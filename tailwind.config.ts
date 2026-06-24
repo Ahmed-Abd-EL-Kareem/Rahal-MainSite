@@ -98,7 +98,7 @@ export default {
         full: "9999px",
       },
       maxWidth: {
-        container: "1280px",
+        container: "1600px",
       },
       spacing: {
         "gutter": "24px",

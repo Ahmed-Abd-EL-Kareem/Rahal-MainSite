@@ -131,7 +131,7 @@ export default function FavoritesPage() {
             {favoriteHotels.map((hotel) => {
               const hotelName = hotel.name[locale as 'en' | 'ar'] || hotel.name.en;
               return (
-                <Card key={hotel._id} className="group bg-white rounded-xl border border-outline-variant/25 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <Card key={hotel._id} className="group bg-surface-container-lowest rounded-xl border border-outline-variant/25 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
                   {/* Image Cover */}
                   <div className="relative h-64 overflow-hidden bg-surface-container group/img">
                     <Link href={`/hotels/${hotel.slug}`} className="absolute inset-0 block">

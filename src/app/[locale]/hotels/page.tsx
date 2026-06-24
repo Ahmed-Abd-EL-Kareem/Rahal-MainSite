@@ -192,14 +192,14 @@ export default function HotelsPage() {
             
             <form onSubmit={handleAiSearchSubmit} className="relative group max-w-2xl mx-auto">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/35 via-secondary/20 to-primary/35 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-500"></div>
-              <div className="relative flex items-center bg-white rounded-xl shadow-md p-1.5 border border-outline-variant/20">
+              <div className="relative flex items-center bg-white dark:bg-surface-container-lowest rounded-xl shadow-md p-1.5 border border-outline-variant/20">
                 <Sparkles className="ml-4 text-primary animate-pulse" size={24} />
                 <input 
                   type="text"
                   placeholder={t('aiSearchPlaceholder')}
                   value={aiQuery}
                   onChange={(e) => setAiQuery(e.target.value)}
-                  className="w-full py-4 px-4 border-none focus:ring-0 text-base md:text-lg font-body text-on-surface placeholder:text-outline outline-none"
+                  className=" w-full py-4 px-4 border-none focus:ring-0 text-base md:text-lg font-body text-on-surface placeholder:text-outline outline-none"
                 />
                 <Button 
                   type="submit"
@@ -240,7 +240,7 @@ export default function HotelsPage() {
         <div className="flex flex-col lg:flex-row gap-gutter items-start">
           
           {/* Left Sidebar: Filters */}
-          <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-24 z-30">
+          <aside className="w-full lg:w-80 2xl:w-96 shrink-0 lg:sticky lg:top-24 z-30">
             <div className="bg-surface-container-low p-6 rounded-2xl border border-outline-variant/20 shadow-sm space-y-6">
               <div className="space-y-1">
                 <h3 className="font-display text-xl font-semibold text-on-surface flex items-center gap-2">
@@ -262,7 +262,7 @@ export default function HotelsPage() {
                     id="city"
                     value={searchCity}
                     onChange={(e) => setSearchCity(e.target.value)}
-                    className="w-full px-3 py-3 bg-white border border-outline-variant rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all text-sm font-medium text-on-surface cursor-pointer"
+                    className="w-full px-3 py-3 bg-white dark:bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all text-sm font-medium text-on-surface cursor-pointer"
                   >
                     <option value="">{t('locationPlaceholder')}</option>
                     {metadata.cities.map(city => (
@@ -281,13 +281,13 @@ export default function HotelsPage() {
                       type="date"
                       value={checkIn}
                       onChange={(e) => setCheckIn(e.target.value)}
-                      className="w-full px-2 py-2.5 bg-white border border-outline-variant rounded-xl text-xs font-semibold focus:ring-1 focus:ring-secondary outline-none"
+                      className="w-full px-2 py-2.5 bg-white dark:bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-semibold focus:ring-1 focus:ring-secondary outline-none"
                     />
                     <input 
                       type="date"
                       value={checkOut}
                       onChange={(e) => setCheckOut(e.target.value)}
-                      className="w-full px-2 py-2.5 bg-white border border-outline-variant rounded-xl text-xs font-semibold focus:ring-1 focus:ring-secondary outline-none"
+                      className="w-full px-2 py-2.5 bg-white dark:bg-surface-container-lowest border border-outline-variant rounded-xl text-xs font-semibold focus:ring-1 focus:ring-secondary outline-none"
                     />
                   </div>
                 </div>
@@ -326,8 +326,8 @@ export default function HotelsPage() {
                         onClick={() => setSelectedStars(selectedStars === stars ? null : stars)}
                         className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
                           selectedStars === stars 
-                            ? 'bg-primary/10 border-primary text-primary' 
-                            : 'bg-white border-outline-variant/60 hover:border-primary text-on-surface-variant'
+                            ? 'bg-primary/10 dark:bg-primary/10 border-primary dark:border-primary text-primary dark:text-primary' 
+                            : 'bg-white dark:bg-surface-container-lowest border-outline-variant/60 hover:border-primary text-on-surface-variant dark:text-on-surface-variant'
                         }`}
                       >
                         {stars}★
@@ -431,15 +431,15 @@ export default function HotelsPage() {
               </div>
             ) : (
               /* Grid Layout */
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 min-[1920px]:grid-cols-4 gap-6">
                 {hotels.map((hotel) => {
                   const hotelName = hotel.name[locale as 'en' | 'ar'] || hotel.name.en;
                   const matchPercent = isAiMode && activeAiQuery ? calculateCompatibility(hotel, activeAiQuery) : null;
                   
                   return (
-                    <Card key={hotel._id} className="group bg-white rounded-xl border border-outline-variant/25 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                    <Card key={hotel._id} className="group bg-surface-container-lowest rounded-xl border border-outline-variant/25 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
                       {/* Card Image Cover wrapped in details link */}
-                      <div className="relative h-64 overflow-hidden bg-surface-container group/img">
+                      <div className="relative h-72 overflow-hidden bg-surface-container group/img">
                         <Link href={`/hotels/${hotel.slug}`} className="absolute inset-0 block">
                           <img 
                             src={hotel.coverImage || hotel.images[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"}

@@ -35,12 +35,31 @@ export default function HotelDetailsPage() {
   const slug = params.slug as string;
 
   // Booking Form States
+  // const getTodayDateString = (offsetDays = 0) => {
+    //   const d = new Date();
+  //   d.setDate(d.getDate() + offsetDays);
+  //   return d.toISOString().split('T')[0];
+  // };
+
+    // Fetch hotel details using TanStack Query
+  const { data: hotel, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['hotel', slug],
+    queryFn: async () => {
+      if (!slug) throw new Error('Invalid hotel slug');
+      const response = await hotelsApi.getHotelBySlug(slug);
+      if (!response || !response.data) throw new Error('Hotel not found');
+      return response.data;
+    },
+    enabled: !!slug,
+  });
+  
+  const error = queryError ? (queryError as Error).message || 'Hotel not found' : null;
   const getTodayDateString = (offsetDays = 0) => {
     const d = new Date();
     d.setDate(d.getDate() + offsetDays);
     return d.toISOString().split('T')[0];
   };
-
+  
   const [checkIn, setCheckIn] = useState(getTodayDateString(1));
   const [checkOut, setCheckOut] = useState(getTodayDateString(4));
   const [guests, setGuests] = useState(2);
@@ -51,9 +70,11 @@ export default function HotelDetailsPage() {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
-  
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('rahal_favorites');
@@ -80,19 +101,6 @@ export default function HotelDetailsPage() {
     }
   };
 
-  // Fetch hotel details using TanStack Query
-  const { data: hotel, isLoading: loading, error: queryError } = useQuery({
-    queryKey: ['hotel', slug],
-    queryFn: async () => {
-      if (!slug) throw new Error('Invalid hotel slug');
-      const response = await hotelsApi.getHotelBySlug(slug);
-      if (!response || !response.data) throw new Error('Hotel not found');
-      return response.data;
-    },
-    enabled: !!slug,
-  });
-
-  const error = queryError ? (queryError as Error).message || 'Hotel not found' : null;
 
   // Check login state on mount
   useEffect(() => {
@@ -194,7 +202,7 @@ export default function HotelDetailsPage() {
   const hotelDesc = hotel.description?.[locale as 'en' | 'ar'] || hotel.description?.en || '';
   
   // Track image loading errors to fallback gracefully
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  // const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
   const handleImageError = (idx: number) => {
     setImageErrors(prev => ({ ...prev, [idx]: true }));
