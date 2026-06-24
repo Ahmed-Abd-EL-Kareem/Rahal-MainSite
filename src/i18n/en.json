@@ -1,0 +1,288 @@
+{
+  "common": {
+    "appName": "Rahal رحّال",
+    "nav": {
+      "home": "Home",
+      "destinations": "Destinations",
+      "hotels": "Hotels",
+      "planner": "AI Planner",
+      "pricing": "Pricing",
+      "about": "About",
+      "login": "Log in",
+      "signup": "Sign up",
+      "logout": "Log out",
+      "profile": "My Profile",
+      "favorites": "My Favorites"
+    },
+    "footer": {
+      "tagline": "Pioneering the future of travel through AI and heritage preservation. Discover Egypt like never before.",
+      "quickLinks": "Quick Links",
+      "support": "Support",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "copyright": "© 2024 Rahal Travel AI. All rights reserved."
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Discover Egypt, Intelligently.",
+      "subtitle": "Your AI-powered travel companion for the land of the Pharaohs. Bespoke itineraries, heritage insights, and seamless bookings crafted by artificial intelligence.",
+      "ctaPrimary": "Start Planning Free",
+      "ctaSecondary": "Watch Demo",
+      "statDestinations": "500+ Destinations",
+      "statHotels": "1200+ Hotels",
+      "statEngine": "AI-Powered Intelligent Engine"
+    },
+    "experience": {
+      "subtitle": "The Experience",
+      "title": "Plan Your Dream Egypt Trip in 3 Steps",
+      "step1": {
+        "title": "Select Interests",
+        "desc": "Tell Rahal your preferences—from ancient history to Red Sea diving or culinary tours."
+      },
+      "step2": {
+        "title": "AI Builds Itinerary",
+        "desc": "Our AI cross-references logistics, opening hours, and seasonal tips to create your perfect plan."
+      },
+      "step3": {
+        "title": "Book with Ease",
+        "desc": "One-click reservations for hotels, transport, and expert-led tours through our trusted network."
+      }
+    },
+    "destinations": {
+      "subtitle": "Discovery",
+      "title": "Explore Egypt's Wonders",
+      "cta": "View All Destinations",
+      "cairo": {
+        "name": "Cairo",
+        "tag": "The City of a Thousand Minarets"
+      },
+      "luxor": {
+        "name": "Luxor",
+        "tag": "World's Greatest Open-Air Museum"
+      },
+      "aswan": {
+        "name": "Aswan",
+        "tag": "Nubian Serenity & Nile Sails"
+      },
+      "sharm": {
+        "name": "Sharm El Sheikh",
+        "tag": "Red Sea Coastal Paradise"
+      },
+      "alexandria": {
+        "name": "Alexandria",
+        "tag": "Pearl of the Mediterranean"
+      }
+    },
+    "features": {
+      "subtitle": "Intelligence",
+      "title": "AI-Powered Intelligent Travel",
+      "f1Title": "AI Trip Planner",
+      "f1Desc": "Custom itineraries generated in seconds, optimized for your interests.",
+      "f2Title": "Smart Hotel Search",
+      "f2Desc": "Find the best places to stay matching your exact budget and preferences.",
+      "f3Title": "24/7 AI Travel Chat",
+      "f3Desc": "Instant answers on historical sights, transport, and local food.",
+      "f4Title": "Secure Booking",
+      "f4Desc": "One-click reservations for accommodations and local expert-led tours.",
+      "insight": "Rahal Insight"
+    },
+    "plannerCallout": {
+      "title": "Let the AI Be Your Guide",
+      "desc": "Ready to move beyond standard tours? Our AI engine crafts unique paths based on historical archives, real-time weather, and your personal tastes.",
+      "cta": "Build Your Itinerary"
+    },
+    "hotels": {
+      "subtitle": "Accommodations",
+      "title": "Curated Stays",
+      "explore": "Explore",
+      "topPick": "AI TOP PICK",
+      "pricePerNight": "From {price} {currency}/night",
+      "h1": {
+        "name": "The Ritz-Carlton, Cairo",
+        "desc": "Iconic views of the Egyptian Museum and the Nile.",
+        "price": "From $320/night"
+      },
+      "h2": {
+        "name": "Old Cataract Hotel",
+        "desc": "Historical elegance where Agatha Christie wrote her classics.",
+        "price": "From $450/night"
+      },
+      "h3": {
+        "name": "Four Seasons Sharm",
+        "desc": "Pristine reef access and ultra-modern amenities.",
+        "price": "From $580/night"
+      }
+    },
+    "chatbot": {
+      "subtitle": "Intelligence",
+      "title": "Meet Rahal Bot: Your Personal Concierge",
+      "bullet1Title": "Instant Answers",
+      "bullet1Desc": "\"What time does the Egyptian Museum open?\" or \"Where is the best Kushari in Cairo?\"—just ask.",
+      "bullet2Title": "Live Translation",
+      "bullet2Desc": "Break language barriers with real-time Egyptian Arabic translation and cultural etiquette tips.",
+      "bullet3Title": "Historical Context",
+      "bullet3Desc": "Point your camera at a temple wall and Rahal will decipher the stories behind the hieroglyphs.",
+      "mockName": "Rahal AI",
+      "mockStatus": "Online",
+      "mockMsg1": "Welcome back! I've updated your Luxor itinerary. Should we add the Sound and Light show tonight?",
+      "mockMsg2": "Yes please! Also, can you find a good vegetarian dinner nearby?",
+      "mockMsg3": "Searching... I found 'Al-Sahaby Lane Rooftop'. It has great ratings and incredible temple views!",
+      "mockPlaceholder": "Ask Rahal anything..."
+    },
+    "pricing": {
+      "title": "Choose Your Experience",
+      "subtitle": "Transparent pricing for every type of traveler.",
+      "free": {
+        "title": "Free Explorer",
+        "price": "$0",
+        "unit": "/ trip",
+        "f1": "Standard AI Itineraries",
+        "f2": "Basic Hotel Booking",
+        "f3": "Destination Guides",
+        "cta": "Start for Free"
+      },
+      "pro": {
+        "tag": "Recommended",
+        "title": "Pro Concierge",
+        "price": "$49",
+        "unit": "/ trip",
+        "f1": "Unlimited AI Customization",
+        "f2": "Priority 24/7 Bot Support",
+        "f3": "Offline Navigation Maps",
+        "f4": "Exclusive Heritage Access",
+        "cta": "Go Pro"
+      }
+    },
+    "testimonials": {
+      "title": "Trusted by Modern Explorers",
+      "t1": {
+        "quote": "\"The AI-generated itinerary for our family trip to Luxor was flawless. It managed to balance my kids' energy with my wife's love for archeology perfectly.\"",
+        "author": "Ahmed K.",
+        "loc": "Cairo, Egypt"
+      },
+      "t2": {
+        "quote": "\"I loved the real-time insights Rahal provided while I was exploring Aswan. It felt like having a personal historian in my pocket.\"",
+        "author": "Sara M.",
+        "loc": "London, UK"
+      },
+      "t3": {
+        "quote": "\"Seamless from start to finish. The booking integration actually works, and the support was there when we had a late flight change.\"",
+        "author": "Mohamed F.",
+        "loc": "Dubai, UAE"
+      }
+    },
+    "finalCta": {
+      "title": "Your Egyptian Odyssey Starts Here",
+      "subtitle": "Join 10,000+ travelers exploring Egypt the smart way.",
+      "cta": "Start Your Journey Now"
+    }
+  },
+  "auth": {
+    "loginTitle": "Welcome Back",
+    "loginSubtitle": "Access your AI-powered Egyptian itineraries.",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "name@domain.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "forgotPassword": "Forgot password?",
+    "loginBtn": "Log In",
+    "continueWith": "Or continue with",
+    "orSignUpWithEmail": "Or sign up with email",
+    "googleBtn": "Continue with Google",
+    "noAccount": "New to Rahal?",
+    "createAccountLink": "Create an account",
+    "signupTitle": "Create Account",
+    "signupSubtitle": "Join Rahal to unlock a new era of heritage-driven exploration.",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "John Doe",
+    "termsCheckbox": "I agree to the Terms of Service and Privacy Policy.",
+    "signupBtn": "Create Account",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Log In",
+    "strength": "Strength: {val}",
+    "strengthNone": "None",
+    "strengthWeak": "Weak",
+    "strengthFair": "Fair",
+    "strengthGood": "Good",
+    "strengthStrong": "Strong",
+    "errors": {
+      "invalidCredentials": "Email or password incorrect.",
+      "emailInUse": "Email address already in use.",
+      "missingFields": "Please fill in all required fields.",
+      "termsRequired": "You must agree to the terms."
+    }
+  },
+  "hotelListing": {
+    "sidebarTitle": "Find Sanctuary",
+    "sidebarSubtitle": "Tailor your stay with AI-curated precision.",
+    "locationLabel": "Location",
+    "locationPlaceholder": "Select City",
+    "datesLabel": "Check-in / Check-out",
+    "priceLabel": "Nightly Rate",
+    "ratingLabel": "Rating",
+    "amenitiesLabel": "Amenities",
+    "applyFilters": "Apply Filters",
+    "resultsTitle": "Discovery",
+    "showingResults": "Showing {count} premium properties in Egypt",
+    "gridView": "Grid",
+    "mapView": "Map",
+    "bookNow": "Book Now",
+    "viewDetails": "View Details",
+    "startingAt": "Starting at",
+    "perNight": "/ night",
+    "rahalChoice": "Rahal Choice",
+    "aiMatch": "AI Match {percent}%",
+    "compatibility": "Rahal Compatibility",
+    "aiSearchPlaceholder": "Describe your perfect stay...",
+    "askRahalBtn": "Ask Rahal",
+    "interpretation": "Interpretation:",
+    "budget": "Budget:",
+    "amenities": "Amenities:",
+    "refinePrompt": "Refine prompt",
+    "revealMore": "Reveal More Sanctuaries"
+  },
+  "hotelDetail": {
+    "luxuryLandmark": "Luxury Landmark",
+    "aiInsight": "Rahal AI Insight",
+    "about": "About the Hotel",
+    "amenities": "Top Amenities",
+    "roomTypes": "Available Room Types",
+    "roomTypeHeader": "Room Type",
+    "sleepsHeader": "Sleeps",
+    "featuresHeader": "Features",
+    "priceHeader": "Price / Night",
+    "startingFrom": "Starting from",
+    "aiBestPrice": "AI Best Price",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Guests & Rooms",
+    "priceNights": "{price} x {nights} nights",
+    "serviceFee": "Service Fee (AI Discount)",
+    "taxesAndFees": "Taxes & Fees",
+    "total": "Total",
+    "bookNow": "Book Now",
+    "disclaimer": "No charge until confirmation. AI concierge support included.",
+    "successMessage": "Your booking is confirmed! 🎉 Booking ID: {id}",
+    "errorMessage": "Failed to create booking. Please try again.",
+    "loginRequired": "Please log in to book a hotel."
+  },
+  "errors": {
+    "notFoundTitle": "Lost in the Sands?",
+    "notFoundSubtitle": "The page you are looking for has been buried in time or doesn't exist.",
+    "notFoundBtn": "Return to Oasis",
+    "loadingTitle": "Consulting the Stars...",
+    "loadingSubtitle": "Rahal AI is preparing your travel sanctuary."
+  },
+  "favoritesPage": {
+    "title": "My Saved Sanctuaries",
+    "subtitle": "Your handpicked collection of Egypt's finest accommodations.",
+    "loginRequiredTitle": "Unlock Your Bookmarks",
+    "loginRequiredSubtitle": "Please log in to save and view your custom collection of travel sanctuaries.",
+    "loginBtn": "Log In to Rahal",
+    "emptyTitle": "Your Oasis is Empty",
+    "emptySubtitle": "You haven't saved any sanctuaries yet. Explore hotels and tap the heart icon to save them here.",
+    "exploreBtn": "Explore Stays",
+    "removedToast": "Removed from your sanctuaries."
+  }
+}
