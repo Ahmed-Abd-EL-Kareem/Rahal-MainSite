@@ -101,6 +101,10 @@ export default function DestinationsMap({ destinations, locale }: DestinationsMa
       );
       map.fitBounds(bounds, { padding: [50, 50] });
     }
+    //new
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 5000);
 
     // Cleanup function
     return () => {
@@ -121,10 +125,8 @@ export default function DestinationsMap({ destinations, locale }: DestinationsMa
   return (
     <div
       ref={mapRef}
-      className="w-full h-full rounded-2xl border border-outline-variant/30 shadow-md"
-      // style={{ minHeight: '600px', zIndex: 10 }}
-
-      style={{ height: '100%', minHeight: '0', zIndex: 10 }}
+      className="w-full h-full rounded-2xl"
+      style={{ zIndex: 10 }}
     />
   );
 }
