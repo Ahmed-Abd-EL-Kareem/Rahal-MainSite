@@ -33,6 +33,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async headers() {
+  return [
+    {
+      source: '/api/v1/:path*',
+      headers: [
+        { key: 'Access-Control-Allow-Credentials', value: 'true' },
+        { key: 'Access-Control-Allow-Origin', value: 'http://localhost:3000' },
+      ],
+    },
+  ];
+},
 };
+
 
 export default withNextIntl(nextConfig);

@@ -82,12 +82,25 @@ export default {
         background: "var(--color-background)",
         "on-background": "var(--color-on-background)",
         "surface-variant": "var(--color-surface-variant)",
+
+        // New Rahal colors (exactly from guidelines)
+        bg:       'var(--color-bg)',
+        surface1: 'var(--color-surface-1)',
+        surface2: 'var(--color-surface-2)',
+        brand:    'var(--color-brand)',
+        accent:   'var(--color-accent)',
+        ink1:     'var(--color-ink-1)',
+        ink2:     'var(--color-ink-2)',
+        ink3:     'var(--color-ink-3)',
+        border:   'var(--color-border)',
       },
       fontFamily: {
-        display: ["var(--font-playfair)", "serif"],
-        body: ["var(--font-inter)", "sans-serif"],
+        display: ['var(--font-sora)', 'system-ui'],
+        body:    ['var(--font-inter)', 'system-ui'],
+        arabic:  ['var(--font-cairo)', 'Tajawal', 'sans-serif'],
+        // Legacy fonts compatibility
+        playfair: ["var(--font-playfair)", "serif"],
         "arabic-display": ["var(--font-noto-naskh)", "serif"],
-        "arabic-body": ["var(--font-cairo)", "sans-serif"],
       },
       borderRadius: {
         sm: "0.25rem",
@@ -96,6 +109,9 @@ export default {
         lg: "1rem",
         xl: "1.5rem",
         full: "9999px",
+        card: "16px",
+        btn:  "10px",
+        pill: "9999px",
       },
       maxWidth: {
         container: "1600px",
@@ -107,7 +123,11 @@ export default {
       },
       boxShadow: {
         "card-rest": "0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.04)",
-        "card-hover": "0 4px 12px 0 rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05)",
+        "card-hover-legacy": "0 4px 12px 0 rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.05)",
+        card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
+        "brand-glow": "0 0 24px var(--color-brand-glow)",
+        "accent-glow": "0 0 20px var(--color-accent-glow)",
       },
       backdropBlur: {
         nav: "20px",

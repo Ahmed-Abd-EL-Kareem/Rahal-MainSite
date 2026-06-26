@@ -37,4 +37,6 @@ export const tripsApi = {
 
   updateTrip: (id: string, body: any) =>
     client.patch<SuccessResponse<Trip>>(`/trips/${id}`, body),
+  deleteTrip: (id: string) =>
+  client.delete<SuccessResponse<null>>(`/trips/${id}`),
 };

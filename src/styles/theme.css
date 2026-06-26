@@ -64,6 +64,41 @@
     --color-background: #fcf9f4;
     --color-on-background: #1c1c19;
     --color-surface-variant: #e5e2dd;
+
+    /* ---- Rahal Design System Light Mode ---- */
+    --color-bg:            oklch(97% 0.008 250);   /* #F4F6FB warm off-white */
+    --color-surface-1:     oklch(100% 0.000 0);    /* #FFFFFF pure white card */
+    --color-surface-2:     oklch(94% 0.010 252);   /* #EBF0F8 elevated / hover */
+    --color-surface-glass: oklch(100% 0.000 0 / 0.75); /* glass overlay */
+
+    /* Brand — Golden Amber */
+    --color-brand:         oklch(68% 0.175 68);    /* #D4880A deep gold (accessible on light) */
+    --color-brand-dim:     oklch(58% 0.140 68);    /* #A96A08 muted gold */
+    --color-brand-glow:    oklch(68% 0.175 68 / 0.18);
+
+    /* Accent — Teal */
+    --color-accent:        oklch(58% 0.140 192);   /* #0F9B94 deeper teal on light */
+    --color-accent-dim:    oklch(48% 0.110 192);   /* #0A7570 */
+    --color-accent-glow:   oklch(58% 0.140 192 / 0.14);
+
+    /* Ink */
+    --color-ink-1:         oklch(18% 0.025 252);   /* #111827 near-black */
+    --color-ink-2:         oklch(42% 0.022 252);   /* #4B5A72 secondary */
+    --color-ink-3:         oklch(62% 0.018 252);   /* #7E90A8 placeholder */
+
+    /* Semantic overwrites */
+    --color-success:       oklch(52% 0.155 145);
+    --color-warning:       oklch(68% 0.175 68);
+    --color-error:         oklch(52% 0.200 22);
+    --color-info:          oklch(55% 0.130 255);
+
+    /* Borders */
+    --color-border:        oklch(86% 0.015 252);   /* #D0DAE8 light border */
+    --color-border-glow:   oklch(58% 0.140 192 / 0.35);
+
+    /* Shadow */
+    --shadow-card:         0 1px 4px oklch(18% 0.025 252 / 0.08), 0 4px 16px oklch(18% 0.025 252 / 0.06);
+    --shadow-card-hover:   0 4px 12px oklch(18% 0.025 252 / 0.12), 0 12px 32px oklch(18% 0.025 252 / 0.10);
   }
 
   .dark {
@@ -131,5 +166,40 @@
     --color-background: #16140f;
     --color-on-background: #e8e4dd;
     --color-surface-variant: #504536;
+
+    /* ---- Rahal Design System Dark Mode ---- */
+    --color-bg:            oklch(12% 0.025 250);   /* #050D1F near-black navy */
+    --color-surface-1:     oklch(16% 0.030 252);   /* #0C1830 card base */
+    --color-surface-2:     oklch(20% 0.030 254);   /* #112040 elevated card */
+    --color-surface-glass: oklch(18% 0.028 252 / 0.72);
+
+    /* Brand — Golden Amber */
+    --color-brand:         oklch(75% 0.175 68);    /* #F5A623 warm gold */
+    --color-brand-dim:     oklch(65% 0.140 68);
+    --color-brand-glow:    oklch(75% 0.175 68 / 0.25);
+
+    /* Accent — Teal */
+    --color-accent:        oklch(72% 0.155 192);   /* #2DD4CC teal */
+    --color-accent-dim:    oklch(60% 0.120 192);
+    --color-accent-glow:   oklch(72% 0.155 192 / 0.20);
+
+    /* Ink */
+    --color-ink-1:         oklch(97% 0.010 250);   /* #F0F4FF near-white */
+    --color-ink-2:         oklch(78% 0.020 250);   /* #9BAEC8 muted */
+    --color-ink-3:         oklch(58% 0.018 250);   /* #5B6E8A placeholder */
+
+    /* Semantic overwrites */
+    --color-success:       oklch(72% 0.155 145);
+    --color-warning:       oklch(80% 0.160 68);
+    --color-error:         oklch(65% 0.200 22);
+    --color-info:          oklch(70% 0.130 255);
+
+    /* Borders */
+    --color-border:        oklch(28% 0.030 252);
+    --color-border-glow:   oklch(72% 0.155 192 / 0.30);
+
+    /* Shadow */
+    --shadow-card:         0 1px 4px oklch(0% 0 0 / 0.30), 0 4px 20px oklch(0% 0 0 / 0.25);
+    --shadow-card-hover:   0 0 24px var(--color-accent-glow), 0 8px 32px oklch(0% 0 0 / 0.40);
   }
 }

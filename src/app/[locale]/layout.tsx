@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, Noto_Naskh_Arabic, Cairo } from "next/font/google";
+import { Playfair_Display, Inter, Noto_Naskh_Arabic, Cairo, Sora } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { ThemeProvider } from 'next-themes';
@@ -32,6 +32,12 @@ const cairo = Cairo({
   variable: "--font-cairo",
 });
 
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-sora",
+});
+
 export const metadata: Metadata = {
   title: "Rahal رحّال - AI-Powered Egypt Travel Planner",
   description: "Bespoke itineraries, heritage insights, and seamless bookings for your Egypt journey.",
@@ -52,7 +58,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={isAr ? 'rtl' : 'ltr'}
-      className={`${playfair.variable} ${inter.variable} ${notoNaskh.variable} ${cairo.variable} h-full antialiased`}
+      className={`${playfair.variable} ${inter.variable} ${notoNaskh.variable} ${cairo.variable} ${sora.variable} h-full antialiased`}
       suppressHydrationWarning
       data-scroll-behavior="smooth"
     >
