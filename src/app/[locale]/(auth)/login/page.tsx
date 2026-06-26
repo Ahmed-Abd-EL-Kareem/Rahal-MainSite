@@ -140,9 +140,13 @@ export default function LogInPage() {
                 <label className="text-xs font-semibold text-on-surface-variant block uppercase tracking-wider" htmlFor="password">
                   {t('passwordLabel')}
                 </label>
-                <Link href="#" className="text-xs font-semibold text-primary hover:text-primary-container transition-colors">
-                  {t('forgotPassword')}
-                </Link>
+               
+                <Link
+  href="/forgot-password"
+  className="text-xs font-semibold text-primary hover:text-primary-container transition-colors"
+>
+  {t('forgotPassword')}
+</Link>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" size={20} />

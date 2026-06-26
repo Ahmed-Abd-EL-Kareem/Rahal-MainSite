@@ -30,17 +30,17 @@ const TwitterIcon = () => (
 
 export default function Footer() {
   const pathname = usePathname();
-  const isAuthPage = [
-    '/login', '/signup', '/forgot-password', '/reset-password',
-    '/en/login', '/en/signup', '/en/forgot-password', '/en/reset-password',
-    '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password'
-  ].some(p => pathname === p || pathname.startsWith(p + '/'));
-
-  if (isAuthPage) return null;
-
   const t = useTranslations('common.footer');
   const navT = useTranslations('common.nav');
   const locale = useLocale();
+
+  const isAuthPage = [
+    '/login', '/signup', '/forgot-password', '/reset-password', '/verify-otp',
+    '/en/login', '/en/signup', '/en/forgot-password', '/en/reset-password', '/en/verify-otp',
+    '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password', '/ar/verify-otp'
+  ].some(p => pathname === p || pathname.startsWith(p + '/'));
+
+  if (isAuthPage) return null;
 
   const quickLinks = [
     { href: '/destinations', label: navT('destinations') },

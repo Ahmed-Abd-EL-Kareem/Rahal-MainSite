@@ -20,9 +20,9 @@ export default function Header() {
   const { resolvedTheme } = useTheme();
 
   const isAuthPage = [
-    '/login', '/signup', '/forgot-password', '/reset-password',
-    '/en/login', '/en/signup', '/en/forgot-password', '/en/reset-password',
-    '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password'
+    '/login', '/signup', '/forgot-password', '/reset-password', '/verify-otp',
+    '/en/login', '/en/signup', '/en/forgot-password', '/en/reset-password', '/en/verify-otp',
+    '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password', '/ar/verify-otp'
   ].some(p => pathname === p || pathname.startsWith(p + '/'));
 
   const [isScrolled, setIsScrolled] = useState(false);
