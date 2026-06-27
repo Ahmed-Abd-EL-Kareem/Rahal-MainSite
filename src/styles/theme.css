@@ -64,6 +64,13 @@
     --color-background: #fcf9f4;
     --color-on-background: #1c1c19;
     --color-surface-variant: #e5e2dd;
+
+    /* Mockup Brand Colors */
+    --color-pharaoh-gold: #C8922A;
+    --color-nile-blue: #1B4B6E;
+    --color-papyrus-green: #2D7A4F;
+    --color-obsidian: #141008;
+    --color-sand-dark: #1E1810;
   }
 
   .dark {
@@ -131,5 +138,12 @@
     --color-background: #16140f;
     --color-on-background: #e8e4dd;
     --color-surface-variant: #504536;
+
+    /* Mockup Brand Colors */
+    --color-pharaoh-gold: #C8922A;
+    --color-nile-blue: #1B4B6E;
+    --color-papyrus-green: #2D7A4F;
+    --color-obsidian: #141008;
+    --color-sand-dark: #1E1810;
   }
 }

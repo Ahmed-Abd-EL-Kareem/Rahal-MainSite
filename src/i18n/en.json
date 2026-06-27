@@ -130,30 +130,7 @@
       "mockMsg3": "Searching... I found 'Al-Sahaby Lane Rooftop'. It has great ratings and incredible temple views!",
       "mockPlaceholder": "Ask Rahal anything..."
     },
-    "pricing": {
-      "title": "Choose Your Experience",
-      "subtitle": "Transparent pricing for every type of traveler.",
-      "free": {
-        "title": "Free Explorer",
-        "price": "$0",
-        "unit": "/ trip",
-        "f1": "Standard AI Itineraries",
-        "f2": "Basic Hotel Booking",
-        "f3": "Destination Guides",
-        "cta": "Start for Free"
-      },
-      "pro": {
-        "tag": "Recommended",
-        "title": "Pro Concierge",
-        "price": "$49",
-        "unit": "/ trip",
-        "f1": "Unlimited AI Customization",
-        "f2": "Priority 24/7 Bot Support",
-        "f3": "Offline Navigation Maps",
-        "f4": "Exclusive Heritage Access",
-        "cta": "Go Pro"
-      }
-    },
+
     "testimonials": {
       "title": "Trusted by Modern Explorers",
       "t1": {
@@ -176,6 +153,97 @@
       "title": "Your Egyptian Odyssey Starts Here",
       "subtitle": "Join 10,000+ travelers exploring Egypt the smart way.",
       "cta": "Start Your Journey Now"
+    }
+  },
+  "pricing": {
+    "badge": "AI-Powered Travel",
+    "title": "Elevate Your Journey with Ancient Intelligence",
+    "subtitle": "Choose the perfect companion for your next expedition. Whether you're a casual wanderer or a dedicated explorer, Rahal's AI adapts to your rhythm.",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "save20": "Save 20%",
+    "billedAnnually": "Billed annually (${amount}/yr)",
+    "wanderer": {
+      "title": "Wanderer",
+      "desc": "The digital essentials for your first adventure.",
+      "price": "$0",
+      "cycle": "/forever",
+      "cta": "Start for Free",
+      "features": [
+        "3 AI-Generated Itineraries",
+        "Standard Hotel Recommendations",
+        "Unlimited Multi-city Planning",
+        "Offline Map Sync"
+      ]
+    },
+    "pro": {
+      "title": "Traveler Pro",
+      "badge": "Most Popular",
+      "desc": "The ultimate concierge for the modern pharaoh.",
+      "priceMonthly": "$20",
+      "priceAnnual": "$16",
+      "cycle": "/month",
+      "cta": "Start 14-Day Free Trial",
+      "features": [
+        "Unlimited AI Planning",
+        "Exclusive Hidden Gem Alerts",
+        "Real-time Translation & AI Tips",
+        "Priority Customer Support 24/7",
+        "Multi-device Offline Sync"
+      ]
+    },
+    "compare": {
+      "title": "Compare Capabilities",
+      "featureCol": "Feature",
+      "wandererCol": "Wanderer",
+      "proCol": "Traveler Pro",
+      "features": {
+        "itinerary": {
+          "title": "AI Itinerary Generation",
+          "desc": "Custom multi-day travel paths",
+          "wanderer": "3 per month",
+          "pro": "Unlimited"
+        },
+        "experiences": {
+          "title": "Exclusive Experiences",
+          "desc": "Curated high-end tours & bookings",
+          "wanderer": "not-included",
+          "pro": "included"
+        },
+        "logistics": {
+          "title": "Smart Logistics Engine",
+          "desc": "Auto-rebalancing for flight delays",
+          "wanderer": "not-included",
+          "pro": "included"
+        },
+        "collaborative": {
+          "title": "Collaborative Planning",
+          "desc": "Invite friends to edit trip",
+          "wanderer": "included",
+          "pro": "included"
+        },
+        "offline": {
+          "title": "Offline Access",
+          "desc": "Save itineraries to mobile local storage",
+          "wanderer": "not-included",
+          "pro": "included"
+        }
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "How does the AI create my itinerary?",
+      "a1": "Our proprietary \"Rahal Engine\" analyzes millions of historical travel data points, weather patterns, and real-time social trends to curate a journey that matches your personal interests—whether that's hidden bazaar stalls or luxury rooftop lounges.",
+      "q2": "Can I cancel my Traveler Pro subscription anytime?",
+      "a2": "Yes, you can cancel at any moment from your account settings. If you cancel, your Pro benefits will remain active until the end of your current billing period.",
+      "q3": "Does the AI cover destinations worldwide?",
+      "a3": "While our name is rooted in Middle Eastern heritage, Rahal is a global traveler. We cover over 40,000 cities across 190 countries with deep cultural insights for each."
+    },
+    "cta": {
+      "title": "Ready to Write Your Story?",
+      "subtitle": "Join over 50,000 travelers who use Rahal to turn simple trips into legendary experiences.",
+      "buttonTrial": "Start Your Pro Trial",
+      "buttonAgent": "Speak to an Agent"
     }
   },
   "auth": {
@@ -284,5 +352,53 @@
     "emptySubtitle": "You haven't saved any sanctuaries yet. Explore hotels and tap the heart icon to save them here.",
     "exploreBtn": "Explore Stays",
     "removedToast": "Removed from your sanctuaries."
+  },
+  "account": {
+    "profileTitle": "Account Profile",
+    "profileSubtitle": "Manage your personal information and travel preferences across the Rahal ecosystem.",
+    "sidebarProfile": "Profile",
+    "sidebarSubscription": "Subscription",
+    "sidebarPreferences": "Preferences",
+    "sidebarSecurity": "Security",
+    "insightTitle": "Rahal Insight",
+    "insightText": "\"Complete your profile to receive 25% more accurate AI-itineraries tailored to your specific travel style.\"",
+    "photoTitle": "Your Profile Photo",
+    "photoDesc": "Recommended: Square JPEG or PNG, at least 400x400px.",
+    "removePhoto": "Remove Photo",
+    "fullName": "Full Name",
+    "emailAddress": "Email Address",
+    "regionalSettings": "Regional Settings",
+    "preferredLanguage": "Preferred Language",
+    "currency": "Currency",
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "saving": "Saving Changes...",
+    "saved": "Changes Saved Successfully!",
+    "errorSaving": "Failed to save changes.",
+    "changePasswordBtn": "Change Password",
+    "changePasswordTitle": "Change Password",
+    "changePasswordDesc": "Update your account password to keep it secure.",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "passwordsDoNotMatch": "New passwords do not match.",
+    "passwordChangedSuccess": "Password changed successfully!",
+    "currentPasswordIncorrect": "Current password is incorrect.",
+    "savingPassword": "Changing password...",
+    "subscriptionTitle": "My Subscription",
+    "subscriptionSubtitle": "View your plan details, token usages, and limits.",
+    "currentPlan": "Current Plan",
+    "activePlanBadge": "Active",
+    "canceledPlanBadge": "Canceled",
+    "limits": "Subscription Limits",
+    "usage": "Usage This Month",
+    "tripsLimit": "AI Trip Plans",
+    "tokensLimit": "AI Tokens",
+    "requestsLimit": "Requests per Day",
+    "features": "Included Features",
+    "upgradeBtn": "Upgrade Plan",
+    "cancelBtn": "Cancel Subscription",
+    "cancelConfirm": "Are you sure you want to cancel your subscription?",
+    "cancelSuccess": "Subscription canceled successfully."
   }
 }

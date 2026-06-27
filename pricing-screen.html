@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pricing | Rahal رحّال - Premium AI Travel</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {"on-tertiary-fixed": "#3f0300", tertiary: "#b12d17", "surface-container-high": "#ebe8e3", "outline-variant": "#d4c4b0", "primary-container": "#c8922a", "tertiary-container": "#ff6e53", "on-secondary": "#ffffff", background: "#fcf9f4", "surface-container-highest": "#e5e2dd", "surface-container-low": "#f6f3ee", secondary: "#366286", "pharaoh-gold": "#C8922A", "inverse-on-surface": "#f3f0eb", "surface-tint": "#7e5700", "error-container": "#ffdad6", "on-background": "#1c1c19", surface: "#fcf9f4", "nile-blue": "#1B4B6E", "on-tertiary-fixed-variant": "#8e1201", "surface-bright": "#fcf9f4", "on-secondary-fixed": "#001d32", "on-tertiary-container": "#6b0a00", outline: "#827564", "inverse-primary": "#f8bc51", "secondary-fixed": "#cde5ff", "surface-variant": "#e5e2dd", "on-primary-fixed": "#281900", "on-primary": "#ffffff", "tertiary-fixed-dim": "#ffb4a6", "primary-fixed": "#ffdeab", "surface-container": "#f0ede9", error: "#ba1a1a", "surface-dim": "#dcdad5", "on-primary-container": "#462f00", "secondary-fixed-dim": "#a0cbf4", "on-surface": "#1c1c19", "on-secondary-container": "#2f5b7f", "on-error-container": "#93000a", "surface-container-lowest": "#ffffff", "on-surface-variant": "#504536", "on-tertiary": "#ffffff", "on-error": "#ffffff", "on-primary-fixed-variant": "#5f4100", "sand-dark": "#1E1810", obsidian: "#141008", "on-secondary-fixed-variant": "#1a4a6d", "secondary-container": "#a8d3fd", "hieroglyph-red": "#E8543A", "papyrus-green": "#2D7A4F", "inverse-surface": "#31302d", primary: "#7e5700", "tertiary-fixed": "#ffdad3", "primary-fixed-dim": "#f8bc51"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {"margin-desktop": "40px", unit: "8px", gutter: "24px", "margin-mobile": "16px", "container-max": "1280px"}, fontFamily: {"display-lg": ["Playfair Display"], "label-sm": ["Inter"], "body-md": ["Inter"], "headline-md": ["Playfair Display"], "label-md": ["Inter"], "headline-sm": ["Playfair Display"], "display-lg-mobile": ["Playfair Display"], "body-lg": ["Inter"], headline: ["Playfair Display"], display: ["Playfair Display"], body: ["Inter"], label: ["Inter"]}, fontSize: {"display-lg": ["48px", {lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700"}], "label-sm": ["12px", {lineHeight: "16px", fontWeight: "600"}], "body-md": ["16px", {lineHeight: "24px", fontWeight: "400"}], "headline-md": ["32px", {lineHeight: "40px", fontWeight: "600"}], "label-md": ["14px", {lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "500"}], "headline-sm": ["24px", {lineHeight: "32px", fontWeight: "600"}], "display-lg-mobile": ["36px", {lineHeight: "44px", fontWeight: "700"}], "body-lg": ["18px", {lineHeight: "28px", fontWeight: "400"}]}}}};</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .premium-shadow {
+            shadow-color: rgba(200, 146, 42, 0.12);
+            box-shadow: 0 12px 24px -10px rgba(200, 146, 42, 0.15);
+        }
+        .glass-nav {
+            backdrop-filter: blur(20px);
+            background: rgba(250, 247, 242, 0.8);
+        }
+        .pricing-toggle-active {
+            transform: translateX(0%);
+        }
+        .pricing-toggle-inactive {
+            transform: translateX(100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top Navigation -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-desktop h-20 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-md shadow-sm">
+<div class="flex items-center gap-8">
+<span class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed-dim">Rahal رحّال</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Destinations</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Hotels</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Trip Planner</a>
+<a class="font-body-md text-body-md text-primary border-b-2 border-primary pb-1" href="#">Pricing</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">About</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-3 mr-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors" data-icon="language">language</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors" data-icon="dark_mode">dark_mode</span>
+</div>
+<button class="px-5 py-2 text-label-md font-label-md text-on-surface-variant hover:text-primary transition-all">Sign In</button>
+<button class="px-6 py-2.5 bg-pharaoh-gold text-white text-label-md font-label-md rounded-lg shadow-md hover:brightness-110 active:scale-95 transition-all">Start Free</button>
+</div>
+</nav>
+<!-- Hero Section with Shader Background -->
+<section class="relative pt-40 pb-20 overflow-hidden">
+<div class="max-w-container-max mx-auto px-margin-desktop relative z-10 text-center">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-nile-blue/10 text-nile-blue mb-6">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">AI-Powered Travel</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface mb-6 max-w-3xl mx-auto">Elevate Your Journey with Ancient Intelligence</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-2xl mx-auto mb-12">
+                Choose the perfect companion for your next expedition. Whether you're a casual wanderer or a dedicated explorer, Rahal's AI adapts to your rhythm.
+            </p>
+<!-- Pricing Toggle -->
+<div class="flex items-center justify-center gap-4 mb-16" x-data="{ billing: 'monthly' }">
+<span :class="billing === 'monthly' ? 'text-on-surface' : 'text-on-surface-variant'" class="text-label-md font-label-md">Monthly</span>
+<button class="relative w-14 h-7 bg-surface-container-highest rounded-full p-1 transition-colors focus:outline-none" id="billingToggle" onclick="toggleBilling()">
+<div class="w-5 h-5 bg-pharaoh-gold rounded-full shadow-sm transition-transform duration-300" id="toggleKnob"></div>
+</button>
+<div class="flex items-center gap-2">
+<span class="text-label-md font-label-md" id="annualLabel">Annual</span>
+<span class="px-2 py-0.5 bg-papyrus-green/10 text-papyrus-green text-[10px] font-bold rounded uppercase tracking-tighter">Save 20%</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Cards Grid -->
+<section class="pb-24 -mt-10">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+<!-- Free Plan Card -->
+<div class="bg-surface-container-lowest border border-outline-variant p-10 rounded-xl flex flex-col transition-all hover:premium-shadow group">
+<div class="mb-8">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Wanderer</h3>
+<p class="text-body-md text-on-surface-variant">The digital essentials for your first adventure.</p>
+</div>
+<div class="mb-8">
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg">$0</span>
+<span class="text-on-surface-variant">/forever</span>
+</div>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-papyrus-green" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">3 AI-Generated Itineraries</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-papyrus-green" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">Standard Hotel Recommendations</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant/50">
+<span class="material-symbols-outlined" data-icon="cancel">cancel</span>
+<span class="text-body-md">Unlimited Multi-city Planning</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant/50">
+<span class="material-symbols-outlined" data-icon="cancel">cancel</span>
+<span class="text-body-md">Offline Map Sync</span>
+</li>
+</ul>
+<button class="w-full py-3 border border-outline text-on-surface font-label-md rounded-lg hover:bg-surface-container transition-colors">Start for Free</button>
+</div>
+<!-- Traveler Pro Card -->
+<div class="relative bg-surface-container-lowest border-2 border-pharaoh-gold p-10 rounded-xl flex flex-col premium-shadow transition-all group scale-105 z-10 overflow-hidden">
+<!-- Popular Badge -->
+<div class="absolute top-0 right-0">
+<div class="bg-pharaoh-gold text-white text-[10px] font-bold px-8 py-1.5 transform rotate-45 translate-x-8 translate-y-3 shadow-sm uppercase tracking-widest">Most Popular</div>
+</div>
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Traveler Pro</h3>
+<span class="material-symbols-outlined text-pharaoh-gold" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="text-body-md text-on-surface-variant">The ultimate concierge for the modern pharaoh.</p>
+</div>
+<div class="mb-8">
+<div class="flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg" id="proPrice">$15</span>
+<span class="text-on-surface-variant" id="proBillingCycle">/month</span>
+</div>
+<p class="text-[12px] text-papyrus-green font-medium hidden" id="annualSaving">Billed annually ($144/yr)</p>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-pharaoh-gold" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-body-md font-medium italic">Unlimited AI Planning</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-papyrus-green" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">Exclusive Hidden Gem Alerts</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-papyrus-green" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">Real-time Translation &amp; AI Tips</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-papyrus-green" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">Priority Customer Support 24/7</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-papyrus-green" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-body-md">Multi-device Offline Sync</span>
+</li>
+</ul>
+<button class="w-full py-4 bg-pharaoh-gold text-white font-label-md rounded-lg shadow-lg hover:brightness-110 active:scale-95 transition-all relative overflow-hidden">
+<span class="relative z-10">Start 14-Day Free Trial</span>
+<div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style="background: linear-gradient(45deg, transparent, rgba(255,255,255,0.4), transparent)"></div>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Feature Comparison Table -->
+<section class="py-24 bg-surface-container-low">
+<div class="max-w-container-max mx-auto px-margin-desktop">
+<div class="text-center mb-16">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-4">Compare Capabilities</h2>
+<div class="w-24 h-1 bg-pharaoh-gold mx-auto rounded-full"></div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-container-high/50">
+<th class="p-6 font-label-md text-on-surface-variant uppercase tracking-wider w-1/2">Feature</th>
+<th class="p-6 font-label-md text-on-surface-variant uppercase tracking-wider text-center">Wanderer</th>
+<th class="p-6 font-label-md text-pharaoh-gold uppercase tracking-wider text-center bg-pharaoh-gold/5">Traveler Pro</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr>
+<td class="p-6">
+<div class="font-medium text-on-surface">AI Itinerary Generation</div>
+<div class="text-sm text-on-surface-variant">Custom multi-day travel paths</div>
+</td>
+<td class="p-6 text-center text-on-surface-variant">3 per month</td>
+<td class="p-6 text-center font-bold text-on-surface bg-pharaoh-gold/5">Unlimited</td>
+</tr>
+<tr>
+<td class="p-6">
+<div class="font-medium text-on-surface">Exclusive Experiences</div>
+<div class="text-sm text-on-surface-variant">Curated high-end tours &amp; bookings</div>
+</td>
+<td class="p-6 text-center">
+<span class="material-symbols-outlined text-outline-variant" data-icon="remove">remove</span>
+</td>
+<td class="p-6 text-center bg-pharaoh-gold/5">
+<span class="material-symbols-outlined text-pharaoh-gold" data-icon="check" style="font-variation-settings: 'FILL' 1;">check</span>
+</td>
+</tr>
+<tr>
+<td class="p-6">
+<div class="font-medium text-on-surface">Smart Logistics Engine</div>
+<div class="text-sm text-on-surface-variant">Auto-rebalancing for flight delays</div>
+</td>
+<td class="p-6 text-center">
+<span class="material-symbols-outlined text-outline-variant" data-icon="remove">remove</span>
+</td>
+<td class="p-6 text-center bg-pharaoh-gold/5">
+<span class="material-symbols-outlined text-pharaoh-gold" data-icon="check" style="font-variation-settings: 'FILL' 1;">check</span>
+</td>
+</tr>
+<tr>
+<td class="p-6">
+<div class="font-medium text-on-surface">Collaborative Planning</div>
+<div class="text-sm text-on-surface-variant">Invite friends to edit trip</div>
+</td>
+<td class="p-6 text-center">
+<span class="material-symbols-outlined text-papyrus-green" data-icon="check" style="font-variation-settings: 'FILL' 1;">check</span>
+</td>
+<td class="p-6 text-center bg-pharaoh-gold/5">
+<span class="material-symbols-outlined text-pharaoh-gold" data-icon="check" style="font-variation-settings: 'FILL' 1;">check</span>
+</td>
+</tr>
+<tr>
+<td class="p-6">
+<div class="font-medium text-on-surface">Offline Access</div>
+<div class="text-sm text-on-surface-variant">Save itineraries to mobile local storage</div>
+</td>
+<td class="p-6 text-center">
+<span class="material-symbols-outlined text-outline-variant" data-icon="remove">remove</span>
+</td>
+<td class="p-6 text-center bg-pharaoh-gold/5">
+<span class="material-symbols-outlined text-pharaoh-gold" data-icon="check" style="font-variation-settings: 'FILL' 1;">check</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- FAQ Accordion -->
+<section class="py-24">
+<div class="max-w-3xl mx-auto px-margin-desktop">
+<h2 class="font-headline-md text-headline-md text-center mb-12">Frequently Asked Questions</h2>
+<div class="space-y-4">
+<!-- FAQ Item 1 -->
+<div class="border border-outline-variant rounded-lg overflow-hidden transition-all">
+<button class="w-full flex justify-between items-center p-6 text-left hover:bg-surface-container-low transition-colors" onclick="toggleFaq(this)">
+<span class="font-medium text-on-surface">How does the AI create my itinerary?</span>
+<span class="material-symbols-outlined transition-transform duration-300" data-icon="expand_more">expand_more</span>
+</button>
+<div class="faq-content h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant">
+                            Our proprietary "Rahal Engine" analyzes millions of historical travel data points, weather patterns, and real-time social trends to curate a journey that matches your personal interests—whether that's hidden bazaar stalls or luxury rooftop lounges.
+                        </div>
+</div>
+</div>
+<!-- FAQ Item 2 -->
+<div class="border border-outline-variant rounded-lg overflow-hidden transition-all">
+<button class="w-full flex justify-between items-center p-6 text-left hover:bg-surface-container-low transition-colors" onclick="toggleFaq(this)">
+<span class="font-medium text-on-surface">Can I cancel my Traveler Pro subscription anytime?</span>
+<span class="material-symbols-outlined transition-transform duration-300" data-icon="expand_more">expand_more</span>
+</button>
+<div class="faq-content h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant">
+                            Yes, you can cancel at any moment from your account settings. If you cancel, your Pro benefits will remain active until the end of your current billing period.
+                        </div>
+</div>
+</div>
+<!-- FAQ Item 3 -->
+<div class="border border-outline-variant rounded-lg overflow-hidden transition-all">
+<button class="w-full flex justify-between items-center p-6 text-left hover:bg-surface-container-low transition-colors" onclick="toggleFaq(this)">
+<span class="font-medium text-on-surface">Does the AI cover destinations worldwide?</span>
+<span class="material-symbols-outlined transition-transform duration-300" data-icon="expand_more">expand_more</span>
+</button>
+<div class="faq-content h-0 overflow-hidden transition-all duration-300">
+<div class="p-6 pt-0 text-on-surface-variant">
+                            While our name is rooted in Middle Eastern heritage, Rahal is a global traveler. We cover over 40,000 cities across 190 countries with deep cultural insights for each.
+                        </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-24 relative overflow-hidden bg-obsidian">
+<div class="absolute inset-0 opacity-40">
+<img class="w-full h-full object-cover mix-blend-overlay" data-alt="A cinematic night shot of the Great Pyramids of Giza under a starry sky, with subtle golden light tracing their silhouettes. The atmosphere is mysterious and majestic, reflecting premium luxury and timeless history. Deep blacks and rich golds dominate the color palette, creating a high-contrast and sophisticated aesthetic consistent with the Rahal brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmgdvvCmQa6xfpDDGyctl5GkSb9GC7AMiZw8tLpxPlUqyPJ69vtZSnsLUG-hdy6NNRYlX8AO6CQu_jNcw3zufTfbdRns7ShJ0ifpHdYIpvAuiPO2Ij8CAnBXj0aYJ6nBy9n0Z7Gr9pHMoPf9d0JoKfIhdMLr9MoVbZZHJtp_bBjGJdRz8GpWw14xCJrfH-fPsDQZmha8Nf65Z9m0_c7KJrzabAJ68SOpuYAZuMB9lry2tlSpUti98aKfMYg66gGIYvNYBzMLn1RjY"/>
+</div>
+<div class="max-w-container-max mx-auto px-margin-desktop text-center relative z-10">
+<h2 class="font-display-lg text-display-lg text-pharaoh-gold mb-6">Ready to Write Your Story?</h2>
+<p class="text-body-lg text-surface-variant mb-12 max-w-xl mx-auto">Join over 50,000 travelers who use Rahal to turn simple trips into legendary experiences.</p>
+<div class="flex flex-col md:flex-row justify-center items-center gap-4">
+<button class="px-8 py-4 bg-pharaoh-gold text-white font-label-md rounded-lg shadow-xl hover:brightness-110 hover:-translate-y-1 transition-all">Start Your Pro Trial</button>
+<button class="px-8 py-4 border border-pharaoh-gold text-pharaoh-gold font-label-md rounded-lg hover:bg-white/5 transition-all">Speak to an Agent</button>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="w-full py-12 px-margin-desktop grid grid-cols-1 md:grid-cols-3 gap-gutter bg-sand-dark dark:bg-obsidian text-pharaoh-gold">
+<div class="space-y-6">
+<span class="font-headline-sm text-headline-sm font-bold text-pharaoh-gold">Rahal رحّال</span>
+<p class="text-body-md text-surface-variant/80 max-w-xs">Artificial Intelligence meeting Ancient Hospitality. Redefining how the world explores.</p>
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full border border-pharaoh-gold/30 flex items-center justify-center hover:bg-pharaoh-gold/10 transition-colors" href="#">
+<img alt="Instagram" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcNeDFczVazNhRA6vH7mbRvtcW99t1YuYzIhAPETSd_9KG_Gv1UKadktecUF0Gud9HoUF9phOxh8rTkFsDg7nvnHT79-6xATyebovP4w8nBHSdxidqjNmQatootLU9o9vib_wR3iw-ChsYNrdDemMA6eEpPlOIFOKFKONtzvTMlFdyhVcD3LGDOH0W4wx6mGupNnQH6nm9oTo-7goWHVEFUN_K2B_VXGe-bBoSHd0DdxauRm8TlToeNVv_BBPVSYjxjgQywIRL9rI"/>
+</a>
+<a class="w-10 h-10 rounded-full border border-pharaoh-gold/30 flex items-center justify-center hover:bg-pharaoh-gold/10 transition-colors" href="#">
+<img alt="X" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaUAcHh2o-8K3YQHdgKdFOyZ2zcfeaBwo7ATCQV-GLMQSVx6wdENxlrd2JN-DXrLm1Iibna7CLJBCPIPqE54an6YGMc0rab-EHrviWoBSA7ZVLAABvPw8tVJUNeZy6CGfwQrrDxYRdgACvU0svCvvRdqqMjcUD-Qwk05vo3ecEMm69JDImqtUsb_ePm7dZ9MkwH86JLvNy4N7Kf9hc6mXdSPOiUKWcx9MnthvEXYD7atcq35m6u2bT40GhYEeBaryC32LyOFMwuSs"/>
+</a>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="space-y-4">
+<h4 class="font-label-md text-on-surface-variant font-bold uppercase tracking-widest text-[12px]">Product</h4>
+<nav class="flex flex-col gap-2">
+<a class="text-body-md text-surface-variant/80 hover:text-pharaoh-gold transition-colors" href="#">Destinations</a>
+<a class="text-body-md text-surface-variant/80 hover:text-pharaoh-gold transition-colors" href="#">Pricing</a>
+<a class="text-body-md text-surface-variant/80 hover:text-pharaoh-gold transition-colors" href="#">Trip Planner</a>
+</nav>
+</div>
+<div class="space-y-4">
+<h4 class="font-label-md text-on-surface-variant font-bold uppercase tracking-widest text-[12px]">Legal</h4>
+<nav class="flex flex-col gap-2">
+<a class="text-body-md text-surface-variant/80 hover:text-pharaoh-gold transition-colors" href="#">Privacy Policy</a>
+<a class="text-body-md text-surface-variant/80 hover:text-pharaoh-gold transition-colors" href="#">Terms of Service</a>
+</nav>
+</div>
+</div>
+<div class="space-y-6">
+<h4 class="font-label-md text-on-surface-variant font-bold uppercase tracking-widest text-[12px]">Subscribe</h4>
+<div class="flex gap-2">
+<input class="bg-obsidian/50 border border-pharaoh-gold/20 rounded-lg px-4 py-2 text-surface focus:border-pharaoh-gold outline-none w-full" placeholder="Your email" type="email"/>
+<button class="bg-pharaoh-gold text-white p-2 rounded-lg">
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<p class="text-sm text-surface-variant/60">© 2024 Rahal Travel AI. All rights reserved.</p>
+</div>
+</footer>
+<script>
+        let isAnnual = false;
+        
+        function toggleBilling() {
+            isAnnual = !isAnnual;
+            const knob = document.getElementById('toggleKnob');
+            const price = document.getElementById('proPrice');
+            const cycle = document.getElementById('proBillingCycle');
+            const annualSaving = document.getElementById('annualSaving');
+            const annualLabel = document.getElementById('annualLabel');
+            
+            if (isAnnual) {
+                knob.style.transform = 'translateX(1.75rem)';
+                price.innerText = '$12';
+                cycle.innerText = '/month';
+                annualSaving.classList.remove('hidden');
+                annualLabel.classList.add('text-on-surface');
+                annualLabel.classList.remove('text-on-surface-variant');
+            } else {
+                knob.style.transform = 'translateX(0)';
+                price.innerText = '$15';
+                cycle.innerText = '/month';
+                annualSaving.classList.add('hidden');
+                annualLabel.classList.add('text-on-surface-variant');
+                annualLabel.classList.remove('text-on-surface');
+            }
+        }
+
+        function toggleFaq(btn) {
+            const content = btn.nextElementSibling;
+            const icon = btn.querySelector('.material-symbols-outlined');
+            
+            // Close all others
+            document.querySelectorAll('.faq-content').forEach(el => {
+                if(el !== content) {
+                    el.style.height = '0';
+                    el.previousElementSibling.querySelector('.material-symbols-outlined').style.transform = 'rotate(0deg)';
+                }
+            });
+
+            if (content.style.height === '0px' || content.style.height === '') {
+                content.style.height = content.scrollHeight + 'px';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.style.height = '0';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+    </script>
+</body></html>
