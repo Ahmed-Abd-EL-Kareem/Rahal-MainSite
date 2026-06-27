@@ -83,7 +83,7 @@ export default function DestinationsMap({ destinations, locale }: DestinationsMa
             <span class="text-[10px] text-on-surface-variant font-medium">${destination.city}</span>
             <div class="flex flex-col gap-1 mt-1 pt-1 border-t border-outline-variant/10" style="border-top: 1px solid rgba(0,0,0,0.06); padding-top: 4px;">
               <span class="text-[10px] text-on-surface-variant">${budgetText} <strong style="color: #1c1c19;">${destination.averageBudgetPerDay} ${destination.currency || 'EGP'}</strong></span>
-              <a href="/${locale}/destinations/slug/${destination.slug}" class="text-[10px] font-bold mt-1 text-center py-1 rounded bg-[#7e5700] text-white hover:bg-[#c8922a] transition-all" style="color: #ffffff; text-decoration: none; font-weight: 700; display: block;">${exploreText}</a>
+              <a href="/${locale}/destinations/${destination.slug}" class="text-[10px] font-bold mt-1 text-center py-1 rounded bg-[#7e5700] text-white hover:bg-[#c8922a] transition-all" style="color: #ffffff; text-decoration: none; font-weight: 700; display: block;">${exploreText}</a>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
@@ -104,6 +105,7 @@ export default function DestinationsPage() {
     region: regionParam || undefined,
     category: categoryParam || undefined,
     maxBudget: maxBudgetParam !== '5000' ? Number(maxBudgetParam) : undefined,
+    isActive: true,
   };
 
   const { data, isLoading } = useQuery({
@@ -371,23 +373,31 @@ export default function DestinationsPage() {
               </div>
 
               {/* Grid / Map toggle — identical to hotels */}
-              <div className="flex items-center bg-surface-container rounded-xl p-1 border border-outline-variant/20 shadow-inner shrink-0">
-                <button
-                  onClick={() => setView('grid')}
-                  className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewParam === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:text-primary'
-                    }`}
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href={`/${locale}/destinations/nearby`}
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container shadow-md active:scale-95 shrink-0"
                 >
-                  <Grid size={14} />
-                  <span>{t('gridView')}</span>
-                </button>
-                <button
-                  onClick={() => setView('map')}
-                  className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewParam === 'map' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:text-primary'
-                    }`}
-                >
-                  <Map size={14} />
-                  <span>{t('mapView')}</span>
-                </button>
+                  <span>{t('nearMe')}</span>
+                </Link>
+                <div className="flex items-center bg-surface-container rounded-xl p-1 border border-outline-variant/20 shadow-inner">
+                  <button
+                    onClick={() => setView('grid')}
+                    className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewParam === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:text-primary'
+                      }`}
+                  >
+                    <Grid size={14} />
+                    <span>{t('gridView')}</span>
+                  </button>
+                  <button
+                    onClick={() => setView('map')}
+                    className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${viewParam === 'map' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:text-primary'
+                      }`}
+                  >
+                    <Map size={14} />
+                    <span>{t('mapView')}</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -438,8 +448,9 @@ export default function DestinationsPage() {
                   return (
                     <article
                       key={destination._id}
-                      className="group bg-surface hover:bg-surface-container-lowest border border-outline-variant/20 hover:border-primary/20 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
+                      className="group bg-surface hover:bg-surface-container-lowest border border-outline-variant/20 hover:border-primary/20 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative"
                     >
+                      <Link href={`/${locale}/destinations/${destination.slug}`} className="absolute inset-0 z-0" />
                       {/* Image */}
                       <div className="h-52 w-full relative overflow-hidden bg-surface-container">
                         <img
@@ -460,9 +471,9 @@ export default function DestinationsPage() {
                           <Heart size={16} className={isFav ? 'fill-current' : ''} />
                         </button>
                       </div>
-
+ 
                       {/* Content */}
-                      <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div className="p-5 flex-1 flex flex-col justify-between relative z-0 pointer-events-none">
                         <div className="space-y-2">
                           {/* Category & price tier */}
                           <div className="flex justify-between items-center text-[10px] font-bold text-on-surface-variant tracking-wider uppercase">
@@ -487,9 +498,9 @@ export default function DestinationsPage() {
                             {desc}
                           </p>
                         </div>
-
+ 
                         {/* Bottom: price + explore */}
-                        <div className="flex justify-between items-center mt-6 pt-4 border-t border-outline-variant/10">
+                        <div className="flex justify-between items-center mt-6 pt-4 border-t border-outline-variant/10 pointer-events-auto">
                           <div>
                             <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block">
                               {t('startingFrom')}
@@ -498,12 +509,12 @@ export default function DestinationsPage() {
                               {formatBudgetText(destination.averageBudgetPerDay, destination.currency)}
                             </span>
                           </div>
-                          <button
-                            onClick={() => router.push(`/destinations/slug/${destination.slug}`)}
-                            className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary hover:text-on-primary-container font-semibold rounded-lg text-xs tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer uppercase"
+                          <Link
+                            href={`/${locale}/destinations/${destination.slug}`}
+                            className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary hover:text-on-primary-container font-semibold rounded-lg text-xs tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer uppercase z-10"
                           >
                             {t('exploreBtn')}
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </article>
