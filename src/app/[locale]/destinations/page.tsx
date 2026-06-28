@@ -176,9 +176,8 @@ export default function DestinationsPage() {
   };
 
   const handleStartAIChat = () => {
-    alert(isAr ? 'سيتم فتح محادثة كونسيرج الذكاء الاصطناعي قريباً!' : 'AI Concierge Chat will be available soon!');
+    router.push('/chat');
   };
-
   const formatBudgetText = (budget: number, currency?: string) => {
     const curr = currency || 'EGP';
     const currencyMap: Record<string, { ar: string; en: string }> = {
@@ -268,8 +267,8 @@ export default function DestinationsPage() {
                       key={category.id}
                       onClick={() => handleCategorySelect(category.id)}
                       className={`px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide border transition-all cursor-pointer ${isActive
-                          ? 'bg-primary text-on-primary border-primary shadow-sm active:scale-95'
-                          : 'bg-surface-container-low text-on-surface-variant border-transparent hover:border-outline-variant/30 hover:bg-surface-container'
+                        ? 'bg-primary text-on-primary border-primary shadow-sm active:scale-95'
+                        : 'bg-surface-container-low text-on-surface-variant border-transparent hover:border-outline-variant/30 hover:bg-surface-container'
                         }`}
                     >
                       {isAr ? category.labelAr : category.labelEn}
@@ -307,6 +306,23 @@ export default function DestinationsPage() {
             </div>
 
             {/* RAHAL AI WIDGET */}
+            {/* <div className="bg-secondary/10 border border-secondary/20 rounded-2xl p-5 space-y-4 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-secondary/20 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
+              <div className="flex items-center gap-2 text-secondary">
+                <Sparkles size={16} />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Rahal AI</span>
+              </div>
+              <h4 className="font-display text-sm font-bold text-on-surface leading-snug">
+                {t('startAIChatTitle')}
+              </h4>
+              <button
+                onClick={handleStartAIChat}
+                className="w-full py-2.5 px-4 bg-primary hover:bg-primary-container text-on-primary hover:text-on-primary-container font-semibold rounded-lg text-xs tracking-wide transition-all shadow active:scale-95 cursor-pointer"
+              >
+                {t('startAIChatBtn')}
+              </button>
+            </div> */}
+
             <div className="bg-secondary/10 border border-secondary/20 rounded-2xl p-5 space-y-4 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-secondary/20 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
               <div className="flex items-center gap-2 text-secondary">
@@ -463,15 +479,15 @@ export default function DestinationsPage() {
                         <button
                           onClick={(e) => toggleFavorite(destination._id, e)}
                           className={`absolute top-4 right-4 p-2.5 rounded-full border transition-all shadow-sm cursor-pointer z-10 ${isFav
-                              ? 'bg-primary border-primary text-on-primary scale-110'
-                              : 'bg-white/80 backdrop-blur-sm border-white/20 text-on-surface-variant hover:bg-white hover:text-primary'
+                            ? 'bg-primary border-primary text-on-primary scale-110'
+                            : 'bg-white/80 backdrop-blur-sm border-white/20 text-on-surface-variant hover:bg-white hover:text-primary'
                             }`}
                           aria-label="Save Destination"
                         >
                           <Heart size={16} className={isFav ? 'fill-current' : ''} />
                         </button>
                       </div>
- 
+
                       {/* Content */}
                       <div className="p-5 flex-1 flex flex-col justify-between relative z-0 pointer-events-none">
                         <div className="space-y-2">
@@ -498,7 +514,7 @@ export default function DestinationsPage() {
                             {desc}
                           </p>
                         </div>
- 
+
                         {/* Bottom: price + explore */}
                         <div className="flex justify-between items-center mt-6 pt-4 border-t border-outline-variant/10 pointer-events-auto">
                           <div>
@@ -541,8 +557,8 @@ export default function DestinationsPage() {
                     key={p}
                     onClick={() => setPage(p)}
                     className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-sm transition-all cursor-pointer ${page === p
-                        ? 'bg-primary text-white'
-                        : 'border border-outline-variant/50 text-on-surface-variant hover:border-primary hover:text-primary'
+                      ? 'bg-primary text-white'
+                      : 'border border-outline-variant/50 text-on-surface-variant hover:border-primary hover:text-primary'
                       }`}
                   >
                     {p}
@@ -560,8 +576,8 @@ export default function DestinationsPage() {
               </div>
             )}
 
-            {/* ── REVEAL MORE BUTTON — identical to hotels page ─────────── */}
-            {!isLoading && totalPages > 1 && page < totalPages && (
+            {/* ── REVEAL MORE BUTTON ─────────── */}
+            {/* {!isLoading && totalPages > 1 && page < totalPages && (
               <div className="mt-12 text-center">
                 <button
                   onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
@@ -571,7 +587,7 @@ export default function DestinationsPage() {
                   <Compass className="group-hover:rotate-45 transition-transform" size={14} />
                 </button>
               </div>
-            )}
+            )} */}
 
           </div>
         </div>

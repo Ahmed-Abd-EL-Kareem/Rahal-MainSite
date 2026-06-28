@@ -101,7 +101,7 @@ export default function DestinationsMap({ destinations, locale }: DestinationsMa
       );
       map.fitBounds(bounds, { padding: [50, 50] });
     }
-    //new
+
     setTimeout(() => {
       map.invalidateSize();
     }, 5000);

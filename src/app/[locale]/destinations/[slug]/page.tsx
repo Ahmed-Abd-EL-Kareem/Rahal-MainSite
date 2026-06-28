@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -17,7 +18,8 @@ import {
   DollarSign,
   Bookmark,
   Star,
-  Clock
+  Clock,
+  Camera,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { destinationsApi } from '@/lib/api/destinations';
@@ -140,15 +142,26 @@ export default function DestinationDetailsPage() {
   const desc = destination.description[locale as 'en' | 'ar'] || destination.description.en;
   const cover = destination.coverImage || destination.images[0] || 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750';
 
-  // Thumbs list
+  // Thumbs list - UPDATED: safer fallback logic
   const getThumbSrc = (idx: number) => {
     const fallbacks = [
-      'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1719659018185-8a239c35fb4a?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=600&q=80',
     ];
-    if (imageErrors[idx]) return fallbacks[idx] || fallbacks[0];
-    return destination.images[idx] || fallbacks[idx] || fallbacks[0];
+
+    // If image previously errored → use fallback
+    if (imageErrors[idx]) {
+      return fallbacks[idx] || fallbacks[0];
+    }
+
+    // If original image exists → use it
+    if (destination.images && destination.images[idx]) {
+      return destination.images[idx];
+    }
+
+    // If no original image → fallback
+    return fallbacks[idx] || fallbacks[0];
   };
 
   // Best months set representation
@@ -194,30 +207,7 @@ export default function DestinationDetailsPage() {
 
             {/* Content overlaid on main image */}
             <div className="absolute inset-0 z-20 flex flex-col justify-between p-6 md:p-10 text-white">
-              {/* Top: Breadcrumbs & Badge */}
-              {/* <div className="space-y-4">
-                <nav className="flex items-center gap-1.5 text-xs text-white/80 font-medium">
-                  <Link href={`/${locale}`} className="hover:text-primary-fixed-dim transition-colors">
-                    {locale === 'ar' ? 'الرئيسية' : 'Home'}
-                  </Link>
-                  <ChevronIcon size={12} className="opacity-60" />
-                  <Link href={`/${locale}/destinations`} className="hover:text-primary-fixed-dim transition-colors">
-                    {locale === 'ar' ? 'الوجهات' : 'Destinations'}
-                  </Link>
-                  <ChevronIcon size={12} className="opacity-60" />
-                  <span className="opacity-65 truncate max-w-[120px] md:max-w-none">
-                    {destination.city}
-                  </span>
-                  <ChevronIcon size={12} className="opacity-60" />
-                  <span className="text-white font-bold truncate max-w-[120px] md:max-w-none">
-                    {name}
-                  </span>
-                </nav>
 
-                <span className="inline-block bg-primary text-on-primary text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full shadow-sm">
-                  {tList(destination.category as any) || destination.category}
-                </span>
-              </div> */}
 
               {/* Bottom: Destination title */}
               <div className="space-y-3">
@@ -245,41 +235,63 @@ export default function DestinationDetailsPage() {
             </button>
           </div>
 
-          {/* Right side Thumbnail grid (1 top landscape, 2 bottom side-by-side) */}
+          {/* Right side Thumbnail grid (1 top landscape, 2 bottom side-by-side) - UPDATED */}
           <div className="hidden lg:grid grid-rows-2 gap-4 h-full">
-            {/* Top Thumbnail */}
-            <div className="relative overflow-hidden rounded-2xl cursor-pointer group shadow-sm">
-              <img
-                src={getThumbSrc(0)}
-                alt={`${name} thumbnail 1`}
-                onError={() => setImageErrors(prev => ({ ...prev, [0]: true }))}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
-              />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-all duration-300"></div>
+            {/* Top Thumbnail - UPDATED */}
+            <div className="relative overflow-hidden rounded-2xl cursor-pointer group shadow-sm bg-surface-container">
+              {getThumbSrc(0) ? (
+                <img
+                  src={getThumbSrc(0)}
+                  alt={`${name} thumbnail 1`}
+                  onError={() => setImageErrors(prev => ({ ...prev, [0]: true }))}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#FFD700] via-[#FFECB3] to-[#F5F5DC]">
+                  <Camera size={24} className="text-white/80" />
+                </div>
+              )}
             </div>
 
             {/* Bottom Row containing 2 thumbnails side-by-side */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="relative overflow-hidden rounded-2xl cursor-pointer group shadow-sm">
-                <img
-                  src={getThumbSrc(1)}
-                  alt={`${name} thumbnail 2`}
-                  onError={() => setImageErrors(prev => ({ ...prev, [1]: true }))}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
-                />
-                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-all duration-300"></div>
+              {/* Bottom Left Thumbnail - UPDATED */}
+              <div className="relative overflow-hidden rounded-2xl cursor-pointer group shadow-sm bg-surface-container">
+                {getThumbSrc(1) ? (
+                  <img
+                    src={getThumbSrc(1)}
+                    alt={`${name} thumbnail 2`}
+                    onError={() => setImageErrors(prev => ({ ...prev, [1]: true }))}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#FFD700] via-[#FFECB3] to-[#F5F5DC]">
+                    <Camera size={24} className="text-white/80" />
+                  </div>
+                )}
               </div>
 
-              <div className="relative overflow-hidden rounded-2xl cursor-pointer group shadow-sm">
-                <img
-                  src={getThumbSrc(2)}
-                  alt={`${name} thumbnail 3`}
-                  onError={() => setImageErrors(prev => ({ ...prev, [2]: true }))}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
-                />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-xs pointer-events-none z-10">
-                  + {destination.images.length > 3 ? destination.images.length - 3 : 1}
-                </div>
+              {/* Bottom Right Thumbnail - UPDATED */}
+              <div className="relative overflow-hidden rounded-2xl cursor-pointer group shadow-sm bg-surface-container">
+                {getThumbSrc(2) ? (
+                  <>
+                    <img
+                      src={getThumbSrc(2)}
+                      alt={`${name} thumbnail 3`}
+                      onError={() => setImageErrors(prev => ({ ...prev, [2]: true }))}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+                    />
+                    {destination.images && destination.images.length > 3 && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-xs pointer-events-none z-10">
+                        +{destination.images.length - 3}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#FFD700] via-[#FFECB3] to-[#F5F5DC]">
+                    <Camera size={24} className="text-white/80" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -352,6 +364,7 @@ export default function DestinationDetailsPage() {
                   <span className="text-xs font-semibold text-primary mb-2">
                     {destination.bestMonths.slice(0, 2).join(' - ')}
                   </span>
+
                   <p className="text-[11px] text-on-surface-variant leading-relaxed">
                     {t('bestTimeDesc')}
                   </p>
@@ -552,7 +565,7 @@ export default function DestinationDetailsPage() {
             </div>
 
             {/* AI Callout Section */}
-            <div className="bg-[#1c1c19] text-white rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-xl text-center space-y-6">
+            {/* <div className="bg-[#1c1c19] text-white rounded-3xl p-8 md:p-12 relative overflow-hidden shadow-xl text-center space-y-6">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/25 via-transparent to-transparent opacity-60 pointer-events-none" />
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-secondary/30 bg-secondary/10 text-secondary-container text-[10px] font-bold uppercase tracking-wider mx-auto">
                 <Sparkles size={12} />
@@ -580,17 +593,17 @@ export default function DestinationDetailsPage() {
                   </Button>
                 </Link>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right Column Sticky Sidebar (Desktop only) */}
           <div className="hidden lg:col-span-4 lg:block sticky top-36 z-20">
             <div className="bg-surface border border-outline-variant/30 rounded-2xl p-6 shadow-md space-y-6">
+
               <div className="flex items-center gap-2.5 text-secondary">
                 <Sparkles size={18} className="animate-pulse" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Rahal AI Concierge</span>
               </div>
-
               <h4 className="font-display text-lg font-bold text-on-surface leading-tight">
                 {locale === 'ar' ? 'جاهز لزيارة هذه الوجهة؟' : 'Ready to Visit this destination?'}
               </h4>
@@ -633,3 +646,4 @@ export default function DestinationDetailsPage() {
     </main>
   );
 }
+
