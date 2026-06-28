@@ -31,16 +31,34 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  // const [authorized, setAuthorized] = useState(false);
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+
 
   // Load email from sessionStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedEmail = sessionStorage.getItem('resetEmail');
-      if (!storedEmail) {
-        router.push(`/${locale}/forgot-password`);
-      }
-    }
-  }, [router, locale]);
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined') {
+  //     const storedEmail = sessionStorage.getItem('resetEmail');
+  //     if (!storedEmail) {
+  //       router.push(`/${locale}/forgot-password`);
+  //     }
+  //   }
+  // }, [router, locale]);
+  // Protect Reset Password page
+ useEffect(() => {
+  if (typeof window === 'undefined') return;
+
+  const storedEmail = sessionStorage.getItem('resetEmail');
+  const otpVerified = sessionStorage.getItem('otpVerified');
+
+  if (!storedEmail || otpVerified !== 'true') {
+    setAuthorized(false);
+    router.replace(`/${locale}/forgot-password`);
+    return;
+  }
+
+  setAuthorized(true);
+}, [router, locale]);
 
   // Derived password strength scoring (avoids useEffect state setter)
   const passwordStrength = (() => {
@@ -115,15 +133,26 @@ export default function ResetPasswordPage() {
         email,
         newPassword: password,
       });
-      setSuccess(true);
+      // setSuccess(true);
       
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('resetEmail');
-      }
+      // if (typeof window !== 'undefined') {
+      //   sessionStorage.removeItem('resetEmail');
+      // }
 
-      setTimeout(() => {
-        router.push(`/${locale}/login`);
-      }, 1500);
+      // setTimeout(() => {
+      //   router.push(`/${locale}/login`);
+      // }, 1500);
+     setSuccess(true);
+
+if (typeof window !== 'undefined') {
+  sessionStorage.removeItem('otpVerified');
+  sessionStorage.removeItem('resetEmail');
+  sessionStorage.removeItem('forgotPasswordStarted');
+}
+
+setTimeout(() => {
+  router.push(`/${locale}/login`);
+}, 1500);
     } catch (err: unknown) {
       console.error('Password reset error:', err);
       if (err instanceof APIError) {
@@ -136,6 +165,15 @@ export default function ResetPasswordPage() {
       setLoading(false);
     }
   };
+
+
+if (authorized === null || !authorized) {
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+    </main>
+  );
+}
 
   return (
     <>
@@ -273,10 +311,10 @@ export default function ResetPasswordPage() {
 
           {/* Hero image — 2×2 grid: كل خلية بتعرض الصورة كاملة */}
           <div className="absolute inset-0 z-0">
-            <div className="w-full h-full grid grid-cols-2 grid-rows-2">
-              {[...Array(4)].map((_, i) => (
+            <div className="w-full h-full ">
+              
                 <div
-                  key={i}
+                  
                   className="w-full h-full bg-cover bg-center"
                   style={{
                     backgroundImage:
@@ -285,7 +323,7 @@ export default function ResetPasswordPage() {
                     backgroundSize: 'cover',
                   }}
                 />
-              ))}
+              
             </div>
             <div className="absolute inset-0 rh-cinematic-overlay" />
           </div>
@@ -314,7 +352,7 @@ export default function ResetPasswordPage() {
               </h1> */}
               {/* Headline */}
 <h1
-  className="text-white mb-4"
+  className="text-white mb-4 leading-tight"
   style={{
     fontFamily: "'Playfair Display', serif",
     fontSize: "clamp(40px,4vw,56px)",

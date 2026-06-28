@@ -1,3 +1,199 @@
+// 'use client';
+
+// import React, { useState, useEffect, useRef, Suspense } from 'react';
+// import { useRouter } from 'next/navigation';
+// import Link from 'next/link';
+// import { useTranslations, useLocale } from 'next-intl';
+// import { Compass, ArrowLeft } from 'lucide-react';
+// import Button from '@/components/ui/Button';
+// import Card from '@/components/ui/Card';
+// import { authApi } from '@/lib/api/auth';
+// import { APIError } from '@/lib/api/client';
+
+
+// function VerifyOtpContent() {
+//   const t = useTranslations('auth');
+//   const locale = useLocale();
+//   const isRtl = locale === 'ar';
+//   const router = useRouter();
+
+//   const [email] = useState<string>(() => {
+//     if (typeof window !== 'undefined') {
+//       return sessionStorage.getItem('resetEmail') || '';
+//     }
+//     return '';
+//   });
+//   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
+
+//   // Load email from sessionStorage on mount
+//   useEffect(() => {
+//     if (typeof window !== 'undefined') {
+//       const storedEmail = sessionStorage.getItem('resetEmail');
+//       if (!storedEmail) {
+//         router.push(`/${locale}/forgot-password`);
+//       }
+//     }
+//   }, [router, locale]);
+//   const [loading, setLoading] = useState(false);
+//   const [resending, setResending] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+//   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+//   const [countdown, setCountdown] = useState(0);
+
+//   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+//   // Focus the first input on mount
+//   useEffect(() => {
+//     if (inputRefs.current[0]) {
+//       inputRefs.current[0].focus();
+//     }
+//   }, []);
+
+//   // Timer countdown hook
+//   useEffect(() => {
+//     if (countdown <= 0) return;
+//     const timer = setInterval(() => {
+//       setCountdown((prev) => prev - 1);
+//     }, 1000);
+//     return () => clearInterval(timer);
+//   }, [countdown]);
+
+//   const handleChange = (value: string, index: number) => {
+//     // Keep numeric only
+//     const cleanValue = value.replace(/[^0-9]/g, '');
+//     if (!cleanValue) {
+//       const newOtp = [...otp];
+//       newOtp[index] = '';
+//       setOtp(newOtp);
+//       return;
+//     }
+
+//     const char = cleanValue[cleanValue.length - 1];
+//     const newOtp = [...otp];
+//     newOtp[index] = char;
+//     setOtp(newOtp);
+
+//     // Auto-focus next field
+//     if (index < 5) {
+//       inputRefs.current[index + 1]?.focus();
+//     }
+//   };
+
+//   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+//     if (e.key === 'Backspace') {
+//       if (otp[index] === '') {
+//         // Backspace on empty input: move focus back and clear previous character
+//         if (index > 0) {
+//           const newOtp = [...otp];
+//           newOtp[index - 1] = '';
+//           setOtp(newOtp);
+//           inputRefs.current[index - 1]?.focus();
+//         }
+//       } else {
+//         // Clear current value
+//         const newOtp = [...otp];
+//         newOtp[index] = '';
+//         setOtp(newOtp);
+//       }
+//       e.preventDefault();
+//     }
+//   };
+
+//   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+//     e.preventDefault();
+//     const pasteData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').substring(0, 6);
+//     if (pasteData) {
+//       const newOtp = [...otp];
+//       for (let i = 0; i < 6; i++) {
+//         newOtp[i] = pasteData[i] || '';
+//       }
+//       setOtp(newOtp);
+      
+//       // Place focus on either the next empty cell or the last cell
+//       const nextIndex = Math.min(pasteData.length, 5);
+//       inputRefs.current[nextIndex]?.focus();
+//     }
+//   };
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     if (!email) {
+//       setError(isRtl ? 'البريد الإلكتروني مفقود.' : 'Email is missing from the request.');
+//       return;
+//     }
+
+//     const otpCode = otp.join('');
+//     if (otpCode.length < 6) {
+//       setError(isRtl ? 'يرجى إدخال الرمز المكون من 6 أرقام كاملاً.' : 'Please enter the full 6-digit code.');
+//       return;
+//     }
+
+//     setLoading(true);
+//     setError(null);
+//     setSuccessMsg(null);
+
+//     try {
+//       console.log('EMAIL =>', email);
+//       console.log('OTP =>', otpCode);
+//       // await authApi.verifyOtp(email, otpCode);
+//       // setSuccessMsg(isRtl ? 'تم التحقق بنجاح!' : 'Verification successful!');
+      
+//       // // Redirect to reset password on success
+//       // setTimeout(() => {
+//       //   router.push(`/${locale}/reset-password`);
+//       // }, 1000);
+//       await authApi.verifyOtp(email, otpCode);
+// setSuccessMsg(isRtl ? 'تم التحقق بنجاح!' : 'Verification successful!');
+
+// // ✅ أضف السطر ده
+// sessionStorage.setItem('otpVerified', 'true');
+
+// setTimeout(() => {
+//   router.push(`/${locale}/reset-password`);
+// }, 1000);
+//     } catch (err: unknown) {
+//       console.error('OTP verification error:', err);
+//       if (err instanceof APIError) {
+//         setError(err.message);
+//       } else {
+//         const errorMsg = err instanceof Error ? err.message : String(err);
+//         setError(errorMsg || t('errors.genericOtp') || 'An unexpected error occurred. Please try again.');
+//       }
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleResend = async () => {
+//     if (countdown > 0 || resending) return;
+//     if (!email) {
+//       setError(isRtl ? 'البريد الإلكتروني مفقود.' : 'Email is missing.');
+//       return;
+//     }
+
+//     setResending(true);
+//     setError(null);
+//     setSuccessMsg(null);
+
+//     try {
+//       await authApi.forgotPassword(email);
+//       setSuccessMsg(isRtl ? 'تم إعادة إرسال الرمز بنجاح!' : 'Verification code resent successfully!');
+//       setCountdown(60);
+//     } catch (err: unknown) {
+//       console.error('OTP resend error:', err);
+//       if (err instanceof APIError) {
+//         setError(err.message);
+//       } else {
+//         const errorMsg = err instanceof Error ? err.message : String(err);
+//         setError(errorMsg || t('errors.genericOtp') || 'An unexpected error occurred. Please try again.');
+//       }
+//     } finally {
+//       setResending(false);
+//     }
+//   };
+
+
+
 'use client';
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
@@ -25,15 +221,18 @@ function VerifyOtpContent() {
   });
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
 
-  // Load email from sessionStorage on mount
+  // Route guard — block access unless forgotPasswordStarted is set
+  const [authorized, setAuthorized] = useState(false);
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedEmail = sessionStorage.getItem('resetEmail');
-      if (!storedEmail) {
-        router.push(`/${locale}/forgot-password`);
-      }
+    if (typeof window === 'undefined') return;
+    const started = sessionStorage.getItem('forgotPasswordStarted');
+    if (!started) {
+      router.replace(`/${locale}/forgot-password`);
+      return;
     }
+    setAuthorized(true);
   }, [router, locale]);
+
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -132,27 +331,63 @@ function VerifyOtpContent() {
     setError(null);
     setSuccessMsg(null);
 
-    try {
-      console.log('EMAIL =>', email);
-      console.log('OTP =>', otpCode);
-      await authApi.verifyOtp(email, otpCode);
-      setSuccessMsg(isRtl ? 'تم التحقق بنجاح!' : 'Verification successful!');
+    // try {
+    //   console.log('EMAIL =>', email);
+    //   console.log('OTP =>', otpCode);
+    //   await authApi.verifyOtp(email, otpCode);
+    //   setSuccessMsg(isRtl ? 'تم التحقق بنجاح!' : 'Verification successful!');
       
-      // Redirect to reset password on success
-      setTimeout(() => {
-        router.push(`/${locale}/reset-password`);
-      }, 1000);
-    } catch (err: unknown) {
-      console.error('OTP verification error:', err);
-      if (err instanceof APIError) {
-        setError(err.message);
-      } else {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        setError(errorMsg || t('errors.genericOtp') || 'An unexpected error occurred. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
+    //   // Redirect to reset password on success
+    //   setTimeout(() => {
+    //     router.push(`/${locale}/reset-password`);
+    //   }, 1000);
+    // } catch (err: unknown) {
+    //   console.error('OTP verification error:', err);
+    //   if (err instanceof APIError) {
+    //     setError(err.message);
+    //   } else {
+    //     const errorMsg = err instanceof Error ? err.message : String(err);
+    //     setError(errorMsg || t('errors.genericOtp') || 'An unexpected error occurred. Please try again.');
+    //   }
+    // } finally {
+    //   setLoading(false);
+    // }
+    try {
+  console.log('EMAIL =>', email);
+  console.log('OTP =>', otpCode);
+
+  await authApi.verifyOtp(email, otpCode);
+
+  // Save verification state
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('otpVerified', 'true');
+    sessionStorage.setItem('resetEmail', email);
+  }
+
+  setSuccessMsg(
+    isRtl ? 'تم التحقق بنجاح!' : 'Verification successful!'
+  );
+
+  setTimeout(() => {
+    router.push(`/${locale}/reset-password`);
+  }, 1000);
+
+} catch (err: unknown) {
+  console.error('OTP verification error:', err);
+
+  if (err instanceof APIError) {
+    setError(err.message);
+  } else {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    setError(
+      errorMsg ||
+      t('errors.genericOtp') ||
+      'An unexpected error occurred. Please try again.'
+    );
+  }
+} finally {
+  setLoading(false);
+}
   };
 
   const handleResend = async () => {
@@ -183,7 +418,19 @@ function VerifyOtpContent() {
     }
   };
 
+  // Guard — show spinner until authorized
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
+
+
+
     <>
       {/* ── Rahal Heritage: Verify OTP Design Tokens ── */}
       <style>{`

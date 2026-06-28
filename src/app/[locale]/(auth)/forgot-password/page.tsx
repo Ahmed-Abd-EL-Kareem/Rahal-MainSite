@@ -51,6 +51,7 @@ export default function ForgotPasswordPage() {
 
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('resetEmail', email);
+        sessionStorage.setItem('forgotPasswordStarted', 'true');
       }
 
       router.push(`/${locale}/verify-otp`);

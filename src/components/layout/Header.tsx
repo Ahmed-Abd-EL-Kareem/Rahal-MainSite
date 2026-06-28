@@ -115,6 +115,7 @@ export default function Header() {
     { href: '/hotels', label: t('hotels') },
     ...(isLoggedIn ? [{ href: '/planner', label: t('planner') }] : []),
     { href: '/pricing', label: t('pricing') },
+    { href: '/about', label: t('about') },
   ];
 
   return (
