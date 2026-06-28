@@ -186,20 +186,7 @@ export default function NearbyDestinationsPage() {
     <main className="pt-28 pb-20 bg-background min-h-screen font-sans" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="max-w-container mx-auto px-margin-mobile md:px-margin-desktop mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          {/* Breadcrumb navigation */}
-          {/* <nav className="col-span-full mb-4 text-sm" aria-label="breadcrumb">
-            <ol className="flex items-center space-x-2 text-on-surface-variant">
-              <li>
-                <Link href="/" className="hover:underline">Home</Link>
-              </li>
-              <li>/</li>
-              <li>
-                <Link href={`/${locale}/destinations`} className="hover:underline">{t('destinations')}</Link>
-              </li>
-              <li>/</li>
-              <li className="font-bold text-on-surface">{t('nearbyTitle') || 'Near Me'}</li>
-            </ol>
-          </nav> */}
+
 
           {/* ── LEFT COLUMN ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 space-y-8">
@@ -409,10 +396,7 @@ export default function NearbyDestinationsPage() {
                       <div className="space-y-1.5">
                         <div className="flex justify-between items-center text-[9px] font-bold text-on-surface-variant tracking-wider uppercase">
                           <span>{tList(destination.category as any) || destination.category}</span>
-                          <div className="flex items-center gap-0.5 text-primary">
-                            <Star size={10} className="fill-current" />
-                            <span>4.9</span>
-                          </div>
+
                         </div>
                         <h3 className="font-display text-base font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-1">
                           {destName}
@@ -430,14 +414,15 @@ export default function NearbyDestinationsPage() {
                     </div>
 
                     {/* Favorite button */}
+
                     <button
                       onClick={(e) => toggleFavorite(destination._id, e)}
-                      className={`absolute top-3 ${isAr ? 'left-3' : 'right-3'} z-20 p-2 rounded-full border shadow-sm cursor-pointer transition-all ${isFav
-                          ? 'bg-primary border-primary text-on-primary'
-                          : 'bg-white/80 backdrop-blur-sm border-white/20 text-on-surface-variant hover:bg-white hover:text-primary'
+                      className={`absolute top-3 ${isAr ? 'left-3' : 'right-3'} z-20 p-2 rounded-full backdrop-blur-md shadow-md cursor-pointer transition-all ${isFav
+                        ? 'bg-primary text-white hover:bg-primary-container'
+                        : 'bg-black/10 text-on-surface-variant hover:bg-black/20 hover:text-error'
                         }`}
                     >
-                      <Heart size={14} className={isFav ? 'fill-current' : ''} />
+                      <Heart size={14} className={isFav ? 'fill-white' : ''} />
                     </button>
                   </article>
                 );

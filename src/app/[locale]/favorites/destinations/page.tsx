@@ -1,24 +1,23 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { Heart, MapPin, Compass, LogIn } from 'lucide-react';
+import { Heart, MapPin, LogIn, Compass } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import { destinationsApi } from '@/lib/api/destinations';
-import { Destination } from '@/types/destination';
 
 export default function FavoriteDestinationsPage() {
-  const t = useTranslations('favoritesPage'); // reuse existing translations if present
-  const listT = useTranslations('destinationListing');
+  const t = useTranslations('favoritesPage');
+  const listT = useTranslations('destinationsListing');
   const locale = useLocale();
+  const isAr = locale === 'ar';
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  // Determine login status and load saved favorite destination IDs
   useEffect(() => {
     const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
     setIsLoggedIn(!!tokenMatch);
@@ -34,10 +33,9 @@ export default function FavoriteDestinationsPage() {
     }
   }, []);
 
-  // Fetch a broad list of destinations (client‑side filter for favorites)
   const { data: destinationsResponse, isLoading: loading } = useQuery({
     queryKey: ['destinations', 'all'],
-    queryFn: () => destinationsApi.getDestinations({ limit: 200 }), // sufficient for local filter
+    queryFn: () => destinationsApi.getDestinations({ limit: 200 }),
     enabled: isLoggedIn === true,
   });
 
@@ -64,7 +62,6 @@ export default function FavoriteDestinationsPage() {
     );
   }
 
-  // Not logged‑in empty state – identical to hotel favorites
   if (!isLoggedIn) {
     return (
       <main className="pt-32 pb-20 bg-background min-h-screen flex items-center">
@@ -91,12 +88,16 @@ export default function FavoriteDestinationsPage() {
     <main className="pt-28 pb-20 bg-background min-h-screen">
       <section className="max-w-container mx-auto px-margin-mobile md:px-margin-desktop">
         {/* Page Header */}
+
         <div className="border-b border-outline-variant/15 pb-6 mb-10">
           <h1 className="font-display text-3xl md:text-5xl font-semibold text-on-surface">
-            {t('favoriteDestinationsTitle') || 'Favorite Destinations'}
+            {isAr ? 'وجهاتي المفضلة' : 'My Saved Destinations'}
           </h1>
           <p className="text-sm text-on-surface-variant mt-2 font-medium">
-            {t('favoriteDestinationsSubtitle') || 'Your saved destinations'}
+            {isAr
+              ? 'مجموعتك المختارة من أهم معالم مصر السياحية.'
+              : 'Your handpicked collection of Egypt\'s most treasured destinations.'
+            }
           </p>
         </div>
 
@@ -105,88 +106,117 @@ export default function FavoriteDestinationsPage() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : favoriteDestinations.length === 0 ? (
-          // Empty state – mirrors hotel favorites empty UI
           <div className="py-20 text-center bg-surface-container-low border border-outline-variant/20 rounded-2xl shadow-sm max-w-2xl mx-auto space-y-6 px-6">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mx-auto border border-primary/20 shadow-md">
               <Heart size={32} />
             </div>
             <div className="space-y-2 max-w-sm mx-auto">
-              <h3 className="font-display text-xl font-bold text-on-surface">{t('emptyTitle') || 'No favorite destinations yet'}</h3>
-              <p className="text-xs text-on-surface-variant leading-relaxed">{t('emptySubtitle') || 'Explore destinations and add them to your favorites.'}</p>
+              <h3 className="font-display text-xl font-bold text-on-surface">{isAr ? 'لا توجد وجهات مفضلة' : 'No favorite destinations yet'}</h3>
+              <p className="text-xs text-on-surface-variant leading-relaxed">{isAr ? 'استكشف الوجهات وأضفها إلى مفضلاتك' : 'Explore destinations and add them to your favorites.'}</p>
             </div>
             <Link href="/destinations" className="inline-block">
               <Button variant="primary" className="font-semibold py-2.5 px-6 rounded-xl">
-                {t('exploreBtn') || 'Explore Destinations'}
+                {isAr ? 'استكشف الوجهات' : 'Explore Destinations'}
               </Button>
             </Link>
           </div>
         ) : (
-          // Favorites grid – identical visual layout to hotel favorites
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favoriteDestinations.map((dest) => {
-              const name = dest.name[locale as 'en' | 'ar'] || dest.name.en;
-              const imageSrc = dest.coverImage || dest.images?.[0] || 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750';
+              const name = dest.name?.[locale as 'en' | 'ar'] ?? dest.name?.en ?? dest.name?.ar ?? '';
+              const desc = dest.description?.[locale as 'en' | 'ar'] ?? dest.description?.en ?? dest.description?.ar ?? '';
+              const imageSrc = dest.coverImage ?? dest.images?.[0] ?? 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750';
               const isFav = favorites.includes(dest._id);
+              const priceTier = dest.averageBudgetPerDay < 100 ? '$' : dest.averageBudgetPerDay < 250 ? '$$' : dest.averageBudgetPerDay < 500 ? '$$$' : '$$$$';
+
               return (
-                <Card key={dest._id} className="group bg-surface-container-lowest rounded-xl border border-outline-variant/25 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                  {/* Image Cover */}
-                  <div className="relative h-64 overflow-hidden bg-surface-container group/img">
-                    <Link href={`/destinations/${dest.slug}`} className="absolute inset-0 block">
-                      <img
-                        src={imageSrc}
-                        alt={name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105 absolute inset-0"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.src = 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750';
-                        }}
-                      />
-                    </Link>
+                <article
+                  key={dest._id}
+                  className="group bg-surface-container-lowest rounded-2xl border border-outline-variant/25 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative"
+                >
+                  <Link href={`/${locale}/destinations/${dest.slug}`} className="absolute inset-0 z-0" />
+                  {/* Image */}
+                  <div className="relative h-52 overflow-hidden bg-surface-container group/img">
+                    <img
+                      src={imageSrc}
+                      alt={name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover/img:scale-105"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750';
+                      }}
+                    />
+                    {/* Heart - SAME AS HOTELS */}
                     <button
                       onClick={(e) => toggleFavorite(dest._id, e)}
                       className="absolute top-4 right-4 bg-primary text-white p-2 rounded-full hover:bg-primary-container transition-all shadow-md z-10 cursor-pointer"
-                      aria-label="Toggle favorite"
+                      aria-label="Remove from favorites"
                     >
                       <Heart size={16} className="fill-white" />
                     </button>
                   </div>
+                  {/* Content */}
+                  <div className="p-5 flex-1 flex flex-col justify-between relative z-0 pointer-events-none">
+                    <div className="space-y-2">
+                      {/* Category & price tier */}
+                      <div className="flex justify-between items-center text-[10px] font-bold text-on-surface-variant tracking-wider uppercase">
+                        <span>{listT(dest.category as any) || dest.category}</span>
+                        <span className="text-primary tracking-widest">{priceTier}</span>
+                      </div>
+                      {/* Title */}
+                      <h3 className="font-display text-lg font-bold text-on-surface group-hover:text-primary transition-colors line-clamp-1">
+                        {name}
+                      </h3>
+                      {/* Location */}
+                      {/* <div className="flex items-center gap-1 text-[11px] text-on-surface-variant font-semibold">
+                        <MapPin size={12} className="text-primary shrink-0" />
+                        <span>
+                          {isAr
+                            ? `${dest.city}، مصر`
+                            : `${dest.city}, Egypt`}
+                        </span>
+                      </div> */}
 
-                  {/* Card Content */}
-                  <div className="p-5 flex flex-col flex-1 space-y-4">
-                    <div className="flex justify-between items-start gap-2">
-                      <div>
-                        <Link href={`/destinations/${dest.slug}`}>
-                          <h4 className="font-display text-lg font-semibold text-on-surface hover:text-primary transition-colors line-clamp-1">
-                            {name}
-                          </h4>
-                        </Link>
-                        <div className="flex items-center gap-1 text-on-surface-variant text-xs font-semibold mt-1">
-                          <MapPin size={12} className="text-primary" />
-                          <span>{dest.city}</span>
-                        </div>
+                      <div className="flex items-center gap-1 text-[11px] text-on-surface-variant font-semibold">
+                        <MapPin size={12} className="text-primary shrink-0" />
+                        <span>
+                          {isAr
+                            ? `${listT(dest.city as any) || dest.city}، مصر`
+                            : `${listT(dest.city as any) || dest.city}, Egypt`}
+                        </span>
                       </div>
-                      {/* Rating placeholder */}
-                      <div className="flex items-center gap-0.5 text-primary" />
+
+                      {/* Description */}
+                      <p className="font-body text-xs text-on-surface-variant leading-relaxed line-clamp-2 pt-1">
+                        {desc}
+                      </p>
                     </div>
-                    {/* Bottom – price and explore button */}
-                    <div className="pt-3 flex justify-between items-center border-t border-outline-variant/20 mt-auto">
+                    {/* Bottom: price + explore */}
+                    <div className="flex justify-between items-center mt-6 pt-4 border-t border-outline-variant/10 pointer-events-auto">
                       <div>
-                        <span className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider block">
-                          {listT('startingAt')}
+                        <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block">
+                          {isAr ? 'يبدأ من' : 'Starting from'}
                         </span>
-                        <span className="font-bold text-lg text-on-surface">
+                        {/* <span className="font-display text-base font-bold text-on-surface">
                           {dest.averageBudgetPerDay?.toLocaleString() || '-'} {dest.currency || 'EGP'}
-                          <span className="text-[10px] font-normal text-on-surface-variant ml-0.5">{listT('perDay')}</span>
+                          <span className="text-[10px] font-normal text-on-surface-variant ml-0.5">/ {isAr ? 'يوم' : 'day'}</span>
+                        </span> */}
+                        <span className="font-display text-base font-bold text-on-surface">
+                          {dest.averageBudgetPerDay?.toLocaleString() || '-'} {isAr ? 'ج.م' : (dest.currency || 'EGP')}
+                          <span className="text-[10px] font-normal text-on-surface-variant ml-0.5">/ {isAr ? 'يوم' : 'day'}</span>
                         </span>
                       </div>
-                      <Link href={`/destinations/${dest.slug}`}>
-                        <Button variant="ghost" className="px-4 py-2 border border-primary text-primary hover:bg-primary/5 rounded-lg text-xs font-bold active:scale-95 transition-all">
-                          {listT('exploreBtn') || 'Explore'}
-                        </Button>
+                      <Link
+                        href={`/${locale}/destinations/${dest.slug}`}
+                        className="px-4 py-2 bg-primary hover:bg-primary-container text-on-primary hover:text-on-primary-container font-semibold rounded-lg text-xs tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer uppercase z-10"
+                      >
+                        {isAr ? 'استكشف' : 'Explore'}
                       </Link>
                     </div>
                   </div>
-                </Card>
+                </article>
+
+
               );
             })}
           </div>

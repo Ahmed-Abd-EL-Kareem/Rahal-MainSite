@@ -306,28 +306,14 @@ export default function DestinationsPage() {
             </div>
 
             {/* RAHAL AI WIDGET */}
-            {/* <div className="bg-secondary/10 border border-secondary/20 rounded-2xl p-5 space-y-4 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-secondary/20 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
-              <div className="flex items-center gap-2 text-secondary">
-                <Sparkles size={16} />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Rahal AI</span>
-              </div>
-              <h4 className="font-display text-sm font-bold text-on-surface leading-snug">
-                {t('startAIChatTitle')}
-              </h4>
-              <button
-                onClick={handleStartAIChat}
-                className="w-full py-2.5 px-4 bg-primary hover:bg-primary-container text-on-primary hover:text-on-primary-container font-semibold rounded-lg text-xs tracking-wide transition-all shadow active:scale-95 cursor-pointer"
-              >
-                {t('startAIChatBtn')}
-              </button>
-            </div> */}
 
             <div className="bg-secondary/10 border border-secondary/20 rounded-2xl p-5 space-y-4 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-secondary/20 to-transparent rounded-full -mr-8 -mt-8 pointer-events-none" />
               <div className="flex items-center gap-2 text-secondary">
                 <Sparkles size={16} />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Rahal AI</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">
+                  {t('rahalAi')}
+                </span>
               </div>
               <h4 className="font-display text-sm font-bold text-on-surface leading-snug">
                 {t('startAIChatTitle')}
@@ -476,15 +462,16 @@ export default function DestinationsPage() {
                           loading="lazy"
                         />
                         {/* Heart */}
+
                         <button
                           onClick={(e) => toggleFavorite(destination._id, e)}
-                          className={`absolute top-4 right-4 p-2.5 rounded-full border transition-all shadow-sm cursor-pointer z-10 ${isFav
-                            ? 'bg-primary border-primary text-on-primary scale-110'
-                            : 'bg-white/80 backdrop-blur-sm border-white/20 text-on-surface-variant hover:bg-white hover:text-primary'
+                          className={`absolute top-4 right-4 backdrop-blur-md p-2 rounded-full transition-all shadow-md z-10 ${isFav
+                            ? "bg-primary text-white hover:bg-primary-container"
+                            : "bg-white/20 text-white hover:bg-white hover:text-error"
                             }`}
                           aria-label="Save Destination"
                         >
-                          <Heart size={16} className={isFav ? 'fill-current' : ''} />
+                          <Heart size={16} className={isFav ? "fill-white" : ""} />
                         </button>
                       </div>
 
@@ -575,19 +562,6 @@ export default function DestinationsPage() {
                 </button>
               </div>
             )}
-
-            {/* ── REVEAL MORE BUTTON ─────────── */}
-            {/* {!isLoading && totalPages > 1 && page < totalPages && (
-              <div className="mt-12 text-center">
-                <button
-                  onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-                  className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full border border-outline-variant hover:border-primary hover:text-primary text-on-surface-variant font-semibold text-sm transition-all cursor-pointer"
-                >
-                  <span>{t('loadMore')}</span>
-                  <Compass className="group-hover:rotate-45 transition-transform" size={14} />
-                </button>
-              </div>
-            )} */}
 
           </div>
         </div>

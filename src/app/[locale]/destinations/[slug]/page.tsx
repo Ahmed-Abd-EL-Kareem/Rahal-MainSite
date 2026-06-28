@@ -216,17 +216,29 @@ export default function DestinationDetailsPage() {
                 </h1>
                 <div className="flex items-center gap-2 text-sm text-white/90">
                   <MapPin size={16} className="text-primary-fixed-dim" />
-                  <span>
+                  {/* <span>
                     {destination.city}, {locale === 'ar' ? 'مصر' : 'Egypt'}
+                  </span> */}
+                  <span>
+                    {t(destination.city as any) || destination.city}، {t('Egypt')}
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Favorite button on top of image */}
-            <button
+            {/* <button
               onClick={toggleFavorite}
               className={`absolute top-6 right-6 z-30 p-3 rounded-full border transition-all cursor-pointer shadow-lg ${isFav
+                ? 'bg-primary border-primary text-on-primary'
+                : 'bg-white/90 backdrop-blur-sm border-white/20 text-on-surface-variant hover:bg-white hover:text-primary'
+                }`}
+            >
+              <Bookmark size={20} className={isFav ? 'fill-current' : ''} />
+            </button> */}
+            <button
+              onClick={toggleFavorite}
+              className={`absolute top-6 end-6 z-30 p-3 rounded-full border transition-all cursor-pointer shadow-lg ${isFav
                 ? 'bg-primary border-primary text-on-primary'
                 : 'bg-white/90 backdrop-blur-sm border-white/20 text-on-surface-variant hover:bg-white hover:text-primary'
                 }`}
@@ -361,10 +373,17 @@ export default function DestinationDetailsPage() {
                   <h4 className="font-display text-sm font-bold text-on-surface mb-1">
                     {t('bestTimeLabel')}
                   </h4>
-                  <span className="text-xs font-semibold text-primary mb-2">
+                  {/* <span className="text-xs font-semibold text-primary mb-2">
                     {destination.bestMonths.slice(0, 2).join(' - ')}
+                  </span> */}
+                  <span className="text-xs font-semibold text-primary mb-2">
+                    {destination.bestMonths && destination.bestMonths.length > 0
+                      ? destination.bestMonths
+                        .slice(0, 2)
+                        .map((m) => t(m as any) || m)
+                        .join(locale === 'ar' ? ' - ' : ' - ')
+                      : ''}
                   </span>
-
                   <p className="text-[11px] text-on-surface-variant leading-relaxed">
                     {t('bestTimeDesc')}
                   </p>
@@ -394,8 +413,11 @@ export default function DestinationDetailsPage() {
                   <h4 className="font-display text-sm font-bold text-on-surface mb-1">
                     {t('regionLabel')}
                   </h4>
-                  <span className="text-xs font-semibold text-primary mb-2">
+                  {/* <span className="text-xs font-semibold text-primary mb-2">
                     {tList(destination.region as any) || destination.region}
+                  </span> */}
+                  <span className="text-xs font-semibold text-primary mb-2">
+                    {t(destination.region as any) || destination.region}
                   </span>
                   <p className="text-[11px] text-on-surface-variant leading-relaxed">
                     {t('regionDesc')}
@@ -429,11 +451,22 @@ export default function DestinationDetailsPage() {
                         {attr.name[locale as 'en' | 'ar'] || attr.name.en}
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        <span className="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {/* <span className="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full">
                           {attr.type}
+                        </span> */}
+                        <span className="bg-surface-container text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {t(attr.type as any) || attr.type}
                         </span>
-                        <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {/* <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
                           {attr.entryFee === 0 ? t('freeEntry') : `${attr.entryFee} EGP`}
+                        </span> */}
+                        <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {attr.entryFee === 0
+                            ? t('freeEntry')
+                            : locale === 'ar'
+                              ? `${attr.entryFee} ج.م`
+                              : `${attr.entryFee} EGP`
+                          }
                         </span>
                       </div>
                     </div>
@@ -602,7 +635,9 @@ export default function DestinationDetailsPage() {
 
               <div className="flex items-center gap-2.5 text-secondary">
                 <Sparkles size={18} className="animate-pulse" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Rahal AI Concierge</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest">
+                  {t('rahalAiConcierge')}
+                </span>
               </div>
               <h4 className="font-display text-lg font-bold text-on-surface leading-tight">
                 {locale === 'ar' ? 'جاهز لزيارة هذه الوجهة؟' : 'Ready to Visit this destination?'}

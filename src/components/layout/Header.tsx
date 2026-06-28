@@ -293,7 +293,7 @@ export default function Header() {
                     <span>{t('profile')}</span>
                   </Link>
                   
-                  <Link 
+                  <Link
                     href="/favorites"
                     onClick={() => setIsDropdownOpen(false)}
                     className={cn(
@@ -302,6 +302,17 @@ export default function Header() {
                     )}
                   >
                     <span>{t('favorites')}</span>
+                  </Link>
+
+                  <Link
+                    href="/favorites/destinations"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer",
+                      locale === 'ar' ? "flex-row-reverse" : ""
+                    )}
+                  >
+                    <span>{t('favoriteDestinations')}</span>
                   </Link>
                   
                   <button
@@ -436,6 +447,11 @@ export default function Header() {
                 <Link href="/favorites" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
                   <Button variant="secondary" fullWidth className="py-2.5 rounded-xl font-semibold">
                     {t('favorites')}
+                  </Button>
+                </Link>
+                <Link href="/favorites/destinations" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                  <Button variant="secondary" fullWidth className="py-2.5 rounded-xl font-semibold">
+                    {t('favoriteDestinations')}
                   </Button>
                 </Link>
                 
