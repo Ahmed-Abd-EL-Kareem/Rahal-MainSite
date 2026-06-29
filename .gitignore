@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 API_ROUTES.md
 DESIGN-web-1.md
+.opencode
+LOCALIZATION_AUDIT_REPORT.md
+LOCALIZATION_ROADMAP.md
+rahal-main-site.rar

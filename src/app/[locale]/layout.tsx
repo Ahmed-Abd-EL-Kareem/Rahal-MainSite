@@ -3,9 +3,8 @@ import { Playfair_Display, Inter, Noto_Naskh_Arabic, Cairo } from "next/font/goo
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { ThemeProvider } from 'next-themes';
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 import "../globals.css";
 
 const playfair = Playfair_Display({
@@ -60,11 +59,9 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
             <QueryProvider>
-              <Header />
-              <div className="flex-1 flex flex-col">
+              <AuthProvider>
                 {children}
-              </div>
-              <Footer />
+              </AuthProvider>
             </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

@@ -30,17 +30,15 @@ const TwitterIcon = () => (
 
 export default function Footer() {
   const pathname = usePathname();
-  const isAuthPage = [
-    '/login', '/signup', '/forgot-password', '/reset-password',
-    '/en/login', '/en/signup', '/en/forgot-password', '/en/reset-password',
-    '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password'
-  ].some(p => pathname === p || pathname.startsWith(p + '/'));
-
-  if (isAuthPage) return null;
-
+  const locale = useLocale();
   const t = useTranslations('common.footer');
   const navT = useTranslations('common.nav');
-  const locale = useLocale();
+
+  const isAuthPage = [
+    '/login', '/signup', '/forgot-password', '/reset-password',
+  ].some(p => pathname === `/${locale}${p}` || pathname.startsWith(`/${locale}${p}/`));
+
+  if (isAuthPage) return null;
 
   const quickLinks = [
     { href: '/destinations', label: navT('destinations') },
@@ -119,16 +117,16 @@ export default function Footer() {
             ))}
           </nav>
           <div className="flex gap-4 mt-4">
-            <a href="#" className="p-2 bg-surface-container-high rounded-full text-on-surface hover:text-primary transition-all duration-200" aria-label="Facebook">
+            <a href="#" className="p-2 bg-surface-container-high rounded-full text-on-surface hover:text-primary transition-all duration-200" aria-label={t('social.facebook')}>
               <FacebookIcon />
             </a>
-            <a href="#" className="p-2 bg-surface-container-high rounded-full text-on-surface hover:text-primary transition-all duration-200" aria-label="Instagram">
+            <a href="#" className="p-2 bg-surface-container-high rounded-full text-on-surface hover:text-primary transition-all duration-200" aria-label={t('social.instagram')}>
               <InstagramIcon />
             </a>
-            <a href="#" className="p-2 bg-surface-container-high rounded-full text-on-surface hover:text-primary transition-all duration-200" aria-label="Twitter">
+            <a href="#" className="p-2 bg-surface-container-high rounded-full text-on-surface hover:text-primary transition-all duration-200" aria-label={t('social.twitter')}>
               <TwitterIcon />
             </a>
-            <a href="#" className="p-2 bg-surface-container-high rounded-full text-on-surface hover:text-primary transition-all duration-200" aria-label="Email">
+            <a href="#" className="p-2 bg-surface-container-high rounded-full text-on-surface hover:text-primary transition-all duration-200" aria-label={t('social.email')}>
               <Mail size={18} />
             </a>
           </div>

@@ -2,6 +2,13 @@
 @import "../styles/theme.css";
 @config "../../tailwind.config.ts";
 
+@layer utilities {
+  .text-start { text-align: start; }
+  .text-end { text-align: end; }
+  .flex-row { flex-direction: row; }
+  .flex-row-reverse { flex-direction: row-reverse; }
+}
+
 body {
   background: var(--color-background);
   color: var(--color-on-background);
@@ -11,6 +18,14 @@ body {
 
 html {
   scroll-behavior: smooth;
+}
+
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="ltr"] {
+  direction: ltr;
 }
 
 /* Custom scrollbars matching the brand theme */

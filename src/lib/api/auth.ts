@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { client } from './client';
 import { User } from '@/types/user';
 import { SuccessResponse } from '@/types/api';

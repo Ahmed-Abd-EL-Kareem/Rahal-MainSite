@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://rahal.app/en</loc>
+    <lastmod>2026-06-29T19:18:35.935Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1</priority>
+  </url>
+  <url>
+    <loc>https://rahal.app/ar</loc>
+    <lastmod>2026-06-29T19:18:35.935Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1</priority>
+  </url>
+  <url>
+    <loc>https://rahal.app/en/hotels</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/hotels" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/hotels</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/hotels" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/destinations</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/destinations" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/destinations</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/destinations" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/about</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/about" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/about</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/about" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/planner</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/planner" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/planner</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/planner" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/chat</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/chat" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/chat</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/chat" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/trips</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/trips" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/trips</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/trips" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/account</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/account" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/account</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/account" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/booking</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/booking" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/booking</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/booking" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/bookings</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/bookings" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/bookings</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/bookings" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/pricing</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/pricing" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/pricing</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/pricing" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/privacy</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/privacy" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/privacy</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/privacy" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/terms</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/terms" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/terms</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/terms" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/favorites</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/favorites" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/favorites</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/favorites" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/login</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/login" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/login</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/login" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/signup</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/signup" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/signup</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/signup" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/forgot-password</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/forgot-password" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/forgot-password</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/forgot-password" />
+  </url>
+  <url>
+    <loc>https://rahal.app/en/reset-password</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://rahal.app/en/reset-password" />
+  </url>
+  <url>
+    <loc>https://rahal.app/ar/reset-password</loc>
+    <lastmod>2026-06-29T19:18:35.937Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://rahal.app/ar/reset-password" />
+  </url>
+</urlset>

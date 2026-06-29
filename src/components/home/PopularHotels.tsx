@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
@@ -11,32 +11,26 @@ import Card from '../ui/Card';
 import Badge from '../ui/Badge';
 import { hotelsApi } from '@/lib/api/hotels';
 import { Hotel } from '@/types/hotel';
+import { useQuery } from '@tanstack/react-query';
+import { getLocaleQueryKey } from '@/lib/hooks/useLocaleQuery';
 
 export default function PopularHotels() {
   const t = useTranslations('home.hotels');
   const locale = useLocale();
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchHotels() {
-      try {
-        const response = await hotelsApi.getHotels({ limit: 3 });
-        if (response && response.data && response.data.length > 0) {
-          setHotels(response.data);
-        } else {
-          // If response data is empty, use fallbacks
-          setHotels(getFallbackHotels());
-        }
-      } catch (error) {
-        console.error('Error fetching popular hotels from backend:', error);
-        setHotels(getFallbackHotels());
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchHotels();
-  }, []);
+  // Fetch hotels using TanStack Query with locale-aware key
+  const { data: hotelsQueryResponse, isLoading: loading } = useQuery({
+    queryKey: getLocaleQueryKey(['hotels', 'popular'], locale),
+    queryFn: () => hotelsApi.getHotels({ limit: 3 }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const hotels = hotelsQueryResponse?.data || [];
+  
+  // Fallback hotels when API fails or returns empty
+  const fallbackHotels: Hotel[] = getFallbackHotels();
+
+  const displayHotels = hotels.length > 0 ? hotels : fallbackHotels;
 
   function getFallbackHotels(): Hotel[] {
     return [
@@ -137,10 +131,9 @@ export default function PopularHotels() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-gutter">
-        {hotels.map((hotel) => {
+        {displayHotels.map((hotel) => {
           const hotelName = hotel.name[locale as 'en' | 'ar'] || hotel.name.en;
           const hotelDesc = hotel.description?.[locale as 'en' | 'ar'] || hotel.description?.en || '';
-          
           return (
             <Card key={hotel._id} className="flex flex-col overflow-hidden p-0 bg-surface-container-lowest border border-outline-variant/30 shadow-card-rest hover:shadow-card-hover rounded-xl group">
               {/* Image section */}
@@ -167,7 +160,6 @@ export default function PopularHotels() {
                 <Text variant="body-md" className="mb-6 flex-grow text-on-surface-variant">
                   {hotelDesc}
                 </Text>
-                
                 <div className="flex justify-between items-center mt-auto border-t border-outline-variant/20 pt-4">
                   <span className="text-primary font-bold text-sm md:text-base">
                     {t('pricePerNight', { price: hotel.averagePricePerNight, currency: hotel.currency })}

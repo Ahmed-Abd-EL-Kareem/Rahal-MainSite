@@ -1,12 +1,24 @@
+'use client';
+
+import { useTranslations, useLocale } from 'next-intl';
+import Heading from '@/components/ui/Heading';
+import Text from '@/components/ui/Text';
+import AuthLayout from '@/components/layout/AuthLayout';
+
 export default function ForgotPasswordPage() {
+  const t = useTranslations('auth.forgotPassword');
+  const locale = useLocale();
+
   return (
-    <main className="mx-auto max-w-container px-margin-mobile py-32 md:px-margin-desktop">
-      <h1 className="font-display text-2xl md:text-3xl font-semibold text-on-surface">
-        Forgot Password
-      </h1>
-      <p className="mt-4 font-body text-sm md:text-base text-on-surface-variant">
-        This page is coming soon.
-      </p>
-    </main>
+    <AuthLayout locale={locale}>
+      <main className="mx-auto max-w-container px-margin-mobile py-32 md:px-margin-desktop">
+        <Heading level={1} variant="headline-md" className="text-on-surface">
+          {t('title')}
+        </Heading>
+        <Text variant="body-md" className="mt-4 text-on-surface-variant">
+          {t('comingSoon')}
+        </Text>
+      </main>
+    </AuthLayout>
   );
 }

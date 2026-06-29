@@ -1,10 +1,11 @@
 import { client } from './client';
 import { SuccessResponse } from '@/types/api';
+import type { HotelSearchRequest, HotelRecommendationRequest, HotelSearchResponse, HotelRecommendationResponse } from '@/types/ai';
 
-const serializeParams = (params?: Record<string, any>) => {
+const serializeParams = (params?: Record<string, unknown> | HotelRecommendationRequest) => {
   if (!params) return '';
   const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, val]) => {
+  Object.entries(params as Record<string, unknown>).forEach(([key, val]) => {
     if (val !== undefined && val !== null) {
       searchParams.set(key, String(val));
     }
@@ -17,21 +18,8 @@ export const aiApi = {
   chat: (messages: Array<{ role: 'user' | 'assistant'; content: string }>) =>
     client.post<SuccessResponse<{ reply: string; tokensUsed: number }>>('/ai/chat', { messages }),
 
-  hotelSearch: (
-    query: string,
-    context?: {
-      tripId?: string;
-      checkIn?: string;
-      checkOut?: string;
-      guests?: number;
-      rooms?: number;
-      limit?: number;
-    }
-  ) =>
-    client.post<SuccessResponse<{ reply: string; tokensUsed: number }>>('/ai/hotels/search', {
-      query,
-      context,
-    }),
+  hotelSearch: (payload: HotelSearchRequest) =>
+    client.post<SuccessResponse<HotelSearchResponse>>('/ai/hotels/search', payload),
 
   bookingConversation: (
     message: string,
@@ -51,8 +39,8 @@ export const aiApi = {
       context,
     }),
 
-  hotelRecommendations: (params?: { tripId?: string; limit?: number; context?: string }) =>
-    client.get<SuccessResponse<{ reply: string; tokensUsed: number }>>(
+  hotelRecommendations: (params?: HotelRecommendationRequest) =>
+    client.get<SuccessResponse<HotelRecommendationResponse>>(
       `/ai/hotels/recommendations${serializeParams(params)}`
     ),
 };
