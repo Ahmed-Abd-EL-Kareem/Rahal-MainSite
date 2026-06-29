@@ -33,12 +33,9 @@ export default function LogInPage() {
     try {
       const response = await authApi.login({ email, password });
       if (response && response.token) {
-        // Set cookie
         document.cookie = `token=${response.token}; path=/; max-age=86400; SameSite=Lax`;
-        
-        // Refresh page/redirect to home
-        router.push('/');
-        router.refresh();
+        window.dispatchEvent(new Event('auth-change'));
+        window.location.href = '/';
       } else {
         setError(t('errors.invalidCredentials'));
       }

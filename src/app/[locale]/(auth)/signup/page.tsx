@@ -84,12 +84,9 @@ export default function SignUpPage() {
     try {
       const response = await authApi.signup({ name, email, password });
       if (response && response.token) {
-        // Set cookie
         document.cookie = `token=${response.token}; path=/; max-age=86400; SameSite=Lax`;
-        
-        // Redirect to homepage
-        router.push('/');
-        router.refresh();
+        window.dispatchEvent(new Event('auth-change'));
+        window.location.href = '/';
       } else {
         setError(t('errors.emailInUse'));
       }

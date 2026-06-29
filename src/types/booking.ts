@@ -4,7 +4,8 @@ export interface Booking {
   hotel: string | {
     _id: string;
     name: { en: string; ar: string };
-    city: string;
+    city: string | { en: string; ar: string };
+    address?: string | { en: string; ar: string };
     averagePricePerNight: number;
     stars: number;
     currency: string;

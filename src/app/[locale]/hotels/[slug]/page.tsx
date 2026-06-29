@@ -153,10 +153,7 @@ export default function HotelDetailsPage() {
       const response = await bookingsApi.createBooking(body);
       if (response && response.data) {
         setBookingSuccess(t('successMessage', { id: response.data._id }));
-        // Redirect to user's bookings after a brief pause
-        setTimeout(() => {
-          router.push('/bookings');
-        }, 3000);
+        router.push(`/bookings/${response.data._id}/status`);
       }
     } catch (err: any) {
       console.error('Failed to submit booking:', err);

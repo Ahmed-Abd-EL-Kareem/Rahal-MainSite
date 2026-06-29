@@ -61,6 +61,8 @@ export default function Header() {
       }
     };
     checkAuth();
+    window.addEventListener('auth-change', checkAuth);
+    return () => window.removeEventListener('auth-change', checkAuth);
   }, [pathname]);
 
   // Fetch current user using TanStack Query
@@ -106,6 +108,7 @@ export default function Header() {
     document.cookie = 'token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC';
     setIsLoggedIn(false);
     setUserId(null);
+    window.dispatchEvent(new Event('auth-change'));
     window.location.href = '/';
   };
 
@@ -113,7 +116,9 @@ export default function Header() {
     { href: '/', label: t('home') },
     { href: '/destinations', label: t('destinations') },
     { href: '/hotels', label: t('hotels') },
-    ...(isLoggedIn ? [{ href: '/planner', label: t('planner') }] : []),
+    ...(isLoggedIn ? [{ href: '/planner', label: t('planner') },
+        { href: '/bookings', label: t('bookings') },
+    ] : []),
     { href: '/pricing', label: t('pricing') },
   ];
 
@@ -303,6 +308,17 @@ export default function Header() {
                   >
                     <span>{t('favorites')}</span>
                   </Link>
+
+                  <Link 
+                    href="/bookings"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer",
+                      locale === 'ar' ? "flex-row-reverse" : ""
+                    )}
+                  >
+                    <span>{t('bookings')}</span>
+                  </Link>
                   
                   <button
                     onClick={() => {
@@ -436,6 +452,12 @@ export default function Header() {
                 <Link href="/favorites" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
                   <Button variant="secondary" fullWidth className="py-2.5 rounded-xl font-semibold">
                     {t('favorites')}
+                  </Button>
+                </Link>
+
+                <Link href="/bookings" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                  <Button variant="secondary" fullWidth className="py-2.5 rounded-xl font-semibold">
+                    {t('bookings')}
                   </Button>
                 </Link>
                 
