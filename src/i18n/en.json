@@ -128,7 +128,21 @@
       "mockMsg1": "Welcome back! I've updated your Luxor itinerary. Should we add the Sound and Light show tonight?",
       "mockMsg2": "Yes please! Also, can you find a good vegetarian dinner nearby?",
       "mockMsg3": "Searching... I found 'Al-Sahaby Lane Rooftop'. It has great ratings and incredible temple views!",
-      "mockPlaceholder": "Ask Rahal anything..."
+      "mockPlaceholder": "Ask Rahal anything...",
+      "chatWithRahal": "Chat with Rahal",
+      "welcomeTitle": "Greetings, Traveler",
+      "welcomeSubtitle": "I am Rahal, your AI travel concierge. Where shall your journey begin?",
+      "newChat": "New Chat",
+      "recentPlans": "Recent Plans",
+      "creditsTitle": "AI Oracle Credits",
+      "creditsReset": "Plan active. Resets periodically.",
+      "placeholder": "Describe your dream journey...",
+      "disclaimer": "Rahal AI may provide historical context that requires local verification.",
+      "suggestion1": "Ancient History in Luxor",
+      "suggestion2": "Cairo Foodie Guide",
+      "suggestion3": "Hidden Red Sea Beaches",
+      "newChatStarted": "New chat started",
+      "requestFailed": "Failed to process request"
     },
 
     "testimonials": {
@@ -183,7 +197,7 @@
       "priceMonthly": "$20",
       "priceAnnual": "$16",
       "cycle": "/month",
-      "cta": "Start 14-Day Free Trial",
+      "cta": "Start Traveler Pro",
       "features": [
         "Unlimited AI Planning",
         "Exclusive Hidden Gem Alerts",

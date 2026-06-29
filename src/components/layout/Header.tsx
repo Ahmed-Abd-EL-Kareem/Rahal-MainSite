@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useTheme } from 'next-themes';
+import { usePathname, useRouter } from '@/i18n/navigation';
+import { useTheme } from '@/components/providers/ThemeProvider';
 import { Globe, Menu, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -17,6 +17,7 @@ export default function Header() {
   const t = useTranslations('common.nav');
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
   const { resolvedTheme } = useTheme();
 
   const isAuthPage = [
@@ -90,11 +91,9 @@ export default function Header() {
   const isFloating = isScrolled;
   const isFilledFullWidth = !isHomepage && !isScrolled;
 
-  // Toggle locale using cookie strategy (standard for localePrefix: 'never')
   const toggleLocale = () => {
     const nextLocale = locale === 'en' ? 'ar' : 'en';
-    document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=31536000`;
-    window.location.reload();
+    router.replace(pathname, { locale: nextLocale });
   };
 
   // Determine which logo to use

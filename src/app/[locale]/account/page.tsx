@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,22 +12,18 @@ export default function AccountSettingsPage() {
   const queryClient = useQueryClient();
 
   const [userId, setUserId] = useState<string | null>(null);
-
   // Form states
   const [name, setName] = useState('');
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
   const [currency, setCurrency] = useState('USD');
   const [avatarUrl, setAvatarUrl] = useState('');
-
   // Image Upload states
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
-
   // Profile Save states
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   // Change Password Modal states
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -422,7 +417,7 @@ export default function AccountSettingsPage() {
                     className="w-4 h-4 text-primary border-outline focus:ring-primary cursor-pointer"
                   />
                   <span className="font-body text-sm group-hover:text-primary transition-colors">
-                    EGP (E£) - Egyptian Pound
+                    EGP (EL) - Egyptian Pound
                   </span>
                 </label>
               </div>

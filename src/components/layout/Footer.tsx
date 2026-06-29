@@ -36,7 +36,11 @@ export default function Footer() {
     '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password'
   ].some(p => pathname === p || pathname.startsWith(p + '/'));
 
-  if (isAuthPage) return null;
+  const isChatPage = [
+    '/chat', '/en/chat', '/ar/chat'
+  ].some(p => pathname === p || pathname.startsWith(p + '/'));
+
+  if (isAuthPage || isChatPage) return null;
 
   const t = useTranslations('common.footer');
   const navT = useTranslations('common.nav');
