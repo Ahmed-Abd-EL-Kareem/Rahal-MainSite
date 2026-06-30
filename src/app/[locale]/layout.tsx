@@ -57,11 +57,11 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-on-background">
         <AppProviders locale={locale} messages={messages}>
-          <Header />
+          {/* <Header /> */}
           <div className="flex-1 flex flex-col">
             {children}
           </div>
-          <Footer />
+          {/* <Footer /> */}
           <FloatingChatButton />
         </AppProviders>
       </body>

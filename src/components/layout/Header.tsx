@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-'use client';
+"use client";
 
-import React, { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useLocale, useTranslations } from 'next-intl';
-import { useTheme } from 'next-themes';
+import React, { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useLocale, useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
 import {
   Globe,
   Menu,
@@ -16,24 +16,36 @@ import {
   Hotel,
   MapPinHouse,
 } from "lucide-react";
-import { usePathname, useRouter } from '@/i18n/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { cn } from '@/lib/utils/cn';
-import Button from '@/components/ui/Button';
-import ThemeToggle from '@/components/ui/ThemeToggle';
-import { usersApi } from '@/lib/api/users';
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils/cn";
+import Button from "@/components/ui/Button";
+import ThemeToggle from "@/components/ui/ThemeToggle";
+import { usersApi } from "@/lib/api/users";
 export default function Header() {
-  const t = useTranslations('common.nav');
+  const t = useTranslations("common.nav");
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
 
   const isAuthPage = [
-    '/login', '/signup', '/forgot-password', '/reset-password', '/verify-otp',
-    '/en/login', '/en/signup', '/en/forgot-password', '/en/reset-password', '/en/verify-otp',
-    '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password', '/ar/verify-otp'
-  ].some(p => pathname === p || pathname.startsWith(p + '/'));
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-otp",
+    "/en/login",
+    "/en/signup",
+    "/en/forgot-password",
+    "/en/reset-password",
+    "/en/verify-otp",
+    "/ar/login",
+    "/ar/signup",
+    "/ar/forgot-password",
+    "/ar/reset-password",
+    "/ar/verify-otp",
+  ].some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -49,8 +61,8 @@ export default function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -59,7 +71,8 @@ export default function Header() {
     if (tokenFromUrl) {
       document.cookie = `token=${tokenFromUrl}; path=/; max-age=86400; SameSite=Lax`;
       params.delete("token");
-      const cleanUrl = window.location.pathname + (params.toString() ? `?${params}` : "");
+      const cleanUrl =
+        window.location.pathname + (params.toString() ? `?${params}` : "");
       window.history.replaceState({}, "", cleanUrl);
     }
     const checkAuth = () => {
@@ -69,8 +82,10 @@ export default function Header() {
 
       if (token) {
         try {
-          const payload = token.split('.')[1];
-          const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+          const payload = token.split(".")[1];
+          const decoded = JSON.parse(
+            atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+          );
           setUserId(decoded.id || decoded._id || decoded.sub || null);
         } catch {
           setUserId(null);
@@ -82,15 +97,39 @@ export default function Header() {
     checkAuth();
   }, [pathname]);
 
+  // Close dropdown on outside click / Escape for predictable keyboard + pointer behavior
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isDropdownOpen]);
+
   const { data: userData } = useQuery({
-    queryKey: ['currentUser', userId],
+    queryKey: ["currentUser", userId],
     queryFn: () => usersApi.getUser(userId!),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   });
 
   const currentUser = userData?.data?.user || null;
-  const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U';
+  const userInitial = currentUser?.name
+    ? currentUser.name.charAt(0).toUpperCase()
+    : "U";
   const userImage = currentUser?.image;
 
   useEffect(() => {
@@ -99,52 +138,65 @@ export default function Header() {
 
   if (isAuthPage) return null;
 
-  const isAr = locale === 'ar';
-  const isDark = mounted && resolvedTheme === 'dark';
-  const isHomepage = pathname === '/';
+  const isAr = locale === "ar";
+  const isDark = mounted && resolvedTheme === "dark";
+  const isHomepage = pathname === "/";
 
   const isTransparent = isHomepage && !isScrolled;
   const isFloating = isScrolled;
   const isFilledFullWidth = !isHomepage && !isScrolled;
 
- const toggleLocale = () => {
-   const nextLocale = locale === "en" ? "ar" : "en";
-   router.replace(pathname, { locale: nextLocale });
-   router.refresh(); // force the server to re-render with new locale, bypass Router Cache
- };
+  const toggleLocale = () => {
+    const nextLocale = locale === "en" ? "ar" : "en";
+    // Persist the cookie explicitly and force a full reload. With
+    // `localePrefix: 'never'` the URL never changes between locales, so a
+    // client-side router.replace() to the *same* pathname can be served
+    // straight from the Next.js Router Cache in production (it isn't in
+    // dev), which is why the UI looked "stuck" until a hard refresh.
+    // A real reload always re-requests the page with the new locale cookie.
+    document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=31536000`;
+    window.location.reload();
+  };
 
   const handleLogout = () => {
-    document.cookie = 'token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+    document.cookie =
+      "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
     setIsLoggedIn(false);
     setUserId(null);
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   const navLinks = [
-    { href: '/', label: t('home') },
-    { href: '/destinations', label: t('destinations') },
-    { href: '/hotels', label: t('hotels') },
-    ...(isLoggedIn ? [{ href: '/planner', label: t('planner') }] : []),
-    { href: '/pricing', label: t('pricing') },
-    { href: '/about', label: t('about') },
+    { href: "/", label: t("home") },
+    { href: "/destinations", label: t("destinations") },
+    { href: "/hotels", label: t("hotels") },
+    ...(isLoggedIn ? [{ href: "/planner", label: t("planner") }] : []),
+    { href: "/pricing", label: t("pricing") },
+    { href: "/about", label: t("about") },
   ];
 
   if (!mounted) {
     return (
       <nav
         className={cn(
-          'fixed z-50 transition-all duration-500 ease-in-out flex items-center justify-between',
+          "fixed z-50 transition-all duration-500 ease-in-out flex items-center justify-between",
           isFloating
-            ? 'top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-[1200px] h-16 px-6 bg-surface/80 backdrop-blur-md border border-outline-variant/15 shadow-lg shadow-primary/5 rounded-full'
+            ? "top-4 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-[1200px] h-16 px-4 sm:px-6 bg-surface/80 backdrop-blur-md border border-outline-variant/15 shadow-lg shadow-primary/5 rounded-full"
             : isFilledFullWidth
-            ? 'top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-surface/85 backdrop-blur-md border-b border-outline-variant/15 shadow-sm'
-            : 'top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-transparent border-b border-transparent'
+              ? "top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-surface/85 backdrop-blur-md border-b border-outline-variant/15 shadow-sm"
+              : "top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-transparent border-b border-transparent",
         )}
       >
-        <div className="flex items-center gap-12">
-          <Link href="/" className="flex items-center gap-2 group hover:scale-[1.02] transition-transform duration-300" aria-label="Rahal Home">
+        <div className="flex items-center gap-6 sm:gap-12">
+          <Link
+            href="/"
+            className="flex items-center gap-2 group hover:scale-[1.02] transition-transform duration-300"
+            aria-label="Rahal Home"
+          >
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
-              <span className="font-display font-bold text-xl text-primary">{isAr ? 'رحّال' : 'Rahal'}</span>
+              <span className="font-display font-bold text-xl text-primary">
+                {isAr ? "رحّال" : "Rahal"}
+              </span>
             </div>
           </Link>
         </div>
@@ -153,17 +205,17 @@ export default function Header() {
   }
 
   const logoSrc = isTransparent
-    ? '/images/logo-2.png'
+    ? "/images/logo-2.png"
     : isDark
-    ? '/images/logo-2.png'
-    : '/images/logo.png';
+      ? "/images/logo-2.png"
+      : "/images/logo.png";
 
   return (
     <nav
       className={cn(
         "fixed z-50 transition-all duration-500 ease-in-out flex items-center justify-between",
         isFloating
-          ? "top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-[1200px] h-16 px-6 bg-surface/90 backdrop-blur-md border border-outline-variant/20 shadow-xl shadow-primary/10 rounded-full"
+          ? "top-4 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-[1200px] h-16 px-4 sm:px-6 bg-surface/90 backdrop-blur-md border border-outline-variant/20 shadow-xl shadow-primary/10 rounded-full"
           : isFilledFullWidth
             ? "top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-surface/95 backdrop-blur-md border-b border-outline-variant/20 shadow-sm"
             : "top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-transparent border-b border-transparent",
@@ -171,10 +223,10 @@ export default function Header() {
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="flex items-center gap-12">
+      <div className="flex items-center gap-6 lg:gap-12 min-w-0">
         <Link
           href="/"
-          className="flex items-center gap-3 group hover:scale-[1.02] transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
+          className="flex items-center gap-2 sm:gap-3 group hover:scale-[1.02] transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg shrink-0"
           aria-label="Rahal Home"
         >
           <Image
@@ -188,7 +240,7 @@ export default function Header() {
           />
           <span
             className={cn(
-              "font-display font-bold text-lg md:text-xl transition-all duration-300",
+              "font-display font-bold text-lg md:text-xl transition-all duration-300 whitespace-nowrap",
               isTransparent ? "text-white" : "text-on-background",
             )}
           >
@@ -196,7 +248,10 @@ export default function Header() {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-1" role="menubar">
+        <div
+          className="hidden lg:flex items-center gap-0.5 xl:gap-1"
+          role="menubar"
+        >
           {navLinks.map((link) => {
             const isActive =
               pathname === link.href ||
@@ -206,12 +261,12 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 role="menuitem"
-                className="relative py-3 px-4 group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
+                className="relative py-3 px-3 xl:px-4 group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
                 aria-current={isActive ? "page" : undefined}
               >
                 <span
                   className={cn(
-                    "text-sm font-medium transition-colors duration-300 relative z-10",
+                    "text-sm font-medium transition-colors duration-300 relative z-10 whitespace-nowrap",
                     isTransparent
                       ? isActive
                         ? "text-primary-fixed-dim"
@@ -238,43 +293,44 @@ export default function Header() {
         </div>
       </div>
 
-      <div className="hidden md:flex items-center gap-3">
-        <div
-          className="relative group/locale"
-          role="group"
-          aria-label={isAr ? "Language selection" : "اختيار اللغة"}
-        >
+      <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0">
+        {/* Locale switcher — single hover scope + fixed-size icon slots so the
+            globe and chevron rotate in place without colliding with neighbors
+            or with each other (this was the "crashed" hover glitch). */}
+        <div className="relative">
           <button
             onClick={toggleLocale}
             className={cn(
-              "group/lang flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 cursor-pointer border",
+              "group/lang flex items-center gap-1.5 xl:gap-2 px-3 xl:px-4 py-2 rounded-full text-xs font-semibold transition-colors duration-300 cursor-pointer border isolate",
               isTransparent
                 ? "border-white/20 bg-white/10 text-white/90 hover:bg-white/20 hover:border-primary-fixed-dim"
                 : "border-outline-variant/30 bg-surface-container-low/50 text-on-surface-variant hover:bg-surface-container hover:border-primary/30",
             )}
             aria-label={isAr ? "Switch to English" : "تحويل للغة العربية"}
-            aria-expanded="false"
-            aria-haspopup="listbox"
           >
-            <Globe
-              size={14}
-              className="transition-transform duration-500 group-hover/lang:rotate-180"
-              aria-hidden="true"
-            />
+            <span className="flex w-3.5 h-3.5 items-center justify-center shrink-0">
+              <Globe
+                size={14}
+                className="transition-transform duration-500 ease-out group-hover/lang:rotate-180"
+                aria-hidden="true"
+              />
+            </span>
             <span className="uppercase tracking-wider">
               {isAr ? "EN" : "AR"}
             </span>
-            <ChevronDown
-              size={12}
-              className="transition-transform duration-300 group-hover/locale:rotate-180"
-              aria-hidden="true"
-            />
+            <span className="flex w-3 h-3 items-center justify-center shrink-0">
+              <ChevronDown
+                size={12}
+                className="transition-transform duration-300 ease-out group-hover/lang:rotate-180"
+                aria-hidden="true"
+              />
+            </span>
           </button>
         </div>
 
         <ThemeToggle
           className={cn(
-            "transition-colors duration-300",
+            "transition-colors duration-300 shrink-0",
             isTransparent
               ? "text-white/90 hover:text-white hover:bg-white/10"
               : "",
@@ -285,12 +341,12 @@ export default function Header() {
           <>
             <Link
               href="/login"
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl shrink-0"
             >
               <Button
                 variant="ghost"
                 className={cn(
-                  "px-5 py-2.5 text-sm transition-colors duration-300",
+                  "px-4 xl:px-5 py-2.5 text-sm whitespace-nowrap transition-colors duration-300",
                   isTransparent
                     ? "text-white hover:bg-white/10"
                     : "text-on-surface hover:bg-surface-container",
@@ -301,13 +357,13 @@ export default function Header() {
             </Link>
             <Link
               href="/signup"
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl shrink-0"
             >
               <Button
                 variant="primary"
                 pill
                 className={cn(
-                  "text-sm px-6 py-2.5 hover:scale-[1.02] transition-transform duration-300 shadow-md hover:shadow-primary/30",
+                  "text-sm px-5 xl:px-6 py-2.5 whitespace-nowrap hover:scale-[1.02] transition-transform duration-300 shadow-md hover:shadow-primary/30",
                   isTransparent
                     ? "bg-primary-fixed text-on-primary-fixed hover:bg-primary-fixed-dim"
                     : "",
@@ -318,10 +374,10 @@ export default function Header() {
             </Link>
           </>
         ) : (
-          <div className="relative">
+          <div className="relative shrink-0" ref={dropdownRef}>
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-surface-container-high/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              onClick={() => setIsDropdownOpen((v) => !v)}
+              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-surface-container-high/50 transition-colors duration-200 cursor-pointer isolate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               aria-label={t("profile")}
               aria-expanded={isDropdownOpen}
               aria-haspopup="menu"
@@ -330,23 +386,30 @@ export default function Header() {
                 <img
                   src={userImage}
                   alt=""
-                  className="w-9 h-9 rounded-full object-cover border border-primary-fixed-dim/30 shadow-sm"
+                  className="w-9 h-9 rounded-full object-cover border border-primary-fixed-dim/30 shadow-sm shrink-0"
                   onError={() => setImageError(true)}
                   aria-hidden="true"
                 />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center text-xs font-bold font-display">
+                <div className="w-9 h-9 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center text-xs font-bold font-display shrink-0">
                   {userInitial}
                 </div>
               )}
-              <ChevronDown
-                size={14}
-                className={cn(
-                  "transition-transform duration-300",
-                  isDropdownOpen && "rotate-180",
-                )}
-                aria-hidden="true"
-              />
+              {/* Fixed-size slot keeps the chevron's rotation from nudging
+                  surrounding layout; state-driven transform (not :hover)
+                  keeps it in sync with the open/closed dropdown state. */}
+              <span className="flex w-3.5 h-3.5 items-center justify-center shrink-0">
+                <ChevronDown
+                  size={14}
+                  className="transition-transform duration-300 ease-out"
+                  style={{
+                    transform: isDropdownOpen
+                      ? "rotate(180deg)"
+                      : "rotate(0deg)",
+                  }}
+                  aria-hidden="true"
+                />
+              </span>
             </button>
 
             {isDropdownOpen && (
@@ -357,7 +420,6 @@ export default function Header() {
                   aria-hidden="true"
                 />
                 <div
-                  ref={dropdownRef}
                   role="menu"
                   className={cn(
                     "absolute mt-2.5 w-56 bg-surface border border-outline-variant/20 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl p-2 z-50 animate-fade-in text-on-surface text-start",
@@ -446,7 +508,7 @@ export default function Header() {
         )}
       </div>
 
-      <div className="flex md:hidden items-center gap-2">
+      <div className="flex lg:hidden items-center gap-1 sm:gap-2 shrink-0">
         <ThemeToggle
           className={cn(
             "transition-colors duration-300",
@@ -458,10 +520,10 @@ export default function Header() {
         <button
           onClick={toggleLocale}
           className={cn(
-            "p-1.5 text-sm font-medium cursor-pointer transition-colors duration-300 rounded-full",
+            "px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider cursor-pointer transition-colors duration-300 rounded-full border",
             isTransparent
-              ? "text-white hover:bg-white/10"
-              : "text-on-surface-variant hover:bg-surface-container",
+              ? "border-white/20 bg-white/10 text-white hover:bg-white/20"
+              : "border-outline-variant/30 bg-surface-container-low/50 text-on-surface-variant hover:bg-surface-container",
           )}
           aria-label={isAr ? "Switch to English" : "تحويل للغة العربية"}
         >
@@ -490,7 +552,7 @@ export default function Header() {
           aria-modal="true"
           aria-label="Mobile navigation menu"
           className={cn(
-            "absolute inset-inline-start-0 w-full transition-all duration-300 md:hidden flex flex-col p-6 gap-6",
+            "absolute inset-inline-start-0 w-full transition-all duration-300 lg:hidden flex flex-col p-5 sm:p-6 gap-6 max-h-[calc(100vh-6rem)] overflow-y-auto",
             isFloating
               ? "top-18 bg-surface/95 backdrop-blur-md border border-outline-variant/20 shadow-2xl rounded-3xl"
               : "top-20 bg-surface border-b border-outline-variant/20 shadow-lg",
