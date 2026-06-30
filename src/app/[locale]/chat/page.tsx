@@ -4,20 +4,21 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useQuery } from '@tanstack/react-query';
 import {
-  Bot,
-  User,
   Send,
-  Mic,
   Plus,
   History,
   Sparkles,
   Loader2,
   Compass,
   AlertCircle,
-  Paperclip,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { aiApi } from '@/lib/api/ai';
+import { usersApi } from '@/lib/api/users';
 import { tripsApi } from '@/lib/api/trips';
 import { subscriptionsApi } from '@/lib/api/subscriptions';
 import { Trip } from '@/types/trip';
@@ -49,6 +50,27 @@ export default function AITravelChatPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'error' } | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userImageError, setUserImageError] = useState(false);
+
+  // Fetch Current User
+  const { data: userData } = useQuery({
+    queryKey: ["currentUser", userId],
+    queryFn: () => usersApi.getUser(userId!),
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const currentUser = userData?.data?.user || null;
+  const userInitial = currentUser?.name
+    ? currentUser.name.charAt(0).toUpperCase()
+    : "U";
+  const userImage = currentUser?.image;
+
+  // Reset image error state when user image changes
+  useEffect(() => {
+    setUserImageError(false);
+  }, [userImage]);
 
   // References
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -78,6 +100,19 @@ export default function AITravelChatPage() {
     } else {
       setAuthLoading(false);
       fetchSidebarData();
+
+      const token = tokenMatch[2];
+      if (token) {
+        try {
+          const payload = token.split(".")[1];
+          const decoded = JSON.parse(
+            atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+          );
+          setUserId(decoded.id || decoded._id || decoded.sub || null);
+        } catch (err) {
+          console.error('Error decoding token:', err);
+        }
+      }
     }
   }, [router]);
 
@@ -203,23 +238,6 @@ export default function AITravelChatPage() {
     showToast(t('newChatStarted'));
   };
 
-  const handleMicClick = () => {
-    showToast(
-      isAr
-        ? 'الإدخال الصوتي غير مدعوم في إصدار متصفحك الحالي.'
-        : 'Voice input is not supported in this browser version.',
-      'info'
-    );
-  };
-
-  const handleAttachmentClick = () => {
-    showToast(
-      isAr
-        ? 'إرفاق الملفات متاح فقط للمشتركين في الباقة الاحترافية.'
-        : 'File attachment is only available for Pro subscribers.',
-      'info'
-    );
-  };
 
   if (authLoading) {
     return (
@@ -382,29 +400,76 @@ export default function AITravelChatPage() {
                     {/* Avatar */}
                     <div
                       className={cn(
-                        "w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md",
-                        isUser 
-                          ? "bg-primary/20 text-primary border border-primary/20" 
+                        "w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md relative overflow-hidden",
+                        isUser
+                          ? "bg-primary/20 text-primary border border-primary/20"
                           : "bg-obsidian text-primary border border-primary/10"
                       )}
                     >
                       {isUser ? (
-                        <User className="w-5 h-5" />
+                        userImage && !userImageError ? (
+                          <Image
+                            src={userImage}
+                            alt={currentUser?.name || "User"}
+                            fill
+                            className="object-cover"
+                            onError={() => setUserImageError(true)}
+                          />
+                        ) : (
+                          <span className="text-sm md:text-base font-bold text-primary">
+                            {userInitial}
+                          </span>
+                        )
                       ) : (
-                        <Bot className="w-5 h-5 text-[#C8922A]" />
+                        <Image
+                          src="/images/logo.png"
+                          alt="Rahal AI"
+                          fill
+                          className="object-contain p-1.5"
+                        />
                       )}
                     </div>
 
                     {/* Chat Bubble */}
                     <div
                       className={cn(
-                        "p-4 rounded-2xl text-sm md:text-base leading-relaxed whitespace-pre-wrap shadow-sm",
+                        "p-4 rounded-2xl text-sm md:text-base leading-relaxed shadow-sm",
                         isUser
-                          ? "bg-primary text-white rounded-tr-none"
-                          : "bg-surface border border-outline-variant/20 text-on-surface rounded-tl-none"
+                          ? "bg-primary text-white rounded-tr-none whitespace-pre-wrap"
+                          : "bg-surface border border-outline-variant/20 text-on-surface rounded-tl-none prose dark:prose-invert max-w-none"
                       )}
                     >
-                      {getMessageContent(msg, locale)}
+                      {isUser ? (
+                        getMessageContent(msg, locale)
+                      ) : (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            h1: ({ node, ...props }) => <h1 className="text-lg md:text-xl font-bold mt-4 mb-2 text-primary" {...props} />,
+                            h2: ({ node, ...props }) => <h2 className="text-base md:text-lg font-semibold mt-3.5 mb-2 text-primary" {...props} />,
+                            h3: ({ node, ...props }) => <h3 className="text-sm md:text-base font-semibold mt-3 mb-1.5 text-on-surface" {...props} />,
+                            p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed text-on-surface-variant" {...props} />,
+                            ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-3 pl-4 rtl:pl-0 rtl:pr-4 space-y-1 text-on-surface-variant" {...props} />,
+                            ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-3 pl-4 rtl:pl-0 rtl:pr-4 space-y-1 text-on-surface-variant" {...props} />,
+                            li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+                            table: ({ node, ...props }) => (
+                              <div className="overflow-x-auto my-4 w-full rounded-xl border border-outline-variant/30 shadow-sm bg-surface-container-lowest/50">
+                                <table className="min-w-full divide-y divide-outline-variant/30 text-xs md:text-sm" {...props} />
+                              </div>
+                            ),
+                            thead: ({ node, ...props }) => <thead className="bg-surface-variant/20 font-semibold" {...props} />,
+                            tbody: ({ node, ...props }) => <tbody className="divide-y divide-outline-variant/15" {...props} />,
+                            tr: ({ node, ...props }) => <tr className="hover:bg-surface-variant/5 transition-colors" {...props} />,
+                            th: ({ node, ...props }) => <th className="px-4 py-3 text-start text-on-surface-variant font-semibold border-b border-outline-variant/30" {...props} />,
+                            td: ({ node, ...props }) => <td className="px-4 py-3 text-start text-on-surface font-normal align-top leading-normal" {...props} />,
+                            blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-primary/50 pl-4 rtl:border-l-0 rtl:border-r-4 rtl:pl-0 rtl:pr-4 italic my-3 text-on-surface-variant bg-surface-variant/10 py-1 rounded-r-lg rtl:rounded-r-none rtl:rounded-l-lg" {...props} />,
+                            code: ({ node, ...props }) => <code className="bg-surface-variant/40 px-1.5 py-0.5 rounded font-mono text-xs text-primary font-medium" {...props} />,
+                            a: ({ node, ...props }) => <a className="text-primary hover:underline font-medium transition-colors" target="_blank" rel="noopener noreferrer" {...props} />,
+                          }}
+                        >
+                          {getMessageContent(msg, locale) || ''}
+                        </ReactMarkdown>
+                      )}
                     </div>
                   </div>
                 );
@@ -415,8 +480,13 @@ export default function AITravelChatPage() {
           {/* AI Typing Indicator */}
           {isLoading && (
             <div className="max-w-4xl mx-auto flex gap-3 md:gap-4 max-w-[85%] md:max-w-[80%] items-center mr-auto">
-              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-obsidian flex items-center justify-center shrink-0 shadow-md border border-primary/10">
-                <Bot className="w-5 h-5 text-[#C8922A]" />
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-obsidian flex items-center justify-center shrink-0 shadow-md border border-primary/10 relative overflow-hidden">
+                <Image
+                  src="/images/logo.png"
+                  alt="Rahal AI"
+                  fill
+                  className="object-contain p-1.5"
+                />
               </div>
               <div className="bg-surface border border-outline-variant/20 flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
                 <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -432,16 +502,6 @@ export default function AITravelChatPage() {
         {/* Bottom Chat Input Bar */}
         <div className="p-4 md:p-6 pt-0 relative z-20">
           <div className="max-w-4xl mx-auto backdrop-blur-md bg-surface/85 border border-outline-variant/30 rounded-2xl p-2 flex items-end gap-2 md:gap-3 shadow-xl focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-300">
-            {/* Attachment Button */}
-            <button
-              onClick={handleAttachmentClick}
-              className="p-3 text-on-surface-variant hover:text-primary hover:bg-surface-variant/40 rounded-xl transition-all duration-200 shrink-0 cursor-pointer"
-              type="button"
-              aria-label="Attach file"
-            >
-              <Paperclip className="w-5 h-5" />
-            </button>
-
             {/* Input textarea */}
             <textarea
               ref={textareaRef}
@@ -450,20 +510,10 @@ export default function AITravelChatPage() {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={t('placeholder')}
-              className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm md:text-base text-on-surface py-3 px-2 resize-none max-h-32 custom-scrollbar outline-none border-none placeholder-on-surface-variant/50"
+              className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm md:text-base text-on-surface py-3 px-4 resize-none max-h-32 custom-scrollbar outline-none border-none placeholder-on-surface-variant/50"
             />
 
             <div className="flex items-center gap-1 md:gap-2 px-1 pb-1">
-              {/* Voice input button */}
-              <button
-                onClick={handleMicClick}
-                className="p-3 text-on-surface-variant hover:text-primary hover:bg-surface-variant/40 rounded-xl transition-all duration-200 shrink-0 cursor-pointer"
-                type="button"
-                aria-label="Voice input"
-              >
-                <Mic className="w-5 h-5" />
-              </button>
-
               {/* Send Button */}
               <button
                 onClick={() => handleSendMessage(inputValue)}
