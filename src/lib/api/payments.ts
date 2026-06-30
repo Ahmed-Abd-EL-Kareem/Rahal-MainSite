@@ -9,7 +9,7 @@ export const paymentsApi = {
       amount: number;
       currency: string;
       bookingId: string;
-    }>>('/payments/booking/pay/checkout', { bookingId, currency }),
+    }>>('/payments/pay/checkout', { bookingId, currency }),
 
   getBookingPaymentStatus: (bookingId: string) =>
     client.get<SuccessResponse<{
@@ -20,5 +20,5 @@ export const paymentsApi = {
       paidAt: string;
       failureReason: string | null;
       bookingStatus: string;
-    }>>(`/payments/booking/status/${bookingId}`),
+    }>>(`/payments/status/${bookingId}`),
 };

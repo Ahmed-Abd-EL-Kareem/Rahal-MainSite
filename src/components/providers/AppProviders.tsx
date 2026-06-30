@@ -4,6 +4,7 @@ import React from 'react';
 import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl';
 import ThemeProvider from './ThemeProvider';
 import QueryProvider from './QueryProvider';
+import { AuthProvider } from './AuthProvider';
 
 export default function AppProviders({
   children,
@@ -17,7 +18,9 @@ export default function AppProviders({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <ThemeProvider>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryProvider>
       </ThemeProvider>
     </NextIntlClientProvider>
   );

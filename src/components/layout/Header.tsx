@@ -123,7 +123,7 @@ export default function Header() {
     { href: '/', label: t('home') },
     { href: '/destinations', label: t('destinations') },
     { href: '/hotels', label: t('hotels') },
-    ...(isLoggedIn ? [{ href: '/planner', label: t('planner') }] : []),
+    ...(isLoggedIn ? [{ href: '/trips', label: t('trips') }] : []),
     { href: '/pricing', label: t('pricing') },
     { href: '/about', label: t('about') },
   ];
