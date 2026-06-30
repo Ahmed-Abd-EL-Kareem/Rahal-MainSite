@@ -107,10 +107,11 @@ export default function Header() {
   const isFloating = isScrolled;
   const isFilledFullWidth = !isHomepage && !isScrolled;
 
-  const toggleLocale = () => {
-    const nextLocale = locale === 'en' ? 'ar' : 'en';
-    router.replace(pathname, { locale: nextLocale });
-  };
+ const toggleLocale = () => {
+   const nextLocale = locale === "en" ? "ar" : "en";
+   router.replace(pathname, { locale: nextLocale });
+   router.refresh(); // force the server to re-render with new locale, bypass Router Cache
+ };
 
   const handleLogout = () => {
     document.cookie = 'token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC';
