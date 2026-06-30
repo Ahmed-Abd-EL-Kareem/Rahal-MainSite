@@ -1,7 +1,13 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 interface User {
   id: string;
@@ -28,14 +34,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkAuth = () => {
-      if (typeof document !== 'undefined') {
+      if (typeof document !== "undefined") {
         const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
         const token = tokenMatch ? tokenMatch[2] : null;
-        
+
         if (token) {
           // Try to parse user from token (JWT) or we could fetch from API
           try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            const payload = JSON.parse(atob(token.split(".")[1]));
             setUser({
               id: payload.sub || payload.id,
               email: payload.email,
@@ -44,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           } catch {
             // If token parsing fails, just mark as authenticated
-            setUser({ id: '', email: '', name: '' });
+            setUser({ id: "", email: "", name: "" });
           }
         }
       }
@@ -61,9 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    document.cookie = 'token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+    document.cookie =
+      "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
     setUser(null);
-    router.push('/');
+    router.push("/");
     router.refresh();
   };
 
@@ -73,18 +80,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Only runs on initial mount, not on login (which is handled by login page)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      const authPaths = ['/login', '/signup', '/forgot-password', '/reset-password'];
-      const isAuthPath = authPaths.some(path => pathname.includes(path));
-      
+      const authPaths = [
+        "/login",
+        "/signup",
+        "/forgot-password",
+        "/reset-password",
+      ];
+      const isAuthPath = authPaths.some((path) => pathname.includes(path));
+
       if (isAuthPath) {
-        router.push('/');
+        router.push("/");
         router.refresh();
       }
     }
   }, []); // Run only once on mount to catch pre-existing auth
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, isAuthenticated, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -93,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

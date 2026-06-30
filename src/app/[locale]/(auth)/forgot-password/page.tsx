@@ -147,7 +147,7 @@ export default function ForgotPasswordPage() {
                 tabIndex={-1}
               >
                 <Image
-                  src="/images/logo-2.png"
+                  src="/images/logo.png"
                   alt="Rahal Heritage"
                   width={50}
                   height={50}
