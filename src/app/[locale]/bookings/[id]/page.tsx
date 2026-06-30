@@ -752,7 +752,7 @@ export default function BookingDetailsPage({ params }: PageProps) {
   // ────────────────────────────────────────────────────────────────────────────
 
   const canCancel = (bookingStatus === 'pending' || bookingStatus === 'confirmed') && isFutureBooking;
-  const needsPayment = bookingPaymentStatus === 'pending' && bookingStatus !== 'canceled';
+  const needsPayment = (bookingPaymentStatus === 'pending' || bookingPaymentStatus === 'failed') && bookingStatus !== 'canceled';
 
   // Math price breakdown
   const totalPrice = booking.totalPrice || 0;
@@ -1025,9 +1025,26 @@ export default function BookingDetailsPage({ params }: PageProps) {
           
           {/* Payment Summary Box */}
           <div className="p-6 md:p-8 bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm hover:border-outline/20 transition-all sticky top-24">
-            <h3 className="font-display font-bold text-xl text-on-surface mb-6 pb-4 border-b border-outline-variant/20 text-left rtl:text-right">
-              {td('paymentSummary')}
-            </h3>
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-outline-variant/20">
+              <h3 className="font-display font-bold text-xl text-on-surface">
+                {td('paymentSummary')}
+              </h3>
+              {bookingStatus !== 'canceled' && (
+                <span className={`font-bold text-[10px] px-2.5 py-1 rounded-full border tracking-wider uppercase ${
+                  bookingPaymentStatus === 'succeeded'
+                    ? 'bg-secondary/10 text-secondary border-secondary/20 shadow-sm'
+                    : bookingPaymentStatus === 'failed'
+                    ? 'bg-error/10 text-error border-error/20'
+                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                }`}>
+                  {bookingPaymentStatus === 'succeeded'
+                    ? t('paymentStatus.succeeded')
+                    : bookingPaymentStatus === 'failed'
+                    ? t('paymentStatus.failed')
+                    : t('paymentStatus.pending')}
+                </span>
+              )}
+            </div>
 
             {/* Prices */}
             <div className="space-y-4 mb-8 text-sm leading-relaxed text-left rtl:text-right">

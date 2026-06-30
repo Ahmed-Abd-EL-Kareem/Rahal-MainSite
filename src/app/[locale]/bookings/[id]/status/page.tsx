@@ -194,7 +194,7 @@ export default function BookingStatusPage({ params }: PageProps) {
   const checkInDate = new Date(booking.checkIn);
   const isFutureBooking = checkInDate > new Date();
   const canCancel = (booking.status === 'pending' || booking.status === 'confirmed') && isFutureBooking;
-  const needsPayment = booking.paymentStatus === 'pending' && booking.status !== 'canceled';
+  const needsPayment = (booking.paymentStatus === 'pending' || booking.paymentStatus === 'failed') && booking.status !== 'canceled';
 
   // Dynamic Timeline logic:
   const isCanceled = booking.status === 'canceled';
@@ -458,14 +458,18 @@ export default function BookingStatusPage({ params }: PageProps) {
               <h3 className="font-display font-bold text-lg text-on-surface">
                 {t('detail.paymentSummary')}
               </h3>
-              <span className={`font-bold text-[10px] px-2.5 py-1 rounded-full border ${
+              <span className={`font-bold text-[10px] px-2.5 py-1 rounded-full border tracking-wider uppercase ${
                 booking.paymentStatus === 'succeeded'
-                  ? 'bg-success/10 text-success border-success/20'
-                  : 'bg-primary/10 text-primary border-primary/20'
+                  ? 'bg-secondary/10 text-secondary border-secondary/20 shadow-sm'
+                  : booking.paymentStatus === 'failed'
+                  ? 'bg-error/10 text-error border-error/20'
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
               }`}>
-                {booking.paymentStatus === 'succeeded' 
-                  ? t('statusPage.paidBadge') 
-                  : t('statusPage.unpaidBadge')}
+                {booking.paymentStatus === 'succeeded'
+                  ? t('paymentStatus.succeeded')
+                  : booking.paymentStatus === 'failed'
+                  ? t('paymentStatus.failed')
+                  : t('paymentStatus.pending')}
               </span>
             </div>
 

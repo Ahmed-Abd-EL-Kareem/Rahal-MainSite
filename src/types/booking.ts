@@ -20,7 +20,7 @@ export interface Booking {
   totalPrice: number;
   currency: string;
   status: 'pending' | 'confirmed' | 'canceled' | 'completed';
-  paymentStatus: 'pending' | 'succeeded' | 'failed';
+  paymentStatus: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded';
   createdAt?: string;
   updatedAt?: string;
 }

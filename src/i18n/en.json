@@ -319,9 +319,9 @@
       "completed": "COMPLETED"
     },
     "paymentStatus": {
-      "pending": "UNPAID",
-      "succeeded": "PAID",
-      "failed": "FAILED"
+      "pending": "Pending Payment",
+      "succeeded": "Paid",
+      "failed": "Unpaid"
     },
     "aiAssistant": {
       "title": "Rahal AI Assistant",
@@ -433,7 +433,15 @@
       "viewBooking": "View My Booking",
       "backToHome": "Back to Home",
       "aiInsight": "Rahal AI: I've added a custom sunset felucca ride to your itinerary.",
-      "rightsReserved": "© 2024 Rahal Travel AI. All rights reserved."
+      "rightsReserved": "© 2024 Rahal Travel AI. All rights reserved.",
+      "loadingTitle": "Verifying Payment",
+      "loadingSubtitle": "Please wait while we verify your transaction with Stripe. Do not refresh or close this page.",
+      "failedTitle": "Payment Failed",
+      "failedSubtitle": "We could not verify your payment. Please try again or contact support if the issue persists.",
+      "retryPayment": "Retry Payment",
+      "pendingTitle": "Waiting for Confirmation",
+      "pendingSubtitle": "Your transaction is currently pending confirmation from your bank or payment provider.",
+      "refreshStatus": "Refresh Status"
     }
   }
 }

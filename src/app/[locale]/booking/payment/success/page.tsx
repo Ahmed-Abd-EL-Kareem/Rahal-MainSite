@@ -3,8 +3,8 @@
 import React, { useEffect, useState, use, useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Check, Sparkles, MapPin, Calendar, Users, ArrowLeft } from 'lucide-react';
-import { useBookingDetailsQuery } from '@/hooks/useBookings';
+import { Loader2, Sparkles, MapPin, AlertCircle, Clock } from 'lucide-react';
+import { useBookingDetailsQuery, useCreateCheckoutMutation } from '@/hooks/useBookings';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { getLocalized, type LocalizedString } from '@/lib/utils/localized';
@@ -22,11 +22,14 @@ export default function PaymentSuccessPage({ params }: PageProps) {
   const bookingId = searchParams.get('booking_id') || '';
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { data: response, isLoading, isError } = useBookingDetailsQuery(bookingId);
+  const { data: response, isLoading, isError, refetch, isFetching } = useBookingDetailsQuery(bookingId);
+  const checkoutMutation = useCreateCheckoutMutation();
   const booking = response?.data;
 
-  // Particle Canvas Confetti Effect
+  // Particle Canvas Confetti Effect (only used in succeeded state)
   useEffect(() => {
+    if (!booking || booking.paymentStatus !== 'succeeded') return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const activeCanvas = canvas;
@@ -114,7 +117,7 @@ export default function PaymentSuccessPage({ params }: PageProps) {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [booking]);
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
@@ -143,32 +146,127 @@ export default function PaymentSuccessPage({ params }: PageProps) {
     }
   };
 
+  const handleRetryPayment = async () => {
+    try {
+      await checkoutMutation.mutateAsync(bookingId);
+    } catch (err) {
+      console.error('Failed to retry payment:', err);
+    }
+  };
+
   const isAr = locale === 'ar';
 
-  if (isLoading) {
+  // 1. Loading Verification State
+  if (isLoading || (booking && booking.paymentStatus === 'processing')) {
     return (
-      <main className="container mx-auto px-margin-mobile py-32 flex flex-col items-center justify-center min-h-[60vh] z-10">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
-          <p className="text-on-surface-variant font-medium text-sm">
-            {t('loading')}
+      <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
+        <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
+          <Loader2 className="w-16 h-16 text-primary animate-spin mb-6" />
+          <h1 className="font-display font-bold text-2xl md:text-3xl text-on-background mb-4">
+            {t('paymentSuccess.loadingTitle')}
+          </h1>
+          <p className="text-sm md:text-base text-on-surface-variant max-w-md mx-auto leading-relaxed">
+            {t('paymentSuccess.loadingSubtitle')}
           </p>
         </div>
       </main>
     );
   }
 
+  // Error fetching state
   if (isError || !booking) {
     return (
       <main className="container mx-auto px-margin-mobile py-32 flex flex-col items-center justify-center min-h-[60vh] z-10 text-center">
-        <p className="text-error font-semibold mb-4">{t('errorStateTitle')}</p>
-        <Link href="/bookings">
+        <div className="bg-error/10 p-4 rounded-full text-error mb-4">
+          <AlertCircle size={32} />
+        </div>
+        <p className="text-error font-semibold mb-6">{t('errorStateTitle')}</p>
+        <Link href={`/${locale}/bookings`}>
           <Button variant="primary">{t('statusPage.returnToBookings')}</Button>
         </Link>
       </main>
     );
   }
 
+  // 2. Failed State
+  if (booking.paymentStatus === 'failed') {
+    return (
+      <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
+        <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
+          <div className="relative mb-8 flex items-center justify-center">
+            <div className="absolute w-24 h-24 bg-error/10 rounded-full scale-125 animate-pulse"></div>
+            <svg className="w-24 h-24 text-error" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M18 6L6 18M6 6l12 12"></path>
+            </svg>
+          </div>
+
+          <h1 className="font-display font-bold text-3xl md:text-4xl text-on-background mb-4">
+            {t('paymentSuccess.failedTitle')}
+          </h1>
+          <p className="text-sm md:text-base text-on-surface-variant mb-10 max-w-md mx-auto leading-relaxed">
+            {t('paymentSuccess.failedSubtitle')}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+            <Button
+              variant="primary"
+              onClick={handleRetryPayment}
+              disabled={checkoutMutation.isPending}
+              className="px-8 py-3.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
+            >
+              {checkoutMutation.isPending && <Loader2 size={16} className="animate-spin" />}
+              {t('paymentSuccess.retryPayment')}
+            </Button>
+            <Link href={`/${locale}`}>
+              <Button variant="secondary" className="px-8 py-3.5 rounded-xl font-bold text-sm w-full">
+                {t('paymentSuccess.backToHome')}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // 3. Pending verification state
+  if (booking.paymentStatus === 'pending') {
+    return (
+      <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
+        <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
+          <div className="relative mb-8 flex items-center justify-center">
+            <div className="absolute w-24 h-24 bg-amber-500/10 rounded-full scale-125 animate-pulse"></div>
+            <Clock className="w-16 h-16 text-amber-600 dark:text-amber-400 animate-pulse" />
+          </div>
+
+          <h1 className="font-display font-bold text-3xl md:text-4xl text-on-background mb-4">
+            {t('paymentSuccess.pendingTitle')}
+          </h1>
+          <p className="text-sm md:text-base text-on-surface-variant mb-10 max-w-md mx-auto leading-relaxed">
+            {t('paymentSuccess.pendingSubtitle')}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+            <Button
+              variant="primary"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="px-8 py-3.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
+            >
+              {isFetching && <Loader2 size={16} className="animate-spin" />}
+              {t('paymentSuccess.refreshStatus')}
+            </Button>
+            <Link href={`/${locale}`}>
+              <Button variant="secondary" className="px-8 py-3.5 rounded-xl font-bold text-sm w-full">
+                {t('paymentSuccess.backToHome')}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // 4. Succeeded state
   const hotelObj = typeof booking.hotel === 'object' ? booking.hotel : null;
   const hotelName = hotelObj ? (locale === 'ar' ? hotelObj.name.ar : hotelObj.name.en) : 'Hotel';
   const hotelCity = getLocalized(hotelObj?.city as LocalizedString, locale);
@@ -278,12 +376,12 @@ export default function PaymentSuccessPage({ params }: PageProps) {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 w-full">
-          <Link href={`/bookings/${booking._id}/status`} className="flex-grow">
+          <Link href={`/${locale}/bookings/${booking._id}/status`} className="flex-grow">
             <Button variant="primary" fullWidth className="py-3.5 rounded-xl font-bold text-sm shadow-md">
               {t('paymentSuccess.viewBooking')}
             </Button>
           </Link>
-          <Link href="/" className="flex-grow">
+          <Link href={`/${locale}`} className="flex-grow">
             <Button variant="secondary" fullWidth className="py-3.5 rounded-xl font-bold text-sm">
               {t('paymentSuccess.backToHome')}
             </Button>

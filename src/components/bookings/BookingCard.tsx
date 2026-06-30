@@ -68,7 +68,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
   const canCancel = (bookingStatus === 'pending' || bookingStatus === 'confirmed') && isFutureBooking;
 
   // Condition to check if payment is required
-  const needsPayment = bookingPaymentStatus === 'pending' && bookingStatus !== 'canceled';
+  const needsPayment = (bookingPaymentStatus === 'pending' || bookingPaymentStatus === 'failed') && bookingStatus !== 'canceled';
 
   const handleCancel = async () => {
     try {
@@ -253,7 +253,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
                     <button 
                       onClick={handlePayNow}
                       disabled={checkoutMutation.isPending}
-                      className="px-4 py-2 bg-primary text-white hover:bg-primary/90 transition-all active:scale-95 rounded-lg font-semibold text-xs flex items-center gap-1.5 min-w-[95px] shadow-sm hover:shadow"
+                      className="px-4 py-2 bg-primary text-white hover:bg-primary/90 transition-all active:scale-95 rounded-lg font-semibold text-xs flex items-center gap-1.5 min-w-[95px] shadow-sm hover:shadow text-center"
                     >
                       {checkoutMutation.isPending ? (
                         <Loader2 size={14} className="animate-spin" />

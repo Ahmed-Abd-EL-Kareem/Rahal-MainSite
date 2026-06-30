@@ -9,12 +9,29 @@ export function useMyBookingsQuery() {
   });
 }
 
+// export function useBookingDetailsQuery(id: string) {
+//   return useQuery({
+//     queryKey: ['bookingDetails', id],
+//     queryFn: () => bookingsAxiosService.getBookingDetails(id),
+//     enabled: !!id,
+//     staleTime: 60 * 1000, // 1 minute
+//   });
+// }
 export function useBookingDetailsQuery(id: string) {
   return useQuery({
     queryKey: ['bookingDetails', id],
     queryFn: () => bookingsAxiosService.getBookingDetails(id),
     enabled: !!id,
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 0, // allow refetch while polling
+    refetchInterval: (query) => {
+      const status = query.state.data?.data?.paymentStatus;
+      // فضل تعمل polling لحد ما توصل لحالة نهائية
+      if (status === 'processing' || status === 'pending') {
+        return 3000; // كل 3 ثواني
+      }
+      return false; // وقف الـ polling عند succeeded / failed / مفيش بيانات
+    },
+    refetchIntervalInBackground: true,
   });
 }
 

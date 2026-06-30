@@ -28,7 +28,7 @@ export default function BookingStatusPage({ params }: PageProps) {
   const bookingId = searchParams.get('bookingId') || '';
   const statusParam = searchParams.get('status') || 'success';
 
-  const [simulatedLoading, setSimulatedLoading] = useState(false);
+  const [simulatedLoading, setSimulatedLoading] = useState(true);
   const [countdown, setCountdown] = useState(600); // 10 minutes
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'info'>('info');
@@ -48,22 +48,46 @@ export default function BookingStatusPage({ params }: PageProps) {
     }, 3500);
   };
 
-  // Countdown timer for Canceled/Failed state
-  useEffect(() => {
-    if (statusParam === 'failed') {
-      const timer = setInterval(() => {
-        setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [statusParam]);
+  // // Countdown timer for Canceled/Failed state
+  // useEffect(() => {
+  //   if (statusParam === 'failed') {
+  //     const timer = setInterval(() => {
+  //       setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+  //     }, 1000);
+  //     return () => clearInterval(timer);
+  //   }
+  // }, [statusParam]);
 
-  // Confetti trigger for Success state
-  useEffect(() => {
-    if (statusParam === 'success' && !simulatedLoading && !apiLoading && booking) {
-      createConfetti();
-    }
-  }, [statusParam, simulatedLoading, apiLoading, booking]);
+  // // Confetti trigger for Success state
+  // useEffect(() => {
+  //   if (statusParam === 'success' && !simulatedLoading && !apiLoading && booking) {
+  //     createConfetti();
+  //   }
+  // }, [statusParam, simulatedLoading, apiLoading, booking]);
+// لتشغيل محاكاة التحميل والدفع ثم الانتقال لصفحة النجاح
+useEffect(() => {
+  if (statusParam === 'loading') {
+    setSimulatedLoading(true);
+    const timer = setTimeout(() => {
+      setSimulatedLoading(false);
+      // بعد ثانيتين ونصف سيتم تحويلك لصفحة النجاح لتشاهديها
+      router.push(`/booking-status?status=success&bookingId=${bookingId}`);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }
+}, [statusParam, bookingId, router]);
+
+// العداد التنازلي لحالة الفشل
+useEffect(() => {
+  if (statusParam === 'failed') {
+    const timer = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }
+}, [statusParam]);
+
+
 
   const formatCountdown = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
