@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { client } from './client';
 import { Trip } from '@/types/trip';
 import { SuccessResponse } from '@/types/api';

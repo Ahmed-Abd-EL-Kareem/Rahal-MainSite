@@ -7,13 +7,22 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
-import { Globe, Menu, X, User, Heart, LogOut, ChevronDown } from 'lucide-react';
+import {
+  Globe,
+  Menu,
+  X,
+  User,
+  Heart,
+  LogOut,
+  ChevronDown,
+  Hotel,
+  MapPinHouse,
+} from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils/cn';
 import Button from '@/components/ui/Button';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { usersApi } from '@/lib/api/users';
-
 export default function Header() {
   const t = useTranslations('common.nav');
   const locale = useLocale();
@@ -152,12 +161,12 @@ export default function Header() {
   return (
     <nav
       className={cn(
-        'fixed z-50 transition-all duration-500 ease-in-out flex items-center justify-between',
+        "fixed z-50 transition-all duration-500 ease-in-out flex items-center justify-between",
         isFloating
-          ? 'top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-[1200px] h-16 px-6 bg-surface/90 backdrop-blur-md border border-outline-variant/20 shadow-xl shadow-primary/10 rounded-full'
+          ? "top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] max-w-[1200px] h-16 px-6 bg-surface/90 backdrop-blur-md border border-outline-variant/20 shadow-xl shadow-primary/10 rounded-full"
           : isFilledFullWidth
-          ? 'top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-surface/95 backdrop-blur-md border-b border-outline-variant/20 shadow-sm'
-          : 'top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-transparent border-b border-transparent'
+            ? "top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-surface/95 backdrop-blur-md border-b border-outline-variant/20 shadow-sm"
+            : "top-0 left-0 w-full h-20 px-margin-mobile md:px-margin-desktop bg-transparent border-b border-transparent",
       )}
       role="navigation"
       aria-label="Main navigation"
@@ -179,40 +188,48 @@ export default function Header() {
           />
           <span
             className={cn(
-              'font-display font-bold text-lg md:text-xl transition-all duration-300',
-              isTransparent ? 'text-white' : 'text-on-background'
+              "font-display font-bold text-lg md:text-xl transition-all duration-300",
+              isTransparent ? "text-white" : "text-on-background",
             )}
           >
-            {locale === 'ar' ? 'رحّال' : 'Rahal'}
+            {locale === "ar" ? "رحّال" : "Rahal"}
           </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1" role="menubar">
           {navLinks.map((link) => {
-            const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+            const isActive =
+              pathname === link.href ||
+              (link.href !== "/" && pathname.startsWith(link.href));
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 role="menuitem"
                 className="relative py-3 px-4 group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
-                aria-current={isActive ? 'page' : undefined}
+                aria-current={isActive ? "page" : undefined}
               >
                 <span
                   className={cn(
-                    'text-sm font-medium transition-colors duration-300 relative z-10',
+                    "text-sm font-medium transition-colors duration-300 relative z-10",
                     isTransparent
-                      ? (isActive ? 'text-primary-fixed-dim' : 'text-white/90 group-hover:text-primary-fixed-dim')
-                      : (isActive ? 'text-primary font-semibold' : 'text-on-surface-variant group-hover:text-primary')
+                      ? isActive
+                        ? "text-primary-fixed-dim"
+                        : "text-white/90 group-hover:text-primary-fixed-dim"
+                      : isActive
+                        ? "text-primary font-semibold"
+                        : "text-on-surface-variant group-hover:text-primary",
                   )}
                 >
                   {link.label}
                 </span>
                 <span
                   className={cn(
-                    'absolute bottom-2 inset-x-2 h-[2px] transition-transform duration-300 origin-center rounded-full',
-                    isTransparent ? 'bg-primary-fixed-dim' : 'bg-primary',
-                    isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+                    "absolute bottom-2 inset-x-2 h-[2px] transition-transform duration-300 origin-center rounded-full",
+                    isTransparent ? "bg-primary-fixed-dim" : "bg-primary",
+                    isActive
+                      ? "scale-x-100"
+                      : "scale-x-0 group-hover:scale-x-100",
                   )}
                 />
               </Link>
@@ -222,55 +239,81 @@ export default function Header() {
       </div>
 
       <div className="hidden md:flex items-center gap-3">
-        <div className="relative group/locale" role="group" aria-label={isAr ? 'Language selection' : 'اختيار اللغة'}>
+        <div
+          className="relative group/locale"
+          role="group"
+          aria-label={isAr ? "Language selection" : "اختيار اللغة"}
+        >
           <button
             onClick={toggleLocale}
             className={cn(
-              'group/lang flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 cursor-pointer border',
+              "group/lang flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 cursor-pointer border",
               isTransparent
-                ? 'border-white/20 bg-white/10 text-white/90 hover:bg-white/20 hover:border-primary-fixed-dim'
-                : 'border-outline-variant/30 bg-surface-container-low/50 text-on-surface-variant hover:bg-surface-container hover:border-primary/30'
+                ? "border-white/20 bg-white/10 text-white/90 hover:bg-white/20 hover:border-primary-fixed-dim"
+                : "border-outline-variant/30 bg-surface-container-low/50 text-on-surface-variant hover:bg-surface-container hover:border-primary/30",
             )}
-            aria-label={isAr ? 'Switch to English' : 'تحويل للغة العربية'}
+            aria-label={isAr ? "Switch to English" : "تحويل للغة العربية"}
             aria-expanded="false"
             aria-haspopup="listbox"
           >
-            <Globe size={14} className="transition-transform duration-500 group-hover/lang:rotate-180" aria-hidden="true" />
-            <span className="uppercase tracking-wider">{isAr ? 'EN' : 'AR'}</span>
-            <ChevronDown size={12} className="transition-transform duration-300 group-hover/locale:rotate-180" aria-hidden="true" />
+            <Globe
+              size={14}
+              className="transition-transform duration-500 group-hover/lang:rotate-180"
+              aria-hidden="true"
+            />
+            <span className="uppercase tracking-wider">
+              {isAr ? "EN" : "AR"}
+            </span>
+            <ChevronDown
+              size={12}
+              className="transition-transform duration-300 group-hover/locale:rotate-180"
+              aria-hidden="true"
+            />
           </button>
         </div>
 
         <ThemeToggle
           className={cn(
-            'transition-colors duration-300',
-            isTransparent ? 'text-white/90 hover:text-white hover:bg-white/10' : ''
+            "transition-colors duration-300",
+            isTransparent
+              ? "text-white/90 hover:text-white hover:bg-white/10"
+              : "",
           )}
         />
 
         {!isLoggedIn ? (
           <>
-            <Link href="/login" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl">
+            <Link
+              href="/login"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
+            >
               <Button
                 variant="ghost"
                 className={cn(
-                  'px-5 py-2.5 text-sm transition-colors duration-300',
-                  isTransparent ? 'text-white hover:bg-white/10' : 'text-on-surface hover:bg-surface-container'
+                  "px-5 py-2.5 text-sm transition-colors duration-300",
+                  isTransparent
+                    ? "text-white hover:bg-white/10"
+                    : "text-on-surface hover:bg-surface-container",
                 )}
               >
-                {t('login')}
+                {t("login")}
               </Button>
             </Link>
-            <Link href="/signup" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl">
+            <Link
+              href="/signup"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-xl"
+            >
               <Button
                 variant="primary"
                 pill
                 className={cn(
-                  'text-sm px-6 py-2.5 hover:scale-[1.02] transition-transform duration-300 shadow-md hover:shadow-primary/30',
-                  isTransparent ? 'bg-primary-fixed text-on-primary-fixed hover:bg-primary-fixed-dim' : ''
+                  "text-sm px-6 py-2.5 hover:scale-[1.02] transition-transform duration-300 shadow-md hover:shadow-primary/30",
+                  isTransparent
+                    ? "bg-primary-fixed text-on-primary-fixed hover:bg-primary-fixed-dim"
+                    : "",
                 )}
               >
-                {t('signup')}
+                {t("signup")}
               </Button>
             </Link>
           </>
@@ -279,7 +322,7 @@ export default function Header() {
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-2 p-1.5 rounded-full hover:bg-surface-container-high/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              aria-label={t('profile')}
+              aria-label={t("profile")}
               aria-expanded={isDropdownOpen}
               aria-haspopup="menu"
             >
@@ -296,7 +339,14 @@ export default function Header() {
                   {userInitial}
                 </div>
               )}
-              <ChevronDown size={14} className={cn('transition-transform duration-300', isDropdownOpen && 'rotate-180')} aria-hidden="true" />
+              <ChevronDown
+                size={14}
+                className={cn(
+                  "transition-transform duration-300",
+                  isDropdownOpen && "rotate-180",
+                )}
+                aria-hidden="true"
+              />
             </button>
 
             {isDropdownOpen && (
@@ -311,12 +361,18 @@ export default function Header() {
                   role="menu"
                   className={cn(
                     "absolute mt-2.5 w-56 bg-surface border border-outline-variant/20 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl p-2 z-50 animate-fade-in text-on-surface text-start",
-                    isAr ? "inset-inline-start-0 origin-top-start left-0" : "inset-inline-end-0 origin-top-end right-0"
+                    isAr
+                      ? "inset-inline-start-0 origin-top-start left-0"
+                      : "inset-inline-end-0 origin-top-end right-0",
                   )}
                 >
                   <div className="px-3 py-2.5 border-b border-outline-variant/10 mb-1.5">
-                    <p className="text-xs font-bold text-on-surface truncate">{currentUser?.name || 'Explorer'}</p>
-                    <p className="text-[10px] text-on-surface-variant truncate">{currentUser?.email || ''}</p>
+                    <p className="text-xs font-bold text-on-surface truncate">
+                      {currentUser?.name || "Explorer"}
+                    </p>
+                    <p className="text-[10px] text-on-surface-variant truncate">
+                      {currentUser?.email || ""}
+                    </p>
                   </div>
 
                   <Link
@@ -325,11 +381,15 @@ export default function Header() {
                     role="menuitem"
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer",
-                      isAr ? "flex-row-reverse" : ""
+                      isAr ? "flex-row-reverse" : "",
                     )}
                   >
-                    <User size={16} className="shrink-0 text-on-surface-variant/60" aria-hidden="true" />
-                    <span>{t('profile')}</span>
+                    <User
+                      size={16}
+                      className="shrink-0 text-on-surface-variant/60"
+                      aria-hidden="true"
+                    />
+                    <span>{t("profile")}</span>
                   </Link>
 
                   <Link
@@ -338,23 +398,46 @@ export default function Header() {
                     role="menuitem"
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer",
-                      isAr ? "flex-row-reverse" : ""
+                      isAr ? "flex-row-reverse" : "",
                     )}
                   >
-                    <Heart size={16} className="shrink-0 text-on-surface-variant/60" aria-hidden="true" />
-                    <span>{t('favorites')}</span>
+                    <Hotel
+                      size={16}
+                      className="shrink-0 text-on-surface-variant/60"
+                      aria-hidden="true"
+                    />
+                    <span>{t("favorites")}</span>
+                  </Link>
+
+                  <Link
+                    href="/favorites/destinations"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer",
+                      locale === "ar" ? "flex-row-reverse" : "",
+                    )}
+                  >
+                    <MapPinHouse
+                      size={16}
+                      className="shrink-0 text-on-surface-variant/60"
+                      aria-hidden="true"
+                    />
+                    <span>{t("favoriteDestinations")}</span>
                   </Link>
 
                   <button
-                    onClick={() => { setIsDropdownOpen(false); handleLogout(); }}
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      handleLogout();
+                    }}
                     role="menuitem"
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-error hover:bg-error/5 rounded-xl transition-colors cursor-pointer border-none bg-transparent",
-                      isAr ? "flex-row-reverse" : ""
+                      isAr ? "flex-row-reverse" : "",
                     )}
                   >
                     <LogOut size={16} className="shrink-0" aria-hidden="true" />
-                    <span>{t('logout')}</span>
+                    <span>{t("logout")}</span>
                   </button>
                 </div>
               </>
@@ -366,27 +449,33 @@ export default function Header() {
       <div className="flex md:hidden items-center gap-2">
         <ThemeToggle
           className={cn(
-            'transition-colors duration-300',
-            isTransparent ? 'text-white/90 hover:text-white hover:bg-white/10' : ''
+            "transition-colors duration-300",
+            isTransparent
+              ? "text-white/90 hover:text-white hover:bg-white/10"
+              : "",
           )}
         />
         <button
           onClick={toggleLocale}
           className={cn(
-            'p-1.5 text-sm font-medium cursor-pointer transition-colors duration-300 rounded-full',
-            isTransparent ? 'text-white hover:bg-white/10' : 'text-on-surface-variant hover:bg-surface-container'
+            "p-1.5 text-sm font-medium cursor-pointer transition-colors duration-300 rounded-full",
+            isTransparent
+              ? "text-white hover:bg-white/10"
+              : "text-on-surface-variant hover:bg-surface-container",
           )}
-          aria-label={isAr ? 'Switch to English' : 'تحويل للغة العربية'}
+          aria-label={isAr ? "Switch to English" : "تحويل للغة العربية"}
         >
-          {isAr ? 'EN' : 'AR'}
+          {isAr ? "EN" : "AR"}
         </button>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={cn(
-            'p-2 cursor-pointer transition-colors duration-300 rounded-full',
-            isTransparent ? 'text-white hover:bg-white/10' : 'text-on-surface-variant hover:bg-surface-container'
+            "p-2 cursor-pointer transition-colors duration-300 rounded-full",
+            isTransparent
+              ? "text-white hover:bg-white/10"
+              : "text-on-surface-variant hover:bg-surface-container",
           )}
-          aria-label={isMobileMenuOpen ? t('closeMenu') : t('openMenu')}
+          aria-label={isMobileMenuOpen ? t("closeMenu") : t("openMenu")}
           aria-expanded={isMobileMenuOpen}
           aria-controls="mobile-menu"
         >
@@ -401,23 +490,27 @@ export default function Header() {
           aria-modal="true"
           aria-label="Mobile navigation menu"
           className={cn(
-            'absolute inset-inline-start-0 w-full transition-all duration-300 md:hidden flex flex-col p-6 gap-6',
+            "absolute inset-inline-start-0 w-full transition-all duration-300 md:hidden flex flex-col p-6 gap-6",
             isFloating
-              ? 'top-18 bg-surface/95 backdrop-blur-md border border-outline-variant/20 shadow-2xl rounded-3xl'
-              : 'top-20 bg-surface border-b border-outline-variant/20 shadow-lg'
+              ? "top-18 bg-surface/95 backdrop-blur-md border border-outline-variant/20 shadow-2xl rounded-3xl"
+              : "top-20 bg-surface border-b border-outline-variant/20 shadow-lg",
           )}
         >
           <div className="flex flex-col gap-3">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+              const isActive =
+                pathname === link.href ||
+                (link.href !== "/" && pathname.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    'text-base font-medium py-3 border-b border-outline-variant/10 transition-colors duration-200',
-                    isActive ? 'text-primary font-semibold' : 'text-on-surface hover:text-primary'
+                    "text-base font-medium py-3 border-b border-outline-variant/10 transition-colors duration-200",
+                    isActive
+                      ? "text-primary font-semibold"
+                      : "text-on-surface hover:text-primary",
                   )}
                 >
                   {link.label}
@@ -428,14 +521,31 @@ export default function Header() {
           <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant/10">
             {!isLoggedIn ? (
               <>
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                  <Button variant="ghost" fullWidth className="text-on-surface py-3 rounded-xl font-semibold">
-                    {t('login')}
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full"
+                >
+                  <Button
+                    variant="ghost"
+                    fullWidth
+                    className="text-on-surface py-3 rounded-xl font-semibold"
+                  >
+                    {t("login")}
                   </Button>
                 </Link>
-                <Link href="/signup" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                  <Button variant="primary" pill fullWidth className="py-3 rounded-xl font-semibold">
-                    {t('signup')}
+                <Link
+                  href="/signup"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full"
+                >
+                  <Button
+                    variant="primary"
+                    pill
+                    fullWidth
+                    className="py-3 rounded-xl font-semibold"
+                  >
+                    {t("signup")}
                   </Button>
                 </Link>
               </>
@@ -446,7 +556,7 @@ export default function Header() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
                     "flex items-center gap-3 p-3 bg-surface-container rounded-xl border border-outline-variant/10 text-start",
-                    isAr ? "flex-row-reverse" : ""
+                    isAr ? "flex-row-reverse" : "",
                   )}
                 >
                   {userImage && !imageError ? (
@@ -463,30 +573,66 @@ export default function Header() {
                     </div>
                   )}
                   <div className="truncate flex-1">
-                    <p className="text-sm font-bold text-on-surface truncate">{currentUser?.name || 'Explorer'}</p>
-                    <p className="text-xs text-on-surface-variant truncate">{currentUser?.email || ''}</p>
+                    <p className="text-sm font-bold text-on-surface truncate">
+                      {currentUser?.name || "Explorer"}
+                    </p>
+                    <p className="text-xs text-on-surface-variant truncate">
+                      {currentUser?.email || ""}
+                    </p>
                   </div>
                 </Link>
 
-                <Link href="/account" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                  <Button variant="secondary" fullWidth className="py-3 rounded-xl font-semibold">
-                    {t('profile')}
+                <Link
+                  href="/account"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full"
+                >
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    className="py-3 rounded-xl font-semibold"
+                  >
+                    {t("profile")}
                   </Button>
                 </Link>
 
-                <Link href="/favorites" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                  <Button variant="secondary" fullWidth className="py-3 rounded-xl font-semibold">
-                    {t('favorites')}
+                <Link
+                  href="/favorites"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full"
+                >
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    className="py-3 rounded-xl font-semibold"
+                  >
+                    {t("favorites")}
+                  </Button>
+                </Link>
+                <Link
+                  href="/favorites/destinations"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full"
+                >
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    className="py-2.5 rounded-xl font-semibold"
+                  >
+                    {t("favoriteDestinations")}
                   </Button>
                 </Link>
 
                 <Button
                   variant="ghost"
                   fullWidth
-                  onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }}
-                  className="text-error hover:bg-error/5 py-3 rounded-xl font-semibold border-none bg-transparent"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="text-error hover:bg-error/5 py-2.5 rounded-xl font-semibold border-none bg-transparent"
                 >
-                  {t('logout')}
+                  {t("logout")}
                 </Button>
               </div>
             )}
