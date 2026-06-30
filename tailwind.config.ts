@@ -82,6 +82,11 @@ export default {
         background: "var(--color-background)",
         "on-background": "var(--color-on-background)",
         "surface-variant": "var(--color-surface-variant)",
+        "pharaoh-gold": "var(--color-pharaoh-gold)",
+        "nile-blue": "var(--color-nile-blue)",
+        "papyrus-green": "var(--color-papyrus-green)",
+        "obsidian": "var(--color-obsidian)",
+        "sand-dark": "var(--color-sand-dark)",
       },
       fontFamily: {
         display: ["var(--font-playfair)", "serif"],

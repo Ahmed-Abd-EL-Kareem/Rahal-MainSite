@@ -46,7 +46,11 @@ export default function Footer() {
     '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password', '/ar/verify-otp'
   ].some(p => pathname === p || pathname.startsWith(p + '/'));
 
-  if (isAuthPage) return null;
+  const isChatPage = [
+    '/chat', '/en/chat', '/ar/chat'
+  ].some(p => pathname === p || pathname.startsWith(p + '/'));
+
+  if (isAuthPage || isChatPage) return null;
 
   const quickLinks = [
     { href: '/destinations', label: navT('destinations') },

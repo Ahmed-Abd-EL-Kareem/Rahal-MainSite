@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// import React from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Check, Star } from 'lucide-react';
@@ -11,10 +11,22 @@ import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 
 export default function PricingSection() {
-  const t = useTranslations('home.pricing');
+  const t = useTranslations('pricing');
 
-  const freeFeatures = [t('free.f1'), t('free.f2'), t('free.f3')];
-  const proFeatures = [t('pro.f1'), t('pro.f2'), t('pro.f3'), t('pro.f4')];
+  const freeFeatures = [
+    t('wanderer.features.0'),
+    t('wanderer.features.1'),
+    t('wanderer.features.2'),
+    t('wanderer.features.3')
+  ];
+
+  const proFeatures = [
+    t('pro.features.0'),
+    t('pro.features.1'),
+    t('pro.features.2'),
+    t('pro.features.3'),
+    t('pro.features.4')
+  ];
 
   return (
     <section className="py-24 px-margin-mobile md:px-margin-desktop max-w-container mx-auto">
@@ -28,15 +40,15 @@ export default function PricingSection() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl mx-auto items-stretch">
-        {/* Free Plan */}
+        {/* Free Plan (Wanderer) */}
         <Card className="p-8 md:p-10 rounded-2xl border-2 border-outline-variant/30 hover:border-outline-variant/60 bg-surface-container-lowest flex flex-col h-full">
           <Heading level={3} variant="headline-sm" className="mb-2">
-            {t('free.title')}
+            {t('wanderer.title')}
           </Heading>
           <div className="text-4xl font-bold text-on-surface mb-6 flex items-baseline gap-1">
-            {t('free.price')}{' '}
+            {t('wanderer.price')}{' '}
             <span className="text-base font-normal text-on-surface-variant">
-              {t('free.unit')}
+              {t('wanderer.cycle')}
             </span>
           </div>
           <ul className="space-y-4 mb-10 flex-grow">
@@ -49,7 +61,7 @@ export default function PricingSection() {
           </ul>
           <Link href="/signup">
             <Button variant="secondary" pill fullWidth className="py-3.5 border-secondary text-secondary">
-              {t('free.cta')}
+              {t('wanderer.cta')}
             </Button>
           </Link>
         </Card>
@@ -57,15 +69,15 @@ export default function PricingSection() {
         {/* Pro Plan */}
         <Card className="p-8 md:p-10 rounded-2xl border-2 border-primary bg-primary/5 relative overflow-hidden flex flex-col h-full">
           <Badge variant="primary" className="absolute top-6 right-6 bg-primary text-white font-bold px-3 py-1 rounded-full uppercase tracking-wider text-[10px]">
-            {t('pro.tag')}
+            {t('pro.badge')}
           </Badge>
           <Heading level={3} variant="headline-sm" className="mb-2">
             {t('pro.title')}
           </Heading>
           <div className="text-4xl font-bold text-on-surface mb-6 flex items-baseline gap-1">
-            {t('pro.price')}{' '}
+            {t('pro.priceMonthly')}{' '}
             <span className="text-base font-normal text-on-surface-variant">
-              {t('pro.unit')}
+              {t('pro.cycle')}
             </span>
           </div>
           <ul className="space-y-4 mb-10 flex-grow">

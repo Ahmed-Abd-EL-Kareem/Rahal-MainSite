@@ -4,7 +4,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import {
@@ -12,12 +11,12 @@ import {
   Menu,
   X,
   User,
-  Heart,
   LogOut,
   ChevronDown,
   Hotel,
   MapPinHouse,
 } from "lucide-react";
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils/cn';
 import Button from '@/components/ui/Button';
@@ -27,6 +26,7 @@ export default function Header() {
   const t = useTranslations('common.nav');
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
   const { resolvedTheme } = useTheme();
 
   const isAuthPage = [
@@ -109,8 +109,7 @@ export default function Header() {
 
   const toggleLocale = () => {
     const nextLocale = locale === 'en' ? 'ar' : 'en';
-    document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=31536000`;
-    window.location.reload();
+    router.replace(pathname, { locale: nextLocale });
   };
 
   const handleLogout = () => {

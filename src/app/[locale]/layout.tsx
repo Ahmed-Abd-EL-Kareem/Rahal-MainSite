@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter, Noto_Naskh_Arabic, Cairo } from "next/font/google";
-import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
-import { ThemeProvider } from 'next-themes';
-import QueryProvider from "@/components/providers/QueryProvider";
-import { AuthProvider } from "@/components/providers/AuthProvider";
+import { getMessages } from 'next-intl/server';
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import FloatingChatButton from "@/components/layout/FloatingChatButton";
+import AppProviders from "@/components/providers/AppProviders";
 import "../globals.css";
 
 const playfair = Playfair_Display({
@@ -51,20 +51,19 @@ export default async function RootLayout({
     <html
       lang={locale}
       dir={isAr ? 'rtl' : 'ltr'}
-      className={`${playfair.variable} ${inter.variable} ${notoNaskh.variable} ${cairo.variable} h-full antialiased`}
+      className={`${playfair.variable} ${inter.variable} ${notoNaskh.variable} ${cairo.variable} light h-full antialiased`}
       suppressHydrationWarning
       data-scroll-behavior="smooth"
     >
       <body className="min-h-full flex flex-col bg-background text-on-background">
-        <NextIntlClientProvider messages={messages}>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-            <QueryProvider>
-              <AuthProvider>
-                {children}
-              </AuthProvider>
-            </QueryProvider>
-          </ThemeProvider>
-        </NextIntlClientProvider>
+        <AppProviders locale={locale} messages={messages}>
+          <Header />
+          <div className="flex-1 flex flex-col">
+            {children}
+          </div>
+          <Footer />
+          <FloatingChatButton />
+        </AppProviders>
       </body>
     </html>
   );
