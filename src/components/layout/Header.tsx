@@ -21,8 +21,10 @@ export default function Header() {
   const { resolvedTheme } = useTheme();
 
   const isAuthPage = [
-    '/login', '/signup', '/forgot-password', '/reset-password',
-  ].some(p => pathname === `/${locale}${p}` || pathname.startsWith(`/${locale}${p}/`));
+    '/login', '/signup', '/forgot-password', '/reset-password', '/verify-otp',
+    '/en/login', '/en/signup', '/en/forgot-password', '/en/reset-password', '/en/verify-otp',
+    '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password', '/ar/verify-otp'
+  ].some(p => pathname === p || pathname.startsWith(p + '/'));
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -115,6 +117,7 @@ export default function Header() {
     { href: '/hotels', label: t('hotels') },
     ...(isLoggedIn ? [{ href: '/planner', label: t('planner') }] : []),
     { href: '/pricing', label: t('pricing') },
+    { href: '/about', label: t('about') },
   ];
 
   if (!mounted) {

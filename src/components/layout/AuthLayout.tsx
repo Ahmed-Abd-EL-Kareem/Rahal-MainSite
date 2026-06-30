@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useRouter, usePathname } from 'next/navigation';
@@ -22,19 +22,6 @@ export default function AuthLayout({ children, locale }: AuthLayoutProps) {
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Redirect authenticated users away from auth pages
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      const authPaths = ['/login', '/signup', '/forgot-password', '/reset-password'];
-      const isAuthPath = authPaths.some(path => pathname.includes(path));
-      
-      if (isAuthPath) {
-        router.push('/');
-        router.refresh();
-      }
-    }
-  }, [isLoading, isAuthenticated, pathname, router]);
-
   // Show loading state while checking auth
   if (isLoading) {
     return (
@@ -42,15 +29,6 @@ export default function AuthLayout({ children, locale }: AuthLayoutProps) {
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
       </div>
     );
-  }
-
-  // Don't render children if authenticated and on auth page (redirect will happen)
-  if (isAuthenticated) {
-    const authPaths = ['/login', '/signup', '/forgot-password', '/reset-password'];
-    const isAuthPath = authPaths.some(path => pathname.includes(path));
-    if (isAuthPath) {
-      return null;
-    }
   }
 
   const toggleLocale = () => {

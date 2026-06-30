@@ -112,6 +112,23 @@ export default {
       backdropBlur: {
         nav: "20px",
       },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-out',
+        'slide-up': 'slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+        'ken-burns': 'kenBurns 20s ease-out',
+      },
+      keyframes: {
+        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        slideUp: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        kenBurns: { '0%': { transform: 'scale(1.08)' }, '100%': { transform: 'scale(1)' } },
+      },
+      animationDelay: {
+        '1': '80ms',
+        '2': '160ms',
+        '3': '240ms',
+        '4': '320ms',
+        '5': '400ms',
+      },
     },
   },
   plugins: [],

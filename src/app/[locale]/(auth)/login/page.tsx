@@ -25,35 +25,39 @@ export default function LogInPage() {
   const [error, setError] = useState<string | null>(null);
 
 const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setError(t('errors.missingFields'));
-      return;
-    }
+  e.preventDefault();
+  if (!email || !password) {
+    setError(t("errors.missingFields"));
+    return;
+  }
 
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      const response = await authApi.login({ email, password });
-      if (response && response.token) {
-        // Use AuthProvider's login function to set auth state
-        login(response.token, {
-          id: response.data.user._id,
-          email: response.data.user.email,
-          name: response.data.user.name,
-          avatar: response.data.user.image,
-        });
-      } else {
-        setError(t('errors.invalidCredentials'));
-      }
-    } catch (err: any) {
-      console.error('Login error:', err);
-      setError(err.message || t('errors.invalidCredentials'));
-    } finally {
-      setLoading(false);
+  try {
+    const response = await authApi.login({ email, password });
+
+    if (response && response.token) {
+      // Set auth state FIRST, and await it if it's async
+      await login(response.token, {
+        id: response.data.user._id,
+        email: response.data.user.email,
+        name: response.data.user.name,
+        avatar: response.data.user.image,
+      });
+      // Redirect to home page after successful login
+      router.push(`/${locale}`);
+      router.refresh();
+    } else {
+      setError(t("errors.invalidCredentials"));
     }
-  };
+  } catch (err: any) {
+    console.error("Login error:", err);
+    setError(err.message || t("errors.invalidCredentials"));
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoogleAuth = () => {
     window.location.href = authApi.getGoogleAuthUrl();

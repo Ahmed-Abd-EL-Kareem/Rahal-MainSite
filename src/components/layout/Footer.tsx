@@ -34,9 +34,17 @@ export default function Footer() {
   const t = useTranslations('common.footer');
   const navT = useTranslations('common.nav');
 
+  // const isAuthPage = [
+  //   '/login', '/signup', '/forgot-password', '/reset-password',
+  // ].some(p => pathname === `/${locale}${p}` || pathname.startsWith(`/${locale}${p}/`));
+
+  // if (isAuthPage) return null;
+
   const isAuthPage = [
-    '/login', '/signup', '/forgot-password', '/reset-password',
-  ].some(p => pathname === `/${locale}${p}` || pathname.startsWith(`/${locale}${p}/`));
+    '/login', '/signup', '/forgot-password', '/reset-password', '/verify-otp',
+    '/en/login', '/en/signup', '/en/forgot-password', '/en/reset-password', '/en/verify-otp',
+    '/ar/login', '/ar/signup', '/ar/forgot-password', '/ar/reset-password', '/ar/verify-otp'
+  ].some(p => pathname === p || pathname.startsWith(p + '/'));
 
   if (isAuthPage) return null;
 

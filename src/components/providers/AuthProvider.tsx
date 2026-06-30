@@ -54,11 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = (token: string, userData: User) => {
+  const login = async (token: string, userData: User) => {
     document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
     setUser(userData);
-    router.push('/');
-    router.refresh();
+    // Redirect handled by caller
   };
 
   const logout = () => {
@@ -71,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user;
 
   // Redirect authenticated users away from auth pages
+  // Only runs on initial mount, not on login (which is handled by login page)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       const authPaths = ['/login', '/signup', '/forgot-password', '/reset-password'];
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.refresh();
       }
     }
-  }, [isLoading, isAuthenticated, pathname, router]);
+  }, []); // Run only once on mount to catch pre-existing auth
 
   return (
     <AuthContext.Provider value={{ user, isLoading, isAuthenticated, login, logout }}>

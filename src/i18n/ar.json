@@ -217,7 +217,7 @@
     "emailPlaceholder": "name@domain.com",
     "passwordLabel": "كلمة المرور",
     "passwordPlaceholder": "••••••••",
-    "forgotPassword": {
+"forgotPassword": {
       "title": "نسيت كلمة المرور",
       "subtitle": "أدخل بريدك الإلكتروني لاستلام رمز إعادة تعيين كلمة المرور",
       "comingSoon": "هذه الصفحة قادمة قريباً.",
@@ -226,7 +226,10 @@
         "description": "أعد تعيين كلمة مرور حسابك في رحّال",
         "ogTitle": "نسيت كلمة المرور | رحّال",
         "ogDescription": "أدخل بريدك الإلكتروني لاستلام رمز إعادة تعيين كلمة المرور"
-      }
+      },
+      "guardianOfJourneys": "حارس الرحلات",
+      "reconnectWithLegacy": "استعد التواصل مع إرثك السياحي.",
+      "eternalPrivacy": "خصوصيتك أبدية كالرمال."
     },
     "loginBtn": "تسجيل الدخول",
     "continueWith": "أو تابع باستخدام",
@@ -241,21 +244,51 @@
     "signupBtn": "إنشاء حساب",
     "haveAccount": "هل لديك حساب بالفعل؟",
     "loginLink": "تسجيل الدخول",
+    "forgotPasswordTitle": "استعادة كلمة المرور",
+    "forgotPasswordSubtitle": "أدخل بريدك الإلكتروني لتلقي رابط استعادة كلمة المرور.",
+    "forgotPasswordBtn": "إرسال رابط الاستعادة",
+    "backToLoginLink": "العودة إلى تسجيل الدخول",
+    "forgotPasswordSuccess": "تم إرسال رابط الاستعادة! يرجى التحقق من صندوق البريد الوارد.",
+    "emailRequired": "يرجى إدخال بريد إلكتروني صالح.",
+    "sendingLink": "جاري الإرسال...",
     "strength": "القوة: {val}",
     "strengthNone": "لا يوجد",
     "strengthWeak": "ضعيف",
     "strengthFair": "مقبول",
     "strengthGood": "جيد",
     "strengthStrong": "قوي",
-    "errors": {
-      "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
-      "emailInUse": "البريد الإلكتروني مستخدم بالفعل.",
-      "missingFields": "يرجى ملء جميع الحقول المطلوبة.",
-      "termsRequired": "يجب الموافقة على الشروط والأحكام."
+"verifyOtpTitle": "التحقق من الهوية",
+    "verifyOtpSubtitle": "لقد أرسلنا رمز التحقق المكون من 6 أرقام إلى {email}.",
+    "verifyOtpBtn": "التحقق من الرمز",
+    "verifyOtpLabel": "رمز التحقق (OTP)",
+    "verifying": "جاري التحقق...",
+    "resendBtn": "إعادة إرسال الرمز",
+    "resendActive": "إعادة الإرسال خلال {seconds} ثانية",
+    "verifyOtp": {
+      "ancientWisdom": "الحكمة القديمة",
+      "securityThroughTime": "الأمان عبر الزمن",
+      "trueWisdomInDetails": "الحكمة الحقيقية تكمن في التفاصيل.",
+      "rahalArchiveSeries": "سلسلة أرشيف رحّال"
     },
+    "resetPasswordTitle": "إعادة تعيين كلمة المرور",
+    "resetPasswordSubtitle": "أنشئ كلمة مرور جديدة وقوية لحسابك.",
+    "newPasswordLabel": "كلمة المرور الجديدة",
+    "confirmPasswordLabel": "تأكيد كلمة المرور",
+    "resetPasswordBtn": "إعادة تعيين كلمة المرور",
+    "resetPasswordSuccess": "تم إعادة تعيين كلمة المرور بنجاح! جاري تحويلك لتسجيل الدخول...",
     "resetPassword": {
       "title": "إعادة تعيين كلمة المرور",
-      "subtitle": "أدخل كلمة المرور الجديدة",
+      "subtitle": "أنشئ كلمة مرور جديدة وقوية لحسابك.",
+      "newPasswordLabel": "كلمة المرور الجديدة",
+      "confirmPasswordLabel": "تأكيد كلمة المرور",
+      "resetPasswordBtn": "إعادة تعيين كلمة المرور",
+      "resetPasswordSuccess": "تم إعادة تعيين كلمة المرور بنجاح! جاري تحويلك لتسجيل الدخول...",
+      "secureRestoration": "استعادة آمنة",
+      "restoringAccess": "استعادة وصولك",
+      "journeyContinues": "رحلتك تستمر هنا. استعد ممرك الرقمي إلى عجائب رحّال هيريتيج.",
+      "encryptedSecured": "مشفّر ومحمي بواسطة رحّال AI",
+      "helpCenter": "مركز المساعدة",
+      "privacyPolicy": "سياسة الخصوصية",
       "comingSoon": "هذه الصفحة قادمة قريباً.",
       "meta": {
         "title": "إعادة تعيين كلمة المرور | رحّال",
@@ -264,11 +297,24 @@
         "ogDescription": "أدخل كلمة المرور الجديدة"
       }
     },
+    "errors": {
+      "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+      "emailInUse": "البريد الإلكتروني مستخدم بالفعل.",
+      "missingFields": "يرجى ملء جميع الحقول المطلوبة.",
+      "termsRequired": "يجب الموافقة على الشروط والأحكام."
+    },
     "meta": {
       "title": "تسجيل الدخول | رحّال",
       "description": "قم بالوصول إلى مسارات رحلتك المصرية المدعومة بالذكاء الاصطناعي",
       "ogTitle": "مرحباً بعودتك - رحّال",
-      "ogDescription": "سجّل الدخول للوصول إلى خطط سفر مصر المخصصة"
+      "ogDescription": "سجّل الدخول للوصول إلى خطط سفر مصر المخصصة",
+      "termsRequired": "يجب الموافقة على الشروط والأحكام.",
+      "invalidOtp": "الرمز الذي أدخلته غير صالح. يرجى المحاولة مرة أخرى.",
+      "otpExpired": "انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.",
+      "genericOtp": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+      "passwordMismatch": "كلمتا المرور غير متطابقتين.",
+      "weakPassword": "يرجى اختيار كلمة مرور أقوى.",
+      "genericReset": "فشل إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى."
     }
   },
   "hotelListing": {

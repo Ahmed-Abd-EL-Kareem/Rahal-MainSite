@@ -226,7 +226,10 @@
         "description": "Reset your Rahal account password",
         "ogTitle": "Forgot Password | Rahal",
         "ogDescription": "Enter your email to receive a password reset code"
-      }
+      },
+      "guardianOfJourneys": "The Guardian of Journeys",
+      "reconnectWithLegacy": "Reconnect with your Travel Legacy.",
+      "eternalPrivacy": "Your privacy is as eternal as the sands."
     },
     "loginBtn": "Log In",
     "continueWith": "Or continue with",
@@ -242,21 +245,51 @@
     "signupBtn": "Create Account",
     "haveAccount": "Already have an account?",
     "loginLink": "Log In",
+    "forgotPasswordTitle": "Password Recovery",
+    "forgotPasswordSubtitle": "Enter your email to receive a password recovery link.",
+    "forgotPasswordBtn": "Send Recovery Link",
+    "backToLoginLink": "Back to Sign In",
+    "forgotPasswordSuccess": "Recovery link sent! Please check your email inbox.",
+    "emailRequired": "Please enter a valid email address.",
+    "sendingLink": "Sending Link...",
     "strength": "Strength: {val}",
     "strengthNone": "None",
     "strengthWeak": "Weak",
     "strengthFair": "Fair",
     "strengthGood": "Good",
     "strengthStrong": "Strong",
-    "errors": {
-      "invalidCredentials": "Email or password incorrect.",
-      "emailInUse": "Email address already in use.",
-      "missingFields": "Please fill in all required fields.",
-      "termsRequired": "You must agree to the terms."
+    "verifyOtpTitle": "Verify OTP",
+    "verifyOtpSubtitle": "We have sent a 6-digit verification code to {email}.",
+    "verifyOtpBtn": "Verify Code",
+    "verifyOtpLabel": "Verification Code (OTP)",
+    "verifying": "Verifying...",
+    "resendBtn": "Resend Code",
+    "resendActive": "Resend in {seconds}s",
+    "verifyOtp": {
+      "ancientWisdom": "Ancient Wisdom",
+      "securityThroughTime": "Security Through Time",
+      "trueWisdomInDetails": "True wisdom is in the details.",
+      "rahalArchiveSeries": "Rahal Archive Series"
     },
+    "resetPasswordTitle": "Reset Password",
+    "resetPasswordSubtitle": "Create a new strong password for your account.",
+    "newPasswordLabel": "New Password",
+    "confirmPasswordLabel": "Confirm Password",
+    "resetPasswordBtn": "Reset Password",
+    "resetPasswordSuccess": "Password reset successful! Redirecting to login...",
     "resetPassword": {
       "title": "Reset Password",
-      "subtitle": "Enter your new password",
+      "subtitle": "Create a new strong password for your account.",
+      "newPasswordLabel": "New Password",
+      "confirmPasswordLabel": "Confirm Password",
+      "resetPasswordBtn": "Reset Password",
+      "resetPasswordSuccess": "Password reset successful! Redirecting to login...",
+      "secureRestoration": "Secure Restoration",
+      "restoringAccess": "Restoring Your Access",
+      "journeyContinues": "Your journey continues here. Reclaim your digital passage to the wonders of Rahal Heritage.",
+      "encryptedSecured": "Encrypted & Secured by Rahal AI",
+      "helpCenter": "Help Center",
+      "privacyPolicy": "Privacy Policy",
       "comingSoon": "This page is coming soon.",
       "meta": {
         "title": "Reset Password | Rahal",
@@ -265,11 +298,24 @@
         "ogDescription": "Enter your new password"
       }
     },
+    "errors": {
+      "invalidCredentials": "Email or password incorrect.",
+      "emailInUse": "Email address already in use.",
+      "missingFields": "Please fill in all required fields.",
+      "termsRequired": "You must agree to the terms."
+    },
     "meta": {
       "title": "Sign In | Rahal",
       "description": "Access your AI-powered Egyptian itineraries",
       "ogTitle": "Welcome Back - Rahal",
-      "ogDescription": "Log in to access your personalized Egypt travel plans"
+      "ogDescription": "Log in to access your personalized Egypt travel plans",
+      "termsRequired": "You must agree to the terms.",
+      "invalidOtp": "Invalid OTP. Please check the code and try again.",
+      "otpExpired": "OTP has expired. Please request a new one.",
+      "genericOtp": "Something went wrong. Please try again.",
+      "passwordMismatch": "Passwords do not match.",
+      "weakPassword": "Please choose a stronger password.",
+      "genericReset": "Failed to reset password. Please try again."
     }
   },
   "hotelListing": {
