@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
@@ -89,10 +90,11 @@ const dict = {
     paymentError: 'Booking created but payment redirect failed. Please try again.',
     processingBooking: 'Creating your booking...',
     processingPayment: 'Redirecting to payment...',
-    newTrip: 'New Trip',
-    newTripConfirm: 'Start a new trip? Your current conversation will be cleared.',
+    newTrip: 'New Booking',
+    newTripConfirm: 'Start a new booking? Your current conversation will be cleared.',
     bookingSummaryTab: 'Summary',
     chatTab: 'Chat',
+    connectionError: 'Something went wrong on our end. Please try again.',
   },
   ar: {
     plannerTitle: 'مساعد رحّال الذكي',
@@ -135,10 +137,11 @@ const dict = {
     paymentError: 'تم إنشاء الحجز لكن فشل التحويل للدفع.',
     processingBooking: 'جاري إنشاء حجزك...',
     processingPayment: 'جاري التحويل للدفع...',
-    newTrip: 'رحلة جديدة',
-    newTripConfirm: 'بدء رحلة جديدة؟ سيتم مسح المحادثة الحالية.',
+    newTrip: 'حجز جديد',
+    newTripConfirm: 'بدء حجز جديد؟ سيتم مسح المحادثة الحالية.',
     bookingSummaryTab: 'الملخص',
     chatTab: 'المحادثة',
+    connectionError: 'عذراً، واجهنا مشكلة. يرجى المحاولة مرة أخرى.',
   },
 };
 
@@ -217,39 +220,313 @@ function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
   return ((...args: any[]) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); }) as T;
 }
 
+const MONTHS: Record<string, string> = {
+  jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+  jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+  'يناير': '01', 'فبراير': '02', 'مارس': '03', 'ابريل': '04', 'أبريل': '04',
+  'مايو': '05', 'يونيو': '06', 'يوليو': '07', 'اغسطس': '08', 'أغسطس': '08',
+  'سبتمبر': '09', 'اكتوبر': '10', 'أكتوبر': '10', 'نوفمبر': '11', 'ديسمبر': '12',
+};
+
+function lookupMonth(word: string): string | undefined {
+  return MONTHS[word] ?? MONTHS[word.toLowerCase().slice(0, 3)];
+}
+
+// Parses a single date chunk in either order: "16 يوليو" (day-month, how
+// Arabic replies write it) or "Jul 16" (month-day, English). The previous
+// implementation used \w+ for the month, which in JS only matches
+// [A-Za-z0-9_] — it silently never matched Arabic month names at all.
+function parseSingleDate(chunk: string, year: string): string | null {
+  let m = chunk.match(/(\d{1,2})\s+([\p{L}]+)/u); // day-month
+  if (m) {
+    const month = lookupMonth(m[2]);
+    if (month) return `${year}-${month}-${m[1].padStart(2, '0')}`;
+  }
+  m = chunk.match(/([\p{L}]+)\s+(\d{1,2})/u); // month-day
+  if (m) {
+    const month = lookupMonth(m[1]);
+    if (month) return `${year}-${month}-${m[2].padStart(2, '0')}`;
+  }
+  return null;
+}
+
 function parseDatesFromText(text: string): { checkIn: string; checkOut: string } | null {
-  const months: Record<string, string> = {
-    jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
-    jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
-  };
-  const pattern = /(\w+)\s+(\d{1,2}).*?(\w+)\s+(\d{1,2}),?\s*(\d{4})?/i;
-  const match = text.match(pattern);
-  if (match) {
-    const year = match[5] ?? new Date().getFullYear().toString();
-    const m1 = months[match[1].toLowerCase().slice(0, 3)];
-    const m2 = months[match[3].toLowerCase().slice(0, 3)];
-    if (m1 && m2) {
-      return {
-        checkIn:  `${year}-${m1}-${match[2].padStart(2, '0')}`,
-        checkOut: `${year}-${m2}-${match[4].padStart(2, '0')}`,
-      };
-    }
+  const yearMatch = text.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? yearMatch[1] : String(new Date().getFullYear());
+  const parts = text.split(/–|—|→|\bto\b|\bإلى\b|\bالى\b|-/i).map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+  const checkIn = parseSingleDate(parts[0], year);
+  const checkOut = parseSingleDate(parts[1], year);
+  if (checkIn && checkOut) return { checkIn, checkOut };
+  return null;
+}
+
+// Generic reader for the AI's "| icon | label | value |" markdown table
+// rows. Matches the label cell against `labelRegex` and returns the value
+// cell right after it — used because the AI now confirms bookings as a
+// table, not as "- Label: value" bullet lines.
+function extractTableCellValue(aiText: string, labelRegex: RegExp): string | null {
+  for (const line of aiText.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) continue;
+    const cells = trimmed.split('|').map((c) => c.replace(/\*+/g, '').trim()).filter((c) => c.length > 0);
+    const idx = cells.findIndex((c) => labelRegex.test(c));
+    if (idx !== -1 && cells[idx + 1]) return cells[idx + 1];
   }
   return null;
 }
 
 function extractConfirmedHotelName(aiText: string): string | null {
+  const cleanName = (raw: string) => raw
+    .replace(/\(.*?\)/g, '')      // strip "(5⭐)" etc.
+    .replace(/\*+/g, '')
+    .replace(/[⭐★]+/g, '')
+    .trim();
+
+  // Table format: "| 🏨 | الفندق | Kempinski Nile Hotel Cairo (5⭐) |"
+  const tableValue = extractTableCellValue(aiText, /^(?:hotel|الفندق)$/i);
+  if (tableValue) return cleanName(tableValue);
+
+  // Bullet format: "- **الفندق:** Four Seasons Hotel Cairo at Nile Plaza ⭐⭐⭐⭐⭐"
   const patterns = [
-  /[-•]\s*(?:hotel|الفندق)\s*[:\-]\s*(.+)/i,  // "- Hotel: Name"
-  /(?:hotel|الفندق)\s*[:\-]\s*(.+)/i,
-];
+    /[-•]\s*\*{0,2}\s*(?:hotel|الفندق)\s*\*{0,2}\s*[:\-]\s*\*{0,2}\s*(.+)/i,
+    /\*{0,2}\s*(?:hotel|الفندق)\s*\*{0,2}\s*[:\-]\s*\*{0,2}\s*(.+)/i,
+  ];
   for (const pattern of patterns) {
     const match = aiText.match(pattern);
-    if (match) {
-      return match[1].split(/\n|،|,/)[0].trim();
+    if (match) return cleanName(match[1].split(/\n|،|,/)[0]);
+  }
+  return null;
+}
+
+// Once the AI actually confirms a booking, pull the REAL numbers (nights,
+// guests, rooms, total price) out of its own confirmation text/table
+// instead of relying on separately-guessed values that can drift out of
+// sync with what was actually booked.
+function extractConfirmedNights(aiText: string): number | null {
+  const bullet = aiText.match(/(?:nights?|عدد الليالي)\s*[:\-]?\s*\*{0,2}\s*(\d+)/i);
+  if (bullet) return parseInt(bullet[1], 10);
+
+  const datesCell = extractTableCellValue(aiText, /^(?:dates?|التواريخ)$/i);
+  if (datesCell) {
+    const parsed = parseDatesFromText(datesCell);
+    if (parsed) {
+      const diff = Math.round(
+        (new Date(parsed.checkOut).getTime() - new Date(parsed.checkIn).getTime()) / 86400000
+      );
+      if (diff > 0) return diff;
     }
   }
   return null;
+}
+
+function extractConfirmedGuestsRooms(aiText: string): { guests: number | null; rooms: number | null } {
+  const guestsBullet = aiText.match(/(?:guests?|الضيوف)\s*[:\-]?\s*\*{0,2}\s*(\d+)/i);
+  const roomsBullet = aiText.match(/(?:rooms?|الغرف)\s*[:\-]?\s*\*{0,2}\s*(\d+)/i);
+
+  const guestsCell = extractTableCellValue(aiText, /^(?:guests?|عدد الضيوف|الضيوف)$/i);
+  const roomsCell = extractTableCellValue(aiText, /^(?:rooms?|الغرف)$/i);
+
+  const parseFirstNumber = (v: string | null) => {
+    if (!v) return null;
+    const m = v.match(/\d+/);
+    return m ? parseInt(m[0], 10) : null;
+  };
+
+  return {
+    guests: guestsBullet ? parseInt(guestsBullet[1], 10) : parseFirstNumber(guestsCell),
+    rooms: roomsBullet ? parseInt(roomsBullet[1], 10) : parseFirstNumber(roomsCell),
+  };
+}
+
+function extractConfirmedTotal(aiText: string): number | null {
+  const parseAmount = (v: string) => {
+    const m = v.match(/([\d,]+)/);
+    if (!m) return null;
+    const val = parseInt(m[1].replace(/,/g, ''), 10);
+    return Number.isFinite(val) ? val : null;
+  };
+
+  const bullet = aiText.match(/(?:total|الإجمالي)\s*[:\-]?\s*\*{0,2}\s*(?:egp|ج\.?م\.?|جنيه)?\s*([\d,]+)/i);
+  if (bullet) return parseAmount(bullet[1]);
+
+  // Table format: label cell may be "الإجمالي (لليلتين)" — match by "contains", not exact.
+  const totalCell = extractTableCellValue(aiText, /(?:total|الإجمالي)/i);
+  if (totalCell) return parseAmount(totalCell);
+
+  return null;
+}
+
+// NEW: extract a human-readable budget label from user/AI text instead of
+// always showing the static "Luxury Heritage" placeholder.
+function extractBudgetLabel(text: string, locale: 'en' | 'ar'): string | null {
+  const lower = text.toLowerCase();
+
+  // Explicit currency amount, e.g. "100000 EGP" / "٦٥٠٠٠ جنيه" / "$150"
+  const egpMatch = text.match(/(\d[\d,]*)\s*(?:egp|جنيه|ج\.?م\.?)/i);
+  if (egpMatch) {
+    const amount = egpMatch[1].replace(/,/g, '');
+    return locale === 'ar' ? `${amount} ج.م / الليلة` : `EGP ${amount} / night`;
+  }
+  const usdMatch = text.match(/\$\s*(\d[\d,]*)/);
+  if (usdMatch) {
+    return locale === 'ar' ? `${usdMatch[1]}$ / الليلة` : `$${usdMatch[1]} / night`;
+  }
+
+  // Qualitative tiers
+  if (lower.includes('luxury') || lower.includes('فاخر') || lower.includes('فخم')) {
+    return locale === 'ar' ? 'تراث فاخر' : 'Luxury Heritage';
+  }
+  if (lower.includes('mid-range') || lower.includes('mid range') || lower.includes('متوسط')) {
+    return locale === 'ar' ? 'ميزانية متوسطة' : 'Mid-Range';
+  }
+  if (lower.includes('budget') || lower.includes('اقتصاد') || lower.includes('رخيص')) {
+    return locale === 'ar' ? 'اقتصادية' : 'Budget-Friendly';
+  }
+  return null;
+}
+
+// NEW: compute nights between two ISO dates, falling back to a sane default
+// instead of hardcoding "3 nights" / "4 nights" for every trip.
+function nightsBetween(checkIn: string | null, checkOut: string | null, fallback: number): number {
+  if (!checkIn || !checkOut) return fallback;
+  const inDate = new Date(checkIn);
+  const outDate = new Date(checkOut);
+  const diff = Math.round((outDate.getTime() - inDate.getTime()) / 86400000);
+  return diff > 0 ? diff : fallback;
+}
+
+// Renders a single line's **bold** segments as inline React nodes.
+function renderInlineBold(line: string, keyPrefix: string) {
+  const parts = line.split(/(\*\*[^*]+\*\*)/g).filter((p) => p.length > 0);
+  return parts.map((part, j) =>
+    part.startsWith('**') && part.endsWith('**') ? (
+      <strong key={`${keyPrefix}-${j}`} className="font-bold text-on-surface">{part.slice(2, -2)}</strong>
+    ) : (
+      <span key={`${keyPrefix}-${j}`}>{part}</span>
+    )
+  );
+}
+
+// ── Table detection/parsing/rendering ──────────────────────────────────────
+// The AI's booking confirmation comes back as a GitHub-style markdown table
+// ("| icon | label | value |" rows plus a "|---|---|---|" separator). The
+// old renderer treated every line as a plain paragraph, so the raw pipes
+// and dashes were dumped straight into the chat bubble looking like a mess.
+// These helpers detect a contiguous table block and render it as a real
+// <table> instead.
+function isTableRow(line: string) {
+  const t = line.trim();
+  return t.startsWith('|') && t.endsWith('|') && t.length > 1;
+}
+
+function isTableSeparator(line: string) {
+  const t = line.trim();
+  if (!t.startsWith('|')) return false;
+  // A separator row only contains pipes, dashes, colons and whitespace
+  return /^\|[\s:|-]+\|$/.test(t) && t.includes('-');
+}
+
+function parseTableRow(line: string): string[] {
+  const t = line.trim();
+  return t.slice(1, -1).split('|').map((c) => c.trim());
+}
+
+function renderTable(rows: string[][], key: string) {
+  return (
+    <div key={key} className="w-full overflow-x-auto my-2 rounded-xl border border-outline-variant bg-surface-container/40">
+      <table className="w-full text-xs md:text-sm border-collapse">
+        <tbody>
+          {rows.map((cells, i) => (
+            <tr
+              key={i}
+              className={cn(
+                i % 2 === 0 ? 'bg-surface-container/30' : 'bg-transparent',
+                i !== rows.length - 1 && 'border-b border-outline-variant/60'
+              )}
+            >
+              {cells.map((cell, j) => (
+                <td
+                  key={j}
+                  className={cn(
+                    'px-3 py-2 align-middle',
+                    j === 0 && 'w-8 text-center shrink-0',
+                    j === 1 && 'font-semibold text-on-surface-variant whitespace-nowrap',
+                    j >= 2 && 'text-on-surface'
+                  )}
+                >
+                  {renderInlineBold(cell, `td-${key}-${i}-${j}`)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// Renders the AI's markdown-ish replies (**bold**, "- " bullet lines, blank
+// lines as section breaks, and "| a | b | c |" tables) as a properly
+// formatted block instead of a raw text dump with literal asterisks/pipes
+// and no visual structure.
+function renderFormattedMessage(text: string) {
+  const lines = text.split('\n');
+  const blocks: React.ReactNode[] = [];
+  let currentList: string[] = [];
+  let i = 0;
+
+  const flushList = (key: string) => {
+    if (currentList.length === 0) return;
+    blocks.push(
+      <ul key={key} className="list-none m-0 p-0 flex flex-col gap-1 my-1">
+        {currentList.map((item, idx) => (
+          <li key={idx} className="flex items-start gap-1.5">
+            <span className="text-secondary mt-1 shrink-0">•</span>
+            <span>{renderInlineBold(item, `li-${key}-${idx}`)}</span>
+          </li>
+        ))}
+      </ul>
+    );
+    currentList = [];
+  };
+
+  while (i < lines.length) {
+    const line = lines[i].trim();
+
+    // Table block: a row followed immediately by a separator row.
+    if (isTableRow(line) && lines[i + 1] && isTableSeparator(lines[i + 1])) {
+      flushList(`list-${i}`);
+      const tableLines = [line];
+      let j = i + 2;
+      while (j < lines.length && isTableRow(lines[j].trim())) {
+        tableLines.push(lines[j].trim());
+        j++;
+      }
+      blocks.push(renderTable(tableLines.map(parseTableRow), `table-${i}`));
+      i = j;
+      continue;
+    }
+
+    const bulletMatch = line.match(/^[-•]\s+(.*)/);
+    if (bulletMatch) {
+      currentList.push(bulletMatch[1]);
+      i++;
+      continue;
+    }
+    flushList(`list-${i}`);
+
+    if (line.length === 0) {
+      blocks.push(<div key={`gap-${i}`} className="h-2" />);
+      i++;
+      continue;
+    }
+    blocks.push(<p key={`line-${i}`} className="m-0">{renderInlineBold(line, `p-${i}`)}</p>);
+    i++;
+  }
+  flushList('list-end');
+
+  return <div className="flex flex-col">{blocks}</div>;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -270,6 +547,23 @@ export default function AITripPlannerPage() {
   const [quotaExceeded,       setQuotaExceeded]       = useState(false);
   const [conversationCities,  setConversationCities]  = useState<string[]>([]);
   const [travelDates,         setTravelDates]         = useState<string | null>(null);
+  const [budgetLabel,         setBudgetLabel]         = useState<string | null>(null);
+
+  // Real numbers pulled from the AI's own confirmation text — once these are
+  // set they take priority over any locally-estimated/computed values, since
+  // they reflect what was ACTUALLY booked (not a guess).
+  const [confirmedNights,     setConfirmedNights]     = useState<number | null>(null);
+  const [confirmedGuests,     setConfirmedGuests]     = useState<number | null>(null);
+  const [confirmedRooms,      setConfirmedRooms]      = useState<number | null>(null);
+  const [confirmedTotal,      setConfirmedTotal]      = useState<number | null>(null);
+
+  // Tracks which hotel the CURRENT bookingId actually belongs to. Needed
+  // because a multi-leg trip (e.g. Cairo + Luxor) confirms one hotel at a
+  // time — if the user already confirmed/paid-flow for hotel A and then
+  // confirms a different hotel B, any bookingId left over from A must be
+  // thrown away, or "Confirm & Pay" would silently check out A's booking
+  // (wrong hotel/dates/total) while the chat is showing B's confirmation.
+  const [lastConfirmedHotelName, setLastConfirmedHotelName] = useState<string | null>(null);
 
   const [selectedPrimaryHotel,   setSelectedPrimaryHotel]   = useState<HotelOption | null>(null);
   const [selectedSecondaryHotel, setSelectedSecondaryHotel] = useState<HotelOption | null>(null);
@@ -287,6 +581,9 @@ export default function AITripPlannerPage() {
   const [parsedCheckIn,  setParsedCheckIn]  = useState<string | null>(null);
   const [parsedCheckOut, setParsedCheckOut] = useState<string | null>(null);
 
+  // isCompleted / bookingId now come straight from the AI conversation
+  // response instead of only being produced by a separate "create booking" call.
+  const [isCompleted,    setIsCompleted]    = useState(false);
   const [bookingStep,    setBookingStep]    = useState<'idle' | 'creating' | 'paying' | 'done'>('idle');
   const [bookingError,   setBookingError]   = useState<string | null>(null);
   const [bookingId,      setBookingId]      = useState<string | null>(null);
@@ -396,6 +693,12 @@ export default function AITripPlannerPage() {
     }
   }, []);
 
+  // ── budget extraction (replaces the static "Luxury Heritage" label) ──
+  const extractBudget = useCallback((text: string) => {
+    const label = extractBudgetLabel(text, locale);
+    if (label) setBudgetLabel(label);
+  }, [locale]);
+
   // ── fresh conversation ──
   const startFreshConversation = useCallback(() => {
     setSessionId(null);
@@ -405,8 +708,15 @@ export default function AITripPlannerPage() {
     setAllSeenHotels([]);
     setConversationCities([]);
     setTravelDates(null);
+    setBudgetLabel(null);
     setParsedCheckIn(null);
     setParsedCheckOut(null);
+    setConfirmedNights(null);
+    setConfirmedGuests(null);
+    setConfirmedRooms(null);
+    setConfirmedTotal(null);
+    setLastConfirmedHotelName(null);
+    setIsCompleted(false);
     setBookingStep('idle');
     setBookingError(null);
     setBookingId(null);
@@ -439,7 +749,7 @@ export default function AITripPlannerPage() {
     startFreshConversation();
   }, [startFreshConversation]);
 
-  // ── FIXED: assign hotel using refs to always read current state ──
+  // ── assign hotel using refs to always read current state ──
   const assignHotel = useCallback((hotel: HotelOption) => {
     const primary   = selectedPrimaryHotelRef.current;
     const secondary = selectedSecondaryHotelRef.current;
@@ -458,6 +768,19 @@ export default function AITripPlannerPage() {
 
   // ── hotel auto-select from user text ──
   const detectAndSelectHotel = useCallback((text: string, hotelCards: HotelOption[]) => {
+    const trimmed = text.trim();
+
+    // The AI explicitly asks "أخبرني بالرقم؟ (1 أو 2 أو 3)" / "which number
+    // (1, 2 or 3)?" — a bare number reply must map to hotelCards[number-1].
+    const numericMatch = trimmed.match(/^[#]?\s*(\d)\s*$/) || trimmed.match(/^(?:رقم|فندق|hotel)?\s*(\d)\s*$/i);
+    if (numericMatch) {
+      const index = parseInt(numericMatch[1], 10) - 1;
+      if (hotelCards[index]) {
+        assignHotel(hotelCards[index]);
+        return;
+      }
+    }
+
     const lower = text.toLowerCase();
     for (const hotel of hotelCards) {
       const nameWords = hotel.name.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
@@ -468,11 +791,9 @@ export default function AITripPlannerPage() {
     }
   }, [assignHotel]);
 
-  // ── FIXED: hotel confirm from AI reply — uses refs, not stale closure ──
+  // ── hotel confirm from AI reply — uses refs, not stale closure ──
   const confirmHotelFromAiText = useCallback(async (aiText: string, knownHotels: HotelOption[]) => {
-    console.log('🔥 confirmHotelFromAiText called');
     const confirmedName = extractConfirmedHotelName(aiText);
-    console.log('confirmedName:', confirmedName);
     if (!confirmedName) return;
 
     const lowerConfirmed = confirmedName.toLowerCase();
@@ -483,17 +804,15 @@ export default function AITripPlannerPage() {
       const matches = hotel.name.toLowerCase() === lowerConfirmed
         || nameWords.some((w) => lowerConfirmed.includes(w));
       if (matches) {
-        console.log('✅ matched hotel card:', hotel.name);
         assignHotel(hotel);
         return;
       }
     }
 
     // No card match — look up directly by name
-    console.log('🔍 looking up hotel by name:', confirmedName);
     const apiHotel = await fetchHotelByName(confirmedName);
     if (!apiHotel) {
-      // Fallback: placeholder حتى لو مش لاقيناه في الـ API
+      // Fallback: placeholder until it's resolved against the real API
       const placeholder: HotelOption = {
         id: `pending-${Date.now()}`,
         name: confirmedName,
@@ -508,7 +827,6 @@ export default function AITripPlannerPage() {
       return;
     }
     const hotel = mapApiHotel(apiHotel, 0, locale);
-    console.log('✅ found via API:', hotel.name);
     setAllSeenHotels((prev) => (prev.some((h) => h.id === hotel.id) ? prev : [...prev, hotel]));
     assignHotel(hotel);
   }, [locale, assignHotel]);
@@ -520,6 +838,7 @@ export default function AITripPlannerPage() {
     setBookingError(null);
     extractCities(textToSend);
     extractDates(textToSend);
+    extractBudget(textToSend);
 
     const userMsg: Message = { id: String(Date.now()), role: 'user', content: textToSend, timestamp: new Date() };
     setMessages((prev) => [...prev, userMsg]);
@@ -532,6 +851,9 @@ export default function AITripPlannerPage() {
 
     try {
       const [response, earlyHotelCards] = await Promise.all([
+        // The conversation endpoint keeps state on the server via sessionId —
+        // every follow-up call (city, dates, budget, hotel choice, payment
+        // method...) must reuse the SAME sessionId returned by the first call.
         aiApi.bookingConversation(textToSend, sessionId),
         hotelsLikelyNeeded
           ? resolveHotelsForContext(textToSend, '', conversationCities, locale).catch(() => [] as HotelOption[])
@@ -539,22 +861,45 @@ export default function AITripPlannerPage() {
       ]);
 
       if (response?.status !== 'success') throw new Error('Invalid server response');
-      const { sessionId: nextSessionId, step: nextStep, aiResponse } = response.data;
+      // NOTE: the API returns "isComplete" (no trailing "d"), not "isCompleted".
+      const {
+        sessionId: nextSessionId,
+        step: nextStep,
+        aiResponse,
+        isComplete: nextIsCompleted,
+        bookingId: aiBookingId,
+      } = response.data as {
+        sessionId: string;
+        step: string;
+        aiResponse: string;
+        isComplete?: boolean;
+        bookingId?: string | null;
+      };
 
       setSessionId(nextSessionId);
       setCurrentStep(nextStep);
       extractCities(aiResponse);
       extractDates(aiResponse);
+      // Intentionally NOT calling extractBudget(aiResponse) here — the AI's
+      // confirmation table's "الإجمالي" (total) row was getting mislabeled
+      // as a per-night budget. Budget only comes from what the user said.
+
+      // FIX: if the AI's reply already confirms a specific hotel (a table
+      // or bullet with "الفندق:"/"Hotel:"), don't fetch/show a fresh batch
+      // of hotel cards in the same turn — that's what produced the
+      // "hotel list pops up again right after you picked one" bug. The
+      // confirmation table itself is the answer at that point.
+      const confirmedHotelNameThisTurn = extractConfirmedHotelName(aiResponse);
 
       let hotelCards = earlyHotelCards;
-      if (!hotelCards && shouldShowHotels(textToSend, aiResponse, nextStep)) {
+      if (!hotelCards && !confirmedHotelNameThisTurn && shouldShowHotels(textToSend, aiResponse, nextStep)) {
         setIsHotelsLoading(true);
         try {
           hotelCards = await resolveHotelsForContext(textToSend, aiResponse, conversationCities, locale);
         } finally { setIsHotelsLoading(false); }
       } else { setIsHotelsLoading(false); }
 
-      if (hotelCards && hotelCards.length > 0) {
+      if (!confirmedHotelNameThisTurn && hotelCards && hotelCards.length > 0) {
         setAllSeenHotels((prev) => {
           const merged = [...prev];
           for (const h of hotelCards!) if (!merged.some((m) => m.id === h.id)) merged.push(h);
@@ -570,10 +915,43 @@ export default function AITripPlannerPage() {
 
       await confirmHotelFromAiText(aiResponse, knownHotelsSoFar);
 
+      // ── This is the key flow fix ──
+      // The AI conversation itself now tells us when the booking is done and
+      // gives us a real bookingId. We no longer need to guess — once
+      // isCompleted is true we store the bookingId and jump straight to the
+      // payment step (see handleConfirmAndPay), instead of re-creating the
+      // booking from scratch with (possibly stale) selected-hotel state.
+      // FIX: if this turn confirms a DIFFERENT hotel than the one our
+      // current bookingId/isCompleted belong to, that old bookingId is
+      // stale — drop it before possibly adopting a new one below. This is
+      // what caused "Confirm & Pay" to check out a completely different
+      // hotel/dates/total (e.g. an earlier-confirmed Luxor booking) than
+      // the hotel the chat had just confirmed (e.g. Cairo).
+      if (confirmedHotelNameThisTurn && confirmedHotelNameThisTurn !== lastConfirmedHotelName) {
+        setBookingId(null);
+        setIsCompleted(false);
+        setLastConfirmedHotelName(confirmedHotelNameThisTurn);
+      }
+
+      if (aiBookingId) setBookingId(aiBookingId);
+      if (nextIsCompleted) setIsCompleted(true);
+
+      // Pull the real, authoritative numbers straight out of the AI's own
+      // confirmation text — these override any locally-guessed values.
+      const nights = extractConfirmedNights(aiResponse);
+      if (nights !== null) setConfirmedNights(nights);
+      const { guests, rooms } = extractConfirmedGuestsRooms(aiResponse);
+      if (guests !== null) setConfirmedGuests(guests);
+      if (rooms !== null) setConfirmedRooms(rooms);
+      const total = extractConfirmedTotal(aiResponse);
+      if (total !== null) setConfirmedTotal(total);
+
       setMessages((prev) => [...prev, {
         id: String(Date.now() + 1), role: 'assistant', content: aiResponse,
         step: nextStep, timestamp: new Date(),
-        hotels: hotelCards?.length ? hotelCards : undefined,
+        // Don't attach hotel cards to a message that is itself a
+        // confirmation of a specific hotel — see fix note above.
+        hotels: (!confirmedHotelNameThisTurn && hotelCards?.length) ? hotelCards : undefined,
       }]);
 
     } catch (err: any) {
@@ -585,7 +963,18 @@ export default function AITripPlannerPage() {
       if (httpStatus === 429 || errMsg.includes('quota') || errMsg.includes('token limit') || errMsg.includes('limit reached')) {
         setQuotaExceeded(true); return;
       }
-      if (sessionId) {
+
+      // FIX: only treat this as a genuinely expired/invalid session (and
+      // wipe the conversation) when the server explicitly says so — a
+      // generic network blip or 500 during "confirm booking" must NOT
+      // nuke the session, or a real, already-confirmed booking looks like
+      // it vanished and the user gets bounced back to square one.
+      const isSessionInvalid = httpStatus === 404
+        || errMsg.includes('session not found')
+        || errMsg.includes('invalid session')
+        || errMsg.includes('session expired');
+
+      if (isSessionInvalid && sessionId) {
         setSessionId(null); setCurrentStep('destination');
         setConversationCities([]);
         localStorage.removeItem('rahal_planner_session_id');
@@ -595,20 +984,57 @@ export default function AITripPlannerPage() {
           content: t.sessionExpired, timestamp: new Date(), step: 'destination',
         }]);
       } else {
-        setError(locale === 'ar' ? 'عذراً، واجهنا مشكلة. يرجى المحاولة مرة أخرى.' : 'Could not connect to Rahal. Please try again.');
+        // Temporary/network/server error — keep the session and messages
+        // intact so the user can just retry without losing their progress.
+        setError(t.connectionError);
       }
     } finally { setIsLoading(false); }
-  }, [isLoading, sessionId, locale, currentStep, conversationCities, extractCities, extractDates, detectAndSelectHotel, confirmHotelFromAiText, t, router]);
+  }, [isLoading, sessionId, locale, currentStep, conversationCities, lastConfirmedHotelName, extractCities, extractDates, extractBudget, detectAndSelectHotel, confirmHotelFromAiText, t, router]);
 
   // ─── CONFIRM & PAY ────────────────────────────────────────────────────────
   const handleConfirmAndPay = useCallback(async () => {
+    setBookingError(null);
+
+    // Case 1 (preferred): the AI conversation already confirmed the booking
+    // (isCompleted === true) and handed us a real bookingId. Just start
+    // payment for it — do NOT create a second booking.
+    if (isCompleted && bookingId) {
+      setBookingStep('paying');
+      try {
+        const payRes = await paymentsApi.bookingCheckout(bookingId);
+        if ((payRes as any).status !== 'success') throw new Error('Payment session failed');
+        const { url } = (payRes as any).data as { url: string };
+        if (!url) throw new Error('No payment URL returned');
+
+        setBookingStep('done');
+        setShowSuccessModal(true);
+        setTimeout(() => { window.location.href = url; }, 1500);
+      } catch (err: any) {
+        setBookingStep('idle');
+        setBookingError(t.paymentError);
+        console.error('Payment error:', err);
+      }
+      return;
+    }
+
+    // Safety net: if the AI already marked the conversation complete but we
+    // somehow don't have a bookingId, do NOT silently fall through to
+    // Case 2 — that would create a second, different booking (wrong hotel/
+    // dates/guest count) instead of paying for the one the AI just confirmed.
+    if (isCompleted && !bookingId) {
+      setBookingError(t.bookingError);
+      console.error('AI marked booking complete but no bookingId was received.');
+      return;
+    }
+
+    // Case 2 (fallback): user picked a hotel card manually before the AI
+    // conversation reached its own "complete" step — create the booking here.
     let hotelToBook = selectedPrimaryHotel ?? selectedSecondaryHotel;
     if (!hotelToBook) {
       setBookingError(t.selectHotelFirst);
       return;
     }
 
-    // لو الفندق placeholder (مش لاقيناه في الـ API قبل كده)، ابحث عنه دلوقتي
     if (hotelToBook.id.startsWith('pending-')) {
       const found = await fetchHotelByName(hotelToBook.name);
       if (!found) {
@@ -618,7 +1044,6 @@ export default function AITripPlannerPage() {
       hotelToBook = mapApiHotel(found, 0, locale);
     }
 
-    setBookingError(null);
     setBookingStep('creating');
 
     try {
@@ -642,8 +1067,8 @@ export default function AITripPlannerPage() {
         hotel:   hotelToBook.id,
         checkIn,
         checkOut,
-        guests:  1,
-        rooms:   1,
+        guests:  confirmedGuests ?? 1,
+        rooms:   confirmedRooms ?? 1,
       });
 
       if ((bookingRes as any).status !== 'success') throw new Error('Booking creation failed');
@@ -669,7 +1094,7 @@ export default function AITripPlannerPage() {
       setBookingError(isPaymentErr ? t.paymentError : t.bookingError);
       console.error('Booking/payment error:', err);
     }
-  }, [selectedPrimaryHotel, selectedSecondaryHotel, parsedCheckIn, parsedCheckOut, bookingId, t, locale]);
+  }, [isCompleted, bookingId, selectedPrimaryHotel, selectedSecondaryHotel, parsedCheckIn, parsedCheckOut, confirmedGuests, confirmedRooms, t, locale]);
 
   // ── hotel card click ──
   const handleSelectHotelCard = useCallback((hotel: HotelOption) => {
@@ -700,13 +1125,22 @@ export default function AITripPlannerPage() {
   const currentStepIndex   = getStepIndex(currentStep);
   const isBookingInProgress = bookingStep === 'creating' || bookingStep === 'paying';
 
-  // ── pricing ── FIXED: no more fake fallback prices before a hotel is chosen ──
-  const primaryDays    = 3;
-  const secondaryDays  = 4;
+  // ── pricing ──
+  // Nights: prefer the REAL number confirmed by the AI's own booking text;
+  // fall back to parsed check-in/out dates; only then fall back to a
+  // placeholder (used solely while nothing else is known yet).
+  const primaryDays    = confirmedNights ?? nightsBetween(parsedCheckIn, parsedCheckOut, 3);
+  const secondaryDays  = confirmedNights ?? nightsBetween(parsedCheckIn, parsedCheckOut, 4);
   const primaryBase    = selectedPrimaryHotel   ? selectedPrimaryHotel.pricePerNight   * primaryDays   : 0;
   const secondaryBase  = selectedSecondaryHotel ? selectedSecondaryHotel.pricePerNight * secondaryDays : 0;
-  const currentTotal   = primaryBase + secondaryBase;
-  const optimizedTotal = currentTotal > 0 ? Math.round(currentTotal * 0.83768) : 0;
+  const estimatedTotal = primaryBase + secondaryBase;
+  // The 0.83768 "Rahal perks" multiplier is only an on-screen ESTIMATE shown
+  // while the trip is still being planned. The moment the AI confirms a real
+  // total (confirmedTotal), that real number is shown instead — never a
+  // fabricated discount on top of a real, already-confirmed price.
+  const optimizedTotal = estimatedTotal > 0 ? Math.round(estimatedTotal * 0.83768) : 0;
+  const currentTotal    = confirmedTotal ?? estimatedTotal;
+  const displayedTotal  = confirmedTotal ?? optimizedTotal;
 
   if (checkingAuth) {
     return (
@@ -726,7 +1160,7 @@ export default function AITripPlannerPage() {
       <section className="w-full bg-surface/70 backdrop-blur-md border border-outline-variant rounded-2xl p-4 sm:p-6 md:py-8 flex flex-row md:flex-row items-center justify-between gap-2 sm:gap-4 relative overflow-hidden overflow-x-auto">
         <div className="absolute inset-0 bg-gradient-to-r from-brand/5 via-accent/5 to-transparent pointer-events-none" />
         {steps.map((step, idx) => {
-          const isCompleted = idx < currentStepIndex || bookingStep === 'done';
+          const isCompletedStep = idx < currentStepIndex || bookingStep === 'done';
           const isActive    = idx === currentStepIndex && bookingStep !== 'done';
           const StepIcon    = step.icon;
           return (
@@ -734,18 +1168,18 @@ export default function AITripPlannerPage() {
               <div className="flex flex-col items-center gap-1.5 sm:gap-2 z-10 shrink-0 select-none">
                 <div className={cn(
                   'w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 font-bold',
-                  isCompleted && 'bg-primary border-primary text-bg shadow-md shadow-sm',
+                  isCompletedStep && 'bg-primary border-primary text-bg shadow-md shadow-sm',
                   isActive    && 'bg-surface-container border-primary text-primary shadow-md animate-pulse',
-                  !isCompleted && !isActive && 'bg-surface-container-low border-outline-variant text-outline'
+                  !isCompletedStep && !isActive && 'bg-surface-container-low border-outline-variant text-outline'
                 )}>
-                  {isCompleted ? <Check size={16} className="stroke-[3px] sm:!w-5 sm:!h-5" />
+                  {isCompletedStep ? <Check size={16} className="stroke-[3px] sm:!w-5 sm:!h-5" />
                     : isActive ? <StepIcon size={16} className="animate-pulse sm:!w-5 sm:!h-5" />
                     : <span className="text-xs sm:text-base">{idx + 1}</span>}
                 </div>
                 <span className={cn(
                   'text-[10px] sm:text-xs md:text-sm font-semibold tracking-wide whitespace-nowrap',
-                  isCompleted && 'text-primary', isActive && 'text-on-surface font-bold',
-                  !isCompleted && !isActive && 'text-outline'
+                  isCompletedStep && 'text-primary', isActive && 'text-on-surface font-bold',
+                  !isCompletedStep && !isActive && 'text-outline'
                 )}>{step.label}</span>
               </div>
               {idx < steps.length - 1 && (
@@ -810,7 +1244,11 @@ export default function AITripPlannerPage() {
               return (
                 <div key={msg.id} className={cn('flex flex-col max-w-[92%] sm:max-w-[85%] animate-fade-in', isUser ? 'self-end items-end' : 'self-start items-start')}>
                   <div className={cn('p-3 sm:p-4 text-sm md:text-base leading-relaxed break-words shadow-sm', isUser ? 'bg-primary text-on-primary rounded-2xl rounded-br-sm font-medium' : 'bg-surface-container text-on-surface rounded-2xl rounded-bl-sm border-s-[3px] border-secondary')}>
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    {isUser ? (
+                      <p className="whitespace-pre-wrap m-0">{msg.content}</p>
+                    ) : (
+                      renderFormattedMessage(msg.content)
+                    )}
                   </div>
                   <span className="text-[10px] text-outline mt-1.5 px-1.5 flex items-center gap-1">
                     {isUser && <Check size={10} className="text-primary shrink-0" />}
@@ -963,6 +1401,14 @@ export default function AITripPlannerPage() {
                   </button>
                 </>
               )}
+              {currentStep === 'payment' && (
+                <>
+                  <button onClick={() => handleSendMessage(locale === 'ar' ? 'سأدفع ببطاقة ائتمان' : "I'll pay by credit card")}
+                    className="bg-transparent hover:bg-surface-container rounded-lg transition-colors text-xs py-1.5 px-3 border border-outline-variant hover:border-secondary text-on-surface-variant hover:text-on-surface font-medium bg-surface-container/40">
+                    {locale === 'ar' ? 'بطاقة ائتمان' : 'Credit card'}
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -1010,8 +1456,8 @@ export default function AITripPlannerPage() {
                 <div className="overflow-hidden">
                   <span className="text-[10px] font-bold text-outline tracking-widest block">{t.destinationLabel}</span>
                   <span className="text-sm font-semibold text-on-surface truncate block">
-                    {currentStepIndex > 0
-                      ? (conversationCities.length > 0 ? conversationCities.join(' & ') + ', Egypt' : t.cairoEgypt)
+                    {conversationCities.length > 0
+                      ? conversationCities.join(' & ') + (locale === 'ar' ? '، مصر' : ', Egypt')
                       : t.awaitingSelection}
                   </span>
                 </div>
@@ -1025,7 +1471,7 @@ export default function AITripPlannerPage() {
                 <div className="overflow-hidden">
                   <span className="text-[10px] font-bold text-outline tracking-widest block">{t.travelDatesLabel}</span>
                   <span className="text-sm font-semibold text-on-surface truncate block">
-                    {currentStepIndex > 1 ? (travelDates ?? t.datesDefault) : t.awaitingSelection}
+                    {travelDates ?? t.awaitingSelection}
                   </span>
                 </div>
               </div>
@@ -1038,19 +1484,20 @@ export default function AITripPlannerPage() {
                 <div className="overflow-hidden">
                   <span className="text-[10px] font-bold text-outline tracking-widest block">{t.budgetLevelLabel}</span>
                   <span className="text-sm font-semibold text-on-surface truncate block">
-                    {currentStepIndex > 2 ? t.budgetDefault : t.awaitingSelection}
+                    {budgetLabel ?? t.awaitingSelection}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Live itinerary */}
+            {/* Live itinerary — dates/legs now reflect real state, no fabricated "Oct 12-15" */}
             <div className="border-t border-outline-variant pt-4 flex flex-col gap-3">
               <span className="text-xs font-bold text-outline tracking-wider uppercase block">{t.liveItinerary}</span>
               <div className="flex justify-between items-start gap-2">
                 <div className="pl-4 border-l-2 border-primary/40 flex flex-col">
                   <span className="text-xs font-bold text-on-surface">
-                    Oct 12-15 ({conversationCities[0] ?? (locale === 'ar' ? 'القاهرة' : 'Cairo')})
+                    {conversationCities[0] ?? (locale === 'ar' ? 'القاهرة' : 'Cairo')}
+                    {selectedPrimaryHotel && travelDates ? ` · ${travelDates}` : ''}
                   </span>
                   <span className="text-[11px] text-on-surface-variant truncate">
                     {selectedPrimaryHotel ? selectedPrimaryHotel.name : t.awaitingSelection}
@@ -1062,41 +1509,54 @@ export default function AITripPlannerPage() {
                   </span>
                 )}
               </div>
-              <div className="flex justify-between items-start gap-2 mt-2">
-                <div className="pl-4 border-l-2 border-outline-variant/60 flex flex-col">
-                  <span className="text-xs font-bold text-on-surface">
-                    Oct 16-20 ({conversationCities[1] ?? (locale === 'ar' ? 'الأقصر' : 'Luxor')})
-                  </span>
-                  <span className="text-[11px] text-outline italic">
-                    {selectedSecondaryHotel ? selectedSecondaryHotel.name : t.awaitingSelection}
-                  </span>
+              {conversationCities.length > 1 && (
+                <div className="flex justify-between items-start gap-2 mt-2">
+                  <div className="pl-4 border-l-2 border-outline-variant/60 flex flex-col">
+                    <span className="text-xs font-bold text-on-surface">
+                      {conversationCities[1] ?? (locale === 'ar' ? 'الأقصر' : 'Luxor')}
+                    </span>
+                    <span className="text-[11px] text-outline italic">
+                      {selectedSecondaryHotel ? selectedSecondaryHotel.name : t.awaitingSelection}
+                    </span>
+                  </div>
+                  {selectedSecondaryHotel && (
+                    <span className="text-xs font-extrabold text-on-surface shrink-0">
+                      ${selectedSecondaryHotel.pricePerNight * secondaryDays}
+                    </span>
+                  )}
                 </div>
-                {selectedSecondaryHotel && (
-                  <span className="text-xs font-extrabold text-on-surface shrink-0">
-                    ${selectedSecondaryHotel.pricePerNight * secondaryDays}
-                  </span>
-                )}
-              </div>
+              )}
             </div>
 
-            {/* Pricing — FIXED: hidden until a real hotel is selected */}
+            {/* Pricing — hidden until a real hotel is selected.
+                Once the AI confirms a real total, show that number as-is
+                (no fabricated discount line on top of a real price). */}
             {currentTotal > 0 ? (
               <div className="border-t border-outline-variant pt-4 flex flex-col gap-2">
-                <div className="flex justify-between items-center text-xs text-outline">
-                  <span>{t.originalPrice}</span>
-                  <span className="line-through">${currentTotal}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs text-secondary">
-                  <span className="flex items-center gap-1"><Percent size={12} />{t.rahalDiscount}</span>
-                  <span>-${currentTotal - optimizedTotal}</span>
-                </div>
+                {confirmedTotal === null && (
+                  <>
+                    <div className="flex justify-between items-center text-xs text-outline">
+                      <span>{t.originalPrice}</span>
+                      <span className="line-through">${currentTotal}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-secondary">
+                      <span className="flex items-center gap-1"><Percent size={12} />{t.rahalDiscount}</span>
+                      <span>-${currentTotal - optimizedTotal}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between items-baseline mt-2">
                   <span className="text-sm font-bold text-on-surface">{t.estTotal}</span>
-                  <span className="font-display text-xl md:text-2xl font-extrabold text-primary">${optimizedTotal}*</span>
+                  <span className="font-display text-xl md:text-2xl font-extrabold text-primary">
+                    {locale === 'ar' ? `${displayedTotal.toLocaleString()} ج.م` : `$${displayedTotal.toLocaleString()}`}
+                    {confirmedTotal === null && '*'}
+                  </span>
                 </div>
-                <span className="text-[10px] text-outline leading-normal border-t border-outline-variant/5 pt-2 text-center block">
-                  {t.perksNotice}
-                </span>
+                {confirmedTotal === null && (
+                  <span className="text-[10px] text-outline leading-normal border-t border-outline-variant/5 pt-2 text-center block">
+                    {t.perksNotice}
+                  </span>
+                )}
               </div>
             ) : (
               <div className="border-t border-outline-variant pt-4 text-xs text-outline text-center">
@@ -1115,10 +1575,10 @@ export default function AITripPlannerPage() {
             {/* Confirm & Pay button */}
             <button
               onClick={handleConfirmAndPay}
-              disabled={currentStepIndex < 3 || isBookingInProgress || bookingStep === 'done'}
+              disabled={(currentStepIndex < 3 && !isCompleted) || isBookingInProgress || bookingStep === 'done'}
               className={cn(
                 'bg-primary text-on-primary rounded-lg hover:opacity-90 transition-all w-full py-3.5 flex items-center justify-center gap-2',
-                (currentStepIndex < 3 || isBookingInProgress || bookingStep === 'done') && 'opacity-40 cursor-not-allowed'
+                ((currentStepIndex < 3 && !isCompleted) || isBookingInProgress || bookingStep === 'done') && 'opacity-40 cursor-not-allowed'
               )}
             >
               {isBookingInProgress ? (
@@ -1131,7 +1591,7 @@ export default function AITripPlannerPage() {
               ) : (
                 <>
                   <span className="font-semibold text-sm md:text-base">
-                    {currentStepIndex >= 3 ? t.confirmPayActive : t.confirmPay}
+                    {currentStepIndex >= 3 || isCompleted ? t.confirmPayActive : t.confirmPay}
                   </span>
                   <ArrowRight size={18} className={cn(isRtl && 'rotate-180', 'shrink-0')} />
                 </>
