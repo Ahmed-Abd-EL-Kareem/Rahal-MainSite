@@ -15,10 +15,23 @@ import {
   Loader2,
   Search,
   Clock,
+  Hotel,
 } from 'lucide-react';
 import { tripsApi } from '@/lib/api/trips';
 import { Trip } from '@/types/trip';
 import { cn } from '@/lib/utils/cn';
+
+// ─── Helper: يتعامل مع أي حقل ممكن يرجع من الـ API كـ string أو {en, ar} ─────
+
+function localize(value: unknown, locale: 'en' | 'ar'): string {
+  if (value == null) return '';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object') {
+    const obj = value as Record<string, string>;
+    return obj[locale] ?? obj.en ?? Object.values(obj)[0] ?? '';
+  }
+  return String(value);
+}
 
 // ─── Localization ─────────────────────────────────────────────────────────────
 
@@ -38,6 +51,7 @@ const dict = {
     errorLoad: 'Failed to load trips. Please try again.',
     update: 'Update',
     delete: 'Delete',
+    aiHotels: 'AI Hotel Recommendations',
     budget: { budget: 'Budget', 'mid-range': 'Mid-range', luxury: 'Luxury' },
   },
   ar: {
@@ -55,6 +69,7 @@ const dict = {
     errorLoad: 'فشل تحميل الرحلات. يرجى المحاولة مرة أخرى.',
     update: 'تعديل',
     delete: 'حذف',
+    aiHotels: 'توصيات فنادق بالذكاء الاصطناعي',
     budget: { budget: 'اقتصادية', 'mid-range': 'متوسطة', luxury: 'فاخرة' },
   },
 };
@@ -73,10 +88,12 @@ function formatDate(dateStr?: string) {
 function TripCard({
   trip,
   t,
+  locale,
   onDelete,
 }: {
   trip: Trip;
   t: typeof dict['en'];
+  locale: 'en' | 'ar';
   onDelete: (id: string) => void;
 }) {
   const router = useRouter();
@@ -98,6 +115,14 @@ function TripCard({
     }
   };
 
+  // استخراج آمن للنصوص اللي ممكن تكون object {en, ar}
+  const title = localize(trip.title, locale);
+  const destination = localize(trip.destination, locale);
+  const summary = localize(trip.summary, locale);
+  const budgetRaw = localize(trip.budget, locale) || (typeof trip.budget === 'string' ? trip.budget : '');
+  // مفتاح الترجمة الثابت لازم يكون بالإنجليزي الأصلي (budget/mid-range/luxury) عشان الـ dict
+  const budgetKey = (typeof trip.budget === 'string' ? trip.budget : localize(trip.budget, 'en')) as keyof typeof t.budget;
+
   return (
     <div className="bg-surface border border-outline-variant/25 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col sm:flex-row group rounded-2xl">
       {/* Image */}
@@ -105,7 +130,7 @@ function TripCard({
         {trip.imageUrl ? (
           <img
             src={trip.imageUrl}
-            alt={trip.title}
+            alt={title}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -128,11 +153,11 @@ function TripCard({
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h3 className="font-display text-sm sm:text-base md:text-lg font-bold text-on-surface line-clamp-1">
-              {trip.title}
+              {title}
             </h3>
             <p className="text-xs text-on-surface-variant flex items-center gap-1 mt-0.5 truncate">
               <MapPin size={11} className="text-primary shrink-0" />
-              <span className="truncate">{trip.destination}</span>
+              <span className="truncate">{destination}</span>
             </p>
           </div>
 
@@ -175,29 +200,40 @@ function TripCard({
           )}
         </div>
 
-        {trip.summary && (
-          <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">{trip.summary}</p>
+        {summary && (
+          <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">{summary}</p>
         )}
 
         {/* Footer */}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2 border-t border-outline-variant/15">
-          <span className={cn(
-            'text-[10px] font-bold px-2 sm:px-2.5 py-1 rounded-full border whitespace-nowrap',
-            trip.budget === 'luxury' && 'bg-tertiary/10 text-tertiary border-tertiary/20',
-            trip.budget === 'mid-range' && 'bg-primary/10 text-primary border-primary/20',
-            trip.budget === 'budget' && 'bg-success/10 text-success border-success/20',
-          )}>
-            {t.budget[trip.budget as keyof typeof t.budget] ?? trip.budget}
-          </span>
-
-          <button
-            onClick={() => router.push(`/trips/${trip._id}`)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors border-none bg-transparent cursor-pointer whitespace-nowrap"
-          >
-            <span>
-              {trip.status === 'draft' ? t.resumePlanning : t.viewDetails}
+        <div className="mt-auto flex flex-col gap-2 pt-2 border-t border-outline-variant/15">
+          <div className="flex items-center justify-between gap-2">
+            <span className={cn(
+              'text-[10px] font-bold px-2 sm:px-2.5 py-1 rounded-full border whitespace-nowrap',
+              budgetKey === 'luxury' && 'bg-tertiary/10 text-tertiary border-tertiary/20',
+              budgetKey === 'mid-range' && 'bg-primary/10 text-primary border-primary/20',
+              budgetKey === 'budget' && 'bg-success/10 text-success border-success/20',
+            )}>
+              {t.budget[budgetKey] ?? budgetRaw}
             </span>
-            <ArrowRight size={13} className="shrink-0" />
+
+            <button
+              onClick={() => router.push(`/trips/${trip._id}`)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors border-none bg-transparent cursor-pointer whitespace-nowrap"
+            >
+              <span>
+                {trip.status === 'draft' ? t.resumePlanning : t.viewDetails}
+              </span>
+              <ArrowRight size={13} className="shrink-0" />
+            </button>
+          </div>
+
+          {/* زرار توصيات الفنادق بالذكاء الاصطناعي */}
+          <button
+            onClick={() => router.push(`/hotels/recommendations?tripId=${trip._id}`)}
+            className="flex items-center justify-center gap-1.5 text-xs font-semibold text-tertiary bg-tertiary/10 hover:bg-tertiary/20 border border-tertiary/20 transition-colors rounded-lg py-2 cursor-pointer"
+          >
+            <Hotel size={13} className="shrink-0" />
+            <span>{t.aiHotels}</span>
           </button>
         </div>
       </div>
@@ -223,7 +259,6 @@ export default function MyTripsPage() {
     setError(null);
     try {
       const res = await tripsApi.getTrips({ limit: 50 });
-      // الـ API بيرجع { status, length, data: [...], pagination }
       const tripsData = (res as any).data ?? [];
       setTrips(Array.isArray(tripsData) ? tripsData : []);
     } catch {
@@ -241,13 +276,12 @@ export default function MyTripsPage() {
     setTrips((prev) => prev.filter((tr) => tr._id !== id));
   };
 
-  // Filter by search only (no tabs anymore)
   const filtered = trips.filter((tr) => {
     if (!search) return true;
-    return (
-      tr.title.toLowerCase().includes(search.toLowerCase()) ||
-      tr.destination.toLowerCase().includes(search.toLowerCase())
-    );
+    const title = localize(tr.title, locale).toLowerCase();
+    const destination = localize(tr.destination, locale).toLowerCase();
+    const q = search.toLowerCase();
+    return title.includes(q) || destination.includes(q);
   });
 
   return (
@@ -323,6 +357,7 @@ export default function MyTripsPage() {
               key={trip._id}
               trip={trip}
               t={t}
+              locale={locale}
               onDelete={handleDelete}
             />
           ))}
