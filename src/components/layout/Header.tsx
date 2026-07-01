@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Hotel,
   MapPinHouse,
+  Bookmark,
 } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -95,6 +96,8 @@ export default function Header() {
       }
     };
     checkAuth();
+    window.addEventListener('auth-change', checkAuth);
+    return () => window.removeEventListener('auth-change', checkAuth);
   }, [pathname]);
 
   // Close dropdown on outside click / Escape for predictable keyboard + pointer behavior
@@ -163,14 +166,19 @@ export default function Header() {
       "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
     setIsLoggedIn(false);
     setUserId(null);
-    window.location.href = "/";
+    // ! /////////////////////////////////////////
+    // window.location.href = "/";
+    window.dispatchEvent(new Event('auth-change'));
+    window.location.href = '/';
   };
 
   const navLinks = [
     { href: '/', label: t('home') },
     { href: '/destinations', label: t('destinations') },
     { href: '/hotels', label: t('hotels') },
-    ...(isLoggedIn ? [{ href: '/trips', label: t('trips') }] : []),
+    ...(isLoggedIn ? [{ href: '/trips', label: t('trips') },
+        { href: '/bookings', label: t('bookings') },
+    ] : []),
     { href: '/pricing', label: t('pricing') },
     { href: '/about', label: t('about') },
   ];
@@ -487,6 +495,22 @@ export default function Header() {
                     <span>{t("favoriteDestinations")}</span>
                   </Link>
 
+                  <Link
+                    href="/bookings"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container-low rounded-xl transition-colors cursor-pointer",
+                      locale === "ar" ? "flex-row-reverse" : "",
+                    )}
+                  >
+                    <Bookmark
+                      size={16}
+                      className="shrink-0 text-on-surface-variant/60"
+                      aria-hidden="true"
+                    />
+                    <span>{t("bookings")}</span>
+                  </Link>
+
                   <button
                     onClick={() => {
                       setIsDropdownOpen(false);
@@ -682,6 +706,20 @@ export default function Header() {
                     className="py-2.5 rounded-xl font-semibold"
                   >
                     {t("favoriteDestinations")}
+                  </Button>
+                </Link>
+
+                <Link
+                  href="/bookings"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="w-full"
+                >
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    className="py-2.5 rounded-xl font-semibold"
+                  >
+                    {t("bookings")}
                   </Button>
                 </Link>
 
