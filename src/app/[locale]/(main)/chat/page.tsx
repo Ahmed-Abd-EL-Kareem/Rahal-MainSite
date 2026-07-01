@@ -467,6 +467,7 @@ export default function AITravelChatPage() {
                   src="/images/logo.png"
                   alt="Rahal AI"
                   fill
+                  sizes="40px"
                   className="object-contain p-1.5"
                 />
               </div>
