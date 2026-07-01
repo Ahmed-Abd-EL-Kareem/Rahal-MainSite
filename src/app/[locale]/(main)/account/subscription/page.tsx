@@ -12,16 +12,12 @@ import {
   Sparkles,
   AlertCircle,
   Calendar,
-  ShieldCheck,
   Loader2,
   Award,
   ArrowUpRight,
   Flame,
   Map,
-  Globe,
   CheckCircle2,
-  X,
-  CreditCard,
   History
 } from 'lucide-react';
 
@@ -516,34 +512,37 @@ export default function SubscriptionSettingsPage() {
         {/* Right Column: Upgrade Prompt & Activity Log */}
         <div className="lg:col-span-4 space-y-gutter font-body">
           {/* Upgrade Prompt Card */}
-          <div className="bg-obsidian border border-primary-container/20 rounded-2xl p-6 md:p-8 relative overflow-hidden group shadow-lg text-white">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-30 pointer-events-none" />
+          <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-6 md:p-8 relative overflow-hidden group shadow-lg text-on-surface">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-20 dark:opacity-40 pointer-events-none" />
+
             <div className="relative z-10 space-y-6">
               <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
                 <Sparkles className="text-white" size={24} />
               </div>
               <div>
-                <h3 className="font-display font-semibold text-lg text-primary-fixed-dim mb-2">
+
+                <h3 className="font-display font-semibold text-lg text-primary mb-2">
                   {locale === 'ar' ? 'الارتقاء إلى كونسيرج محترف' : 'Ascend to Voyager Pro'}
                 </h3>
-                <p className="text-white/70 text-xs leading-relaxed">
+
+                <p className="text-on-surface/70 text-xs leading-relaxed">
                   {locale === 'ar'
                     ? 'أطلق العنان للقوة الكاملة لذكاء رحال مع توليد عدد غير محدود من مسارات السفر، والدعم الفوري على مدار الساعة، وخصومات الفنادق الحصرية.'
                     : 'Unlock the full power of Rahal AI with unlimited travel generation, priority concierge chatbot support, and exclusive luxury hotel booking rates.'}
                 </p>
               </div>
 
-              <ul className="space-y-3 text-xs text-white/80 font-medium">
+              <ul className="space-y-3 text-xs text-on-surface/80 font-medium">
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-primary-fixed-dim" />
+                  <Check size={14} className="text-primary" />
                   <span>{locale === 'ar' ? 'خطط رحلات ذكاء اصطناعي غير محدودة' : 'Unlimited AI Itineraries'}</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-primary-fixed-dim" />
+                  <Check size={14} className="text-primary" />
                   <span>{locale === 'ar' ? 'أولوية المحادثة الفورية مع كونسيرج' : 'Priority Concierge Assistance'}</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={14} className="text-primary-fixed-dim" />
+                  <Check size={14} className="text-primary" />
                   <span>{locale === 'ar' ? 'خرائط بدون اتصال ومقالات تاريخية' : 'Offline Access & Historical Guides'}</span>
                 </li>
               </ul>
