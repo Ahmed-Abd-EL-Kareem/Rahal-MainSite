@@ -16,7 +16,7 @@ export default function AppProviders({
   messages: AbstractIntlMessages;
 }) {
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
       <ThemeProvider>
         <QueryProvider>
           <AuthProvider>{children}</AuthProvider>

@@ -34,6 +34,7 @@ const cairo = Cairo({
 export const metadata: Metadata = {
   title: "Rahal رحّال - AI-Powered Egypt Travel Planner",
   description: "Bespoke itineraries, heritage insights, and seamless bookings for your Egypt journey.",
+  metadataBase: new URL('https://rahal-main-site.vercel.app'),
 };
 
 export default async function RootLayout({

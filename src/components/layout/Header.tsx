@@ -167,12 +167,12 @@ export default function Header() {
   };
 
   const navLinks = [
-    { href: "/", label: t("home") },
-    { href: "/destinations", label: t("destinations") },
-    { href: "/hotels", label: t("hotels") },
-    ...(isLoggedIn ? [{ href: "/planner", label: t("planner") }] : []),
-    { href: "/pricing", label: t("pricing") },
-    { href: "/about", label: t("about") },
+    { href: '/', label: t('home') },
+    { href: '/destinations', label: t('destinations') },
+    { href: '/hotels', label: t('hotels') },
+    ...(isLoggedIn ? [{ href: '/trips', label: t('trips') }] : []),
+    { href: '/pricing', label: t('pricing') },
+    { href: '/about', label: t('about') },
   ];
 
   if (!mounted) {
@@ -554,8 +554,8 @@ export default function Header() {
           className={cn(
             "absolute inset-inline-start-0 w-full transition-all duration-300 lg:hidden flex flex-col p-5 sm:p-6 gap-6 max-h-[calc(100vh-6rem)] overflow-y-auto",
             isFloating
-              ? "top-18 bg-surface/95 backdrop-blur-md border border-outline-variant/20 shadow-2xl rounded-3xl"
-              : "top-20 bg-surface border-b border-outline-variant/20 shadow-lg",
+              ? "top-18 bg-surface/95 backdrop-blur-md border border-outline-variant/20 shadow-2xl rounded-3xl left-0"
+              : "top-20 bg-surface border-b border-outline-variant/20 shadow-lg left-0",
           )}
         >
           <div className="flex flex-col gap-3">
