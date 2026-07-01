@@ -20,8 +20,8 @@ import remarkGfm from 'remark-gfm';
 import { aiApi } from '@/lib/api/ai';
 import { usersApi } from '@/lib/api/users';
 // import { tripsApi } from '@/lib/api/trips';
-import { subscriptionsApi } from '@/lib/api/subscriptions';
-import { Trip } from '@/types/trip';
+// import { subscriptionsApi } from '@/lib/api/subscriptions';
+// import { Trip } from '@/types/trip';
 import { Subscription } from '@/types/subscription';
 import { cn } from '@/lib/utils/cn';
 import type { Locale } from '@/i18n/config';
@@ -37,12 +37,12 @@ export default function AITravelChatPage() {
 
   // States
   const [authLoading, setAuthLoading] = useState(true);
-  const [tripsLoading, setTripsLoading] = useState(true);
+  // const [tripsLoading, setTripsLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [messagesHydrated, setMessagesHydrated] = useState(false);
+  // const [messagesHydrated, setMessagesHydrated] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  const [trips, setTrips] = useState<Trip[]>([]);
+  // const [trips, setTrips] = useState<Trip[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'error' } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
