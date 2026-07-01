@@ -604,7 +604,7 @@ export default function BookingStatusPage({ params }: PageProps) {
           </section>
 
           {/* 24/7 Support Desk Block */}
-          <section className="bg-[#141008] text-white p-6 rounded-xl border border-primary/10 shadow-md flex flex-col gap-4 print:hidden">
+          {/* <section className="bg-[#141008] text-white p-6 rounded-xl border border-primary/10 shadow-md flex flex-col gap-4 print:hidden">
             <h4 className="font-display font-bold text-lg text-primary">
               {t('statusPage.helpTitle')}
             </h4>
@@ -627,7 +627,7 @@ export default function BookingStatusPage({ params }: PageProps) {
                 <span>{t('statusPage.startChat')}</span>
               </button>
             </div>
-          </section>
+          </section> */}
 
         </div>
       </div>

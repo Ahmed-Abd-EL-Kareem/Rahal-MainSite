@@ -202,7 +202,7 @@ export default function MyBookingsPage() {
           </div>
           
           <Link
-            href={`/${locale}/planner`}
+            href={`/${locale}/trips/new`}
             className="w-full md:w-auto px-6 py-3 bg-white text-secondary hover:bg-white/90 font-semibold rounded-lg text-sm text-center shadow-md transition-all active:scale-95 whitespace-nowrap"
           >
             {t('aiAssistant.cta')}

@@ -253,7 +253,7 @@ export default function BookingCard({ booking }: BookingCardProps) {
                     <button 
                       onClick={handlePayNow}
                       disabled={checkoutMutation.isPending}
-                      className="px-4 py-2 bg-primary text-white hover:bg-primary/90 transition-all active:scale-95 rounded-lg font-semibold text-xs flex items-center gap-1.5 min-w-[95px] shadow-sm hover:shadow text-center"
+                      className="px-4 py-2 bg-primary text-white hover:bg-primary/90 transition-all active:scale-95 rounded-lg font-semibold text-xs flex justify-center items-center gap-1.5 min-w-[95px] shadow-sm hover:shadow text-center"
                     >
                       {checkoutMutation.isPending ? (
                         <Loader2 size={14} className="animate-spin" />
