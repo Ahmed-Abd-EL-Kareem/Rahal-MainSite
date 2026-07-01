@@ -20,7 +20,7 @@ import remarkGfm from 'remark-gfm';
 import { aiApi } from '@/lib/api/ai';
 import { usersApi } from '@/lib/api/users';
 // import { tripsApi } from '@/lib/api/trips';
-// import { subscriptionsApi } from '@/lib/api/subscriptions';
+import { subscriptionsApi } from '@/lib/api/subscriptions';
 // import { Trip } from '@/types/trip';
 import { Subscription } from '@/types/subscription';
 import { cn } from '@/lib/utils/cn';
@@ -82,7 +82,7 @@ export default function AITravelChatPage() {
       router.push('/login');
     } else {
       setAuthLoading(false);
-      // fetchSidebarData();
+      fetchSidebarData();
 
       const token = tokenMatch[2];
       if (token) {
@@ -112,27 +112,27 @@ export default function AITravelChatPage() {
     }
   }, [toast]);
 
-  // const fetchSidebarData = async () => {
-  //   try {
-  //     const tripsRes = await tripsApi.getTrips({ limit: 5 });
-  //     if (tripsRes.status === 'success') {
-  //       setTrips(tripsRes.data || []);
-  //     }
-  //   } catch (err) {
-  //     console.error('Error fetching trips:', err);
-  //   } finally {
-  //     setTripsLoading(false);
-  //   }
+  const fetchSidebarData = async () => {
+    // try {
+    //   const tripsRes = await tripsApi.getTrips({ limit: 5 });
+    //   if (tripsRes.status === 'success') {
+    //     setTrips(tripsRes.data || []);
+    //   }
+    // } catch (err) {
+    //   console.error('Error fetching trips:', err);
+    // } finally {
+    //   setTripsLoading(false);
+    // }
 
-  //   try {
-  //     const subRes = await subscriptionsApi.getMySubscription();
-  //     if (subRes.status === 'success') {
-  //       setSubscription(subRes.data);
-  //     }
-  //   } catch (err) {
-  //     console.error('Error fetching subscription:', err);
-  //   }
-  // };
+    try {
+      const subRes = await subscriptionsApi.getMySubscription();
+      if (subRes.status === 'success') {
+        setSubscription(subRes.data);
+      }
+    } catch (err) {
+      console.error('Error fetching subscription:', err);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
