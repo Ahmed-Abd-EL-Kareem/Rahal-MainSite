@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import {  
   Search, Filter, Grid, Map as MapIcon, ChevronLeft, ChevronRight, 
   Sliders, DollarSign, AlertCircle,
-  Loader2, MessageSquare, X, Sparkles
+  Loader2, MessageSquare, X, Sparkles, Calendar
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -152,10 +152,14 @@ return (
               }
             </p>
             <div className="mt-4 flex justify-center">
-              <Link href={`/${locale}/hotels/ai-search`}>
-                <Button variant="secondary" className="gap-2 px-6 py-3">
-                  <Sparkles size={18} />
-                  <span>{t('aiSearchNav')}</span>
+              <Link href={`/${locale}/booking/conversation`}>
+                <Button 
+                  variant="primary" 
+                  className="gap-2.5 px-7 py-3.5 rounded-xl text-base font-semibold shadow-md hover:shadow-[0_0_24px_var(--color-brand-glow),0_8px_24px_var(--color-accent-glow)] transition-all active:scale-95"
+                >
+                  <Calendar size={18} />
+                  <span>{t('bookWithAi')}</span>
+                  <Sparkles size={12} className="text-accent animate-pulse" />
                 </Button>
               </Link>
             </div>
