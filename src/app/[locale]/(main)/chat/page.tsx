@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import Link from 'next/link';
+// import Link from 'next/link';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -19,7 +19,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { aiApi } from '@/lib/api/ai';
 import { usersApi } from '@/lib/api/users';
-import { tripsApi } from '@/lib/api/trips';
+// import { tripsApi } from '@/lib/api/trips';
 import { subscriptionsApi } from '@/lib/api/subscriptions';
 import { Trip } from '@/types/trip';
 import { Subscription } from '@/types/subscription';
@@ -27,11 +27,6 @@ import { cn } from '@/lib/utils/cn';
 import type { Locale } from '@/i18n/config';
 import type { ChatMessage } from '@/lib/chat/types';
 import { getMessageContent, toApiMessages } from '@/lib/chat/types';
-import {
-  loadChatMessages,
-  saveChatMessages,
-  clearChatMessages,
-} from '@/lib/chat/storage';
 
 export default function AITravelChatPage() {
   const router = useRouter();
@@ -80,18 +75,6 @@ export default function AITravelChatPage() {
     setToast({ message, type });
   }, []);
 
-  // Restore chat from session storage on mount
-  useEffect(() => {
-    setMessages(loadChatMessages());
-    setMessagesHydrated(true);
-  }, []);
-
-  // Persist chat whenever messages change (after hydration)
-  useEffect(() => {
-    if (!messagesHydrated) return;
-    saveChatMessages(messages);
-  }, [messages, messagesHydrated]);
-
   // Authentication & Initial Data Fetching
   useEffect(() => {
     const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
@@ -99,7 +82,7 @@ export default function AITravelChatPage() {
       router.push('/login');
     } else {
       setAuthLoading(false);
-      fetchSidebarData();
+      // fetchSidebarData();
 
       const token = tokenMatch[2];
       if (token) {
@@ -129,27 +112,27 @@ export default function AITravelChatPage() {
     }
   }, [toast]);
 
-  const fetchSidebarData = async () => {
-    try {
-      const tripsRes = await tripsApi.getTrips({ limit: 5 });
-      if (tripsRes.status === 'success') {
-        setTrips(tripsRes.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching trips:', err);
-    } finally {
-      setTripsLoading(false);
-    }
+  // const fetchSidebarData = async () => {
+  //   try {
+  //     const tripsRes = await tripsApi.getTrips({ limit: 5 });
+  //     if (tripsRes.status === 'success') {
+  //       setTrips(tripsRes.data || []);
+  //     }
+  //   } catch (err) {
+  //     console.error('Error fetching trips:', err);
+  //   } finally {
+  //     setTripsLoading(false);
+  //   }
 
-    try {
-      const subRes = await subscriptionsApi.getMySubscription();
-      if (subRes.status === 'success') {
-        setSubscription(subRes.data);
-      }
-    } catch (err) {
-      console.error('Error fetching subscription:', err);
-    }
-  };
+  //   try {
+  //     const subRes = await subscriptionsApi.getMySubscription();
+  //     if (subRes.status === 'success') {
+  //       setSubscription(subRes.data);
+  //     }
+  //   } catch (err) {
+  //     console.error('Error fetching subscription:', err);
+  //   }
+  // };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -234,9 +217,8 @@ export default function AITravelChatPage() {
   const handleNewChat = () => {
     if (messages.length === 0) return;
     setMessages([]);
-    clearChatMessages();
     showToast(t('newChatStarted'));
-  };
+  }
 
 
   if (authLoading) {
@@ -287,7 +269,7 @@ export default function AITravelChatPage() {
         </div>
 
         {/* Recent Plans (Trips) list */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 space-y-2">
+        {/* <div className="flex-1 overflow-y-auto custom-scrollbar px-4 space-y-2">
           <div className="px-2 py-1 text-xs font-semibold text-outline uppercase tracking-wider">
             {t('recentPlans')}
           </div>
@@ -313,7 +295,7 @@ export default function AITravelChatPage() {
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Token Usage / AI Credits */}
         <div className="p-6 border-t border-outline-variant/20 bg-surface-container-lowest/30">
