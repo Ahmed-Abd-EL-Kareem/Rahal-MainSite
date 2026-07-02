@@ -890,8 +890,51 @@
     "upgradeBtn": "Upgrade Plan",
     "cancelBtn": "Cancel Subscription",
     "cancelConfirm": "Are you sure you want to cancel your subscription?",
-    "cancelSuccess": "Subscription canceled successfully."
-  },"bookings": {
+    "cancelSuccess": "Subscription canceled successfully.",
+    "subscriptionCancel": {
+      "title": "Payment Cancelled",
+      "subtitle": "Your subscription payment was not completed. You can try again or check your account for current subscription status.",
+      "retryPayment": "Try Again",
+      "goToAccount": "Go to Account"
+    },
+    "paymentCancel": {
+      "title": "Payment Cancelled",
+      "subtitle": "Your booking payment was not completed. You can try again or return to your trips.",
+      "retryPayment": "Retry Payment",
+      "goToTrips": "Go to Trips"
+    },
+    "subscriptionSuccess": {
+      "loadingTitle": "Verifying Payment",
+      "loadingSubtitle": "Please wait while we verify your subscription payment.",
+      "errorTitle": "Unable to Verify Payment",
+      "goToAccount": "Go to Account",
+      "failedTitle": "Payment Failed",
+      "failedSubtitle": "We couldn't process your subscription payment. Please try again.",
+      "retryPayment": "Retry Payment",
+      "pendingTitle": "Payment Pending",
+      "pendingSubtitle": "Your payment is being processed. This may take a few minutes.",
+      "successTitle": "Subscription Activated!",
+      "successSubtitle": "Your subscription is now active. Welcome to Traveler Pro!",
+      "plan": "Plan",
+      "amount": "Amount",
+      "billingCycle": "Billing Cycle",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "startDate": "Start Date",
+      "nextBillingDate": "Next Billing Date",
+"viewSubscription": "View Subscription",
+      "browseExperiences": "Browse Experiences",
+      "subscriptionReference": "Subscription Reference",
+      "active": "Active",
+      "travelerPro": "Traveler Pro",
+      "subscriptionPlan": "Subscription Plan",
+      "totalPaid": "Total Paid",
+      "aiInsight": "Rahal AI: Your subscription unlocks unlimited AI trip planning.",
+      "verifyingAttempt": "Verifying payment... (attempt {attempt} of {maxAttempts})",
+      "verificationTimeout": "Verification taking longer than expected. Please check your account or try again later."
+  }
+  },
+  "bookings": {
     "title": "My Bookings",
     "subtitle": "Manage your stays and explore your upcoming Egyptian adventures. Your personal concierge is ready to assist with any changes.",
     "searchPlaceholder": "Search reservations...",

@@ -59,7 +59,7 @@ export default function PricingSection() {
               </li>
             ))}
           </ul>
-          <Link href="/signup">
+          <Link href="/pricing">
             <Button variant="secondary" pill fullWidth className="py-3.5 border-secondary text-secondary">
               {t('wanderer.cta')}
             </Button>
@@ -88,7 +88,7 @@ export default function PricingSection() {
               </li>
             ))}
           </ul>
-          <Link href="/signup">
+          <Link href="/pricing">
             <Button variant="primary" pill fullWidth className="py-3.5 shadow-lg">
               {t('pro.cta')}
             </Button>

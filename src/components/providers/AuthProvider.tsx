@@ -26,6 +26,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper to extract locale from pathname (e.g., "/en/login" -> "en")
+const getLocaleFromPathname = (pathname: string): string => {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length > 0 && (segments[0] === "en" || segments[0] === "ar")) {
+    return segments[0];
+  }
+  return "en"; // default
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,23 +86,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user;
 
   // Redirect authenticated users away from auth pages
-  // Only runs on initial mount, not on login (which is handled by login page)
+  // Runs on mount and whenever pathname/auth state changes
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
+      const locale = getLocaleFromPathname(pathname);
       const authPaths = [
         "/login",
         "/signup",
         "/forgot-password",
         "/reset-password",
+        "/verify-otp",
       ];
-      const isAuthPath = authPaths.some((path) => pathname.includes(path));
+      // Check for locale-prefixed paths: /en/login, /ar/signup, etc.
+      const isAuthPath = authPaths.some(
+        (path) => pathname === `/${locale}${path}` || pathname === path
+      );
 
       if (isAuthPath) {
-        router.push("/");
+        router.push(`/${locale}`);
         router.refresh();
       }
     }
-  }, []); // Run only once on mount to catch pre-existing auth
+  }, [pathname, isAuthenticated, isLoading, router]);
 
   return (
     <AuthContext.Provider

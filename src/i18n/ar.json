@@ -882,7 +882,50 @@
     "upgradeBtn": "ترقية الباقة",
     "cancelBtn": "إلغاء الاشتراك",
     "cancelConfirm": "هل أنت متأكد من أنك تريد إلغاء اشتراكك؟",
-    "cancelSuccess": "تم إلغاء الاشتراك بنجاح."
+    "cancelSuccess": "تم إلغاء الاشتراك بنجاح.",
+    "subscriptionCancel": {
+      "title": "تم الغاء الدفع",
+      "subtitle": "لم يكتمل دفع الاشتراك الخاص بكم. يمكنك المحاولة مرة أخرى أو التحقق من حسابك لمعرفة حالية الاشتراك الحالية.",
+      "retryPayment": "حاول مرة أخرى",
+      "goToAccount": "الذهاب للحساب"
+    },
+    "paymentCancel": {
+      "title": "تم الغاء الدفع",
+      "subtitle": "لم يكتمل دفع الحجز الخاص بكم. يمكنك المحاولة مرة أخرى أو العودة لرحلاتك.",
+      "retryPayment": "إعادة الدفع",
+      "goToTrips": "الذهاب للرحلات"
+    },
+    "subscriptionSuccess": {
+      "loadingTitle": "جاري التحقق من الدفع",
+      "loadingSubtitle": "يرجى الانتظار بينما نتحقق من معاملتك مع Stripe. لا تقم بتحديث الصفحة أو إغلاقها.",
+      "errorTitle": "حدث خطأ",
+      "errorSubtitle": "تعذر التحقق من حالة الدفع. يرجى المحاولة مرة أخرى أو الانتقال إلى حسابك.",
+      "goToAccount": "الذهاب للحساب",
+      "failedTitle": "فشل الدفع",
+      "failedSubtitle": "لم يكتمل دفع اشتراكك. يمكنك المحاولة مرة أخرى أو التحقق من حسابك لمعرفة حالة الاشتراك الحالية.",
+      "retryPayment": "حاول مرة أخرى",
+      "pendingTitle": "الدفع قيد المعالجة",
+      "pendingSubtitle": "دفعك قيد المعالجة حالياً. سنقوم بتحديث الحالة بمجرد تأكيدها.",
+      "successTitle": "تم تفعيل الاشتراك!",
+      "successSubtitle": "اشتراكك نشط الآن. مرحباً بك في Traveler Pro!",
+      "plan": "الخطة",
+      "amount": "المبلغ",
+      "billingCycle": "دورة الفوترة",
+      "monthly": "شهري",
+      "yearly": "سنوي",
+      "startDate": "تاريخ البداية",
+      "nextBillingDate": "تاريخ الفوترة القادم",
+      "viewSubscription": "عرض الاشتراك",
+      "browseExperiences": "استكشاف التجارب",
+      "subscriptionReference": "مرجع الاشتراك",
+      "active": "نشط",
+      "travelerPro": "Traveler Pro",
+      "subscriptionPlan": "خطة الاشتراك",
+      "totalPaid": "إجمالي المدفوع",
+      "aiInsight": "رحال AI: اشتراكك يفتح التخطيط غير المحدود للرحلات بالذكاء الاصطناعي.",
+      "verifyingAttempt": "جاري التحقق من الدفع... (محاولة {attempt} من {maxAttempts})",
+      "verificationTimeout": "التحقق يستغرق وقتاً أطول من المتوقع. يرجى التحقق من حسابك أو المحاولة لاحقاً."
+    }
   },
   "bookings": {
     "title": "حجوزاتي",

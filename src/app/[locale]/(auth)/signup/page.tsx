@@ -96,6 +96,9 @@ export default function SignUpPage() {
           name: response.data.user.name,
           avatar: response.data.user.image,
         });
+        // Redirect to home page after successful signup
+        router.push(`/${locale}`);
+        router.refresh();
       } else {
         setError(t('errors.emailInUse'));
       }
