@@ -1,9 +1,7 @@
 'use client';
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-// import Link from 'next/link';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -19,9 +17,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { aiApi } from '@/lib/api/ai';
 import { usersApi } from '@/lib/api/users';
-// import { tripsApi } from '@/lib/api/trips';
 import { subscriptionsApi } from '@/lib/api/subscriptions';
-// import { Trip } from '@/types/trip';
 import { Subscription } from '@/types/subscription';
 import { cn } from '@/lib/utils/cn';
 import type { Locale } from '@/i18n/config';
@@ -37,12 +33,9 @@ export default function AITravelChatPage() {
 
   // States
   const [authLoading, setAuthLoading] = useState(true);
-  // const [tripsLoading, setTripsLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  // const [messagesHydrated, setMessagesHydrated] = useState(false);
   const [inputValue, setInputValue] = useState('');
-  // const [trips, setTrips] = useState<Trip[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'error' } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -113,17 +106,6 @@ export default function AITravelChatPage() {
   }, [toast]);
 
   const fetchSidebarData = async () => {
-    // try {
-    //   const tripsRes = await tripsApi.getTrips({ limit: 5 });
-    //   if (tripsRes.status === 'success') {
-    //     setTrips(tripsRes.data || []);
-    //   }
-    // } catch (err) {
-    //   console.error('Error fetching trips:', err);
-    // } finally {
-    //   setTripsLoading(false);
-    // }
-
     try {
       const subRes = await subscriptionsApi.getMySubscription();
       if (subRes.status === 'success') {
@@ -268,34 +250,6 @@ export default function AITravelChatPage() {
           </button>
         </div>
 
-        {/* Recent Plans (Trips) list */}
-        {/* <div className="flex-1 overflow-y-auto custom-scrollbar px-4 space-y-2">
-          <div className="px-2 py-1 text-xs font-semibold text-outline uppercase tracking-wider">
-            {t('recentPlans')}
-          </div>
-          {tripsLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-5 h-5 animate-spin text-outline" />
-            </div>
-          ) : trips.length === 0 ? (
-            <div className="text-xs text-on-surface-variant/60 px-2 py-4">
-              {isAr ? 'لا توجد رحلات مخططة بعد.' : 'No trips planned yet.'}
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {trips.map((trip) => (
-                <Link
-                  key={trip._id}
-                  href={`/planner/${trip._id}`}
-                  className="group flex items-center gap-3 p-3 rounded-xl hover:bg-surface-variant/40 text-on-surface-variant hover:text-primary transition-all duration-200"
-                >
-                  <History className="w-4 h-4 text-outline group-hover:text-primary shrink-0" />
-                  <span className="text-sm font-medium truncate flex-1">{trip.title}</span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div> */}
 
         {/* Token Usage / AI Credits */}
         <div className="p-6 border-t border-outline-variant/20 bg-surface-container-lowest/30">
@@ -376,7 +330,9 @@ export default function AITravelChatPage() {
                     key={index}
                     className={cn(
                       "flex gap-3 md:gap-4 max-w-[85%] md:max-w-[80%]",
-                      isUser ? "ml-auto flex-row-reverse" : "mr-auto"
+                      isUser
+                        ? (isAr ? "mr-auto flex-row-reverse" : "ml-auto flex-row-reverse")
+                        : (isAr ? "ml-auto flex-row" : "mr-auto flex-row")
                     )}
                   >
                     {/* Avatar */}
@@ -394,6 +350,7 @@ export default function AITravelChatPage() {
                             src={userImage}
                             alt={currentUser?.name || "User"}
                             fill
+                            sizes="(max-width: 768px) 36px, 40px"
                             className="object-cover"
                             onError={() => setUserImageError(true)}
                           />
@@ -407,6 +364,7 @@ export default function AITravelChatPage() {
                           src="/images/logo.png"
                           alt="Rahal AI"
                           fill
+                          sizes="40px"
                           className="object-contain p-1.5"
                         />
                       )}
@@ -417,8 +375,14 @@ export default function AITravelChatPage() {
                       className={cn(
                         "p-4 rounded-2xl text-sm md:text-base leading-relaxed shadow-sm",
                         isUser
-                          ? "bg-primary text-white rounded-tr-none whitespace-pre-wrap"
-                          : "bg-surface border border-outline-variant/20 text-on-surface rounded-tl-none prose dark:prose-invert max-w-none"
+                          ? cn(
+                            "bg-primary text-white whitespace-pre-wrap",
+                            isAr ? "rounded-tl-none" : "rounded-tr-none"
+                          )
+                          : cn(
+                            "bg-surface border border-outline-variant/20 text-on-surface prose dark:prose-invert max-w-none",
+                            isAr ? "rounded-tr-none text-right" : "rounded-tl-none text-left"
+                          )
                       )}
                     >
                       {isUser ? (
@@ -461,7 +425,10 @@ export default function AITravelChatPage() {
 
           {/* AI Typing Indicator */}
           {isLoading && (
-            <div className="max-w-4xl mx-auto flex gap-3 md:gap-4 max-w-[85%] md:max-w-[80%] items-center mr-auto">
+            <div className={cn(
+              "max-w-4xl mx-auto flex gap-3 md:gap-4 max-w-[85%] md:max-w-[80%] items-center",
+              isAr ? "ml-auto flex-row" : "mr-auto flex-row"
+            )}>
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-obsidian flex items-center justify-center shrink-0 shadow-md border border-primary/10 relative overflow-hidden">
                 <Image
                   src="/images/logo.png"
@@ -471,7 +438,10 @@ export default function AITravelChatPage() {
                   className="object-contain p-1.5"
                 />
               </div>
-              <div className="bg-surface border border-outline-variant/20 flex items-center gap-1.5 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm">
+              <div className={cn(
+                "bg-surface border border-outline-variant/20 flex items-center gap-1.5 px-4 py-3 rounded-2xl shadow-sm",
+                isAr ? "rounded-tr-none" : "rounded-tl-none"
+              )}>
                 <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
