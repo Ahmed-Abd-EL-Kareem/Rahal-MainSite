@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter } from "@/i18n/navigation";
 import React, {
   createContext,
   useContext,
@@ -7,7 +8,7 @@ import React, {
   useState,
   ReactNode,
 } from "react";
-import { useRouter, usePathname } from "next/navigation";
+// import { useRouter, usePathname } from "next/navigation";
 
 interface User {
   id: string;
@@ -69,46 +70,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (token: string, userData: User) => {
-    document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
-    setUser(userData);
-    // Redirect handled by caller
-  };
+const login = async (token: string, userData: User) => {
+  document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
+  setUser(userData);
+  window.dispatchEvent(new Event("auth-change")); // keep Header in sync
+};
 
-  const logout = () => {
-    document.cookie =
-      "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-    setUser(null);
-    router.push("/");
-    router.refresh();
-  };
-
+  // const logout = () => {
+  //   document.cookie =
+  //     "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+  //   setUser(null);
+  //   router.push("/");
+  //   router.refresh();
+  // };
+const logout = () => {
+  document.cookie =
+    "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+  setUser(null);
+  router.push("/");
+};
   const isAuthenticated = !!user;
 
   // Redirect authenticated users away from auth pages
   // Runs on mount and whenever pathname/auth state changes
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      const locale = getLocaleFromPathname(pathname);
-      const authPaths = [
-        "/login",
-        "/signup",
-        "/forgot-password",
-        "/reset-password",
-        "/verify-otp",
-      ];
-      // Check for locale-prefixed paths: /en/login, /ar/signup, etc.
-      const isAuthPath = authPaths.some(
-        (path) => pathname === `/${locale}${path}` || pathname === path
-      );
+  // useEffect(() => {
+  //   if (!isLoading && isAuthenticated) {
+  //     const locale = getLocaleFromPathname(pathname);
+  //     const authPaths = [
+  //       "/login",
+  //       "/signup",
+  //       "/forgot-password",
+  //       "/reset-password",
+  //       "/verify-otp",
+  //     ];
+  //     // Check for locale-prefixed paths: /en/login, /ar/signup, etc.
+  //     const isAuthPath = authPaths.some(
+  //       (path) => pathname === `/${locale}${path}` || pathname === path
+  //     );
 
-      if (isAuthPath) {
-        router.push(`/${locale}`);
-        router.refresh();
-      }
+  //     if (isAuthPath) {
+  //       router.push(`/`);
+  //       router.refresh();
+  //     }
+  //   }
+  // }, [pathname, isAuthenticated, isLoading, router]);
+useEffect(() => {
+  if (!isLoading && isAuthenticated) {
+    const authPaths = [
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/reset-password",
+      "/verify-otp",
+    ];
+    const isAuthPath = authPaths.some((path) => pathname === path);
+
+    if (isAuthPath) {
+      router.push("/");
     }
-  }, [pathname, isAuthenticated, isLoading, router]);
-
+  }
+}, [pathname, isAuthenticated, isLoading, router]);
   return (
     <AuthContext.Provider
       value={{ user, isLoading, isAuthenticated, login, logout }}

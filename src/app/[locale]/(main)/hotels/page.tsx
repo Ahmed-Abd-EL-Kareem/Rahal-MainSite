@@ -187,7 +187,7 @@ return (
                 {/* AI Search Button - Navigate to AI Search Page */}
                 <Link href={`/${locale}/hotels/ai-search`}>
                   <Button variant="secondary" fullWidth className="gap-2 py-3 font-semibold mb-4"
-                    onClick={(e) => e.preventDefault()}
+                    
                   >
                     <Sparkles size={18} />
                     <span>{t('aiSearchNav')}</span>

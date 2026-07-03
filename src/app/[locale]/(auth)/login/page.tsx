@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Compass, AlertCircle } from 'lucide-react';
@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import { authApi } from '@/lib/api/auth';
 import AuthLayout from '@/components/layout/AuthLayout';
 import { useAuth } from '@/components/providers/AuthProvider';
+import { useRouter } from '@/i18n/navigation';
 
 export default function LogInPage() {
   const t = useTranslations('auth');
@@ -37,17 +38,32 @@ const handleSubmit = async (e: React.FormEvent) => {
   try {
     const response = await authApi.login({ email, password });
 
+    // if (response && response.token) {
+    //   // Set auth state FIRST, and await it if it's async
+    //   await login(response.token, {
+    //     id: response.data.user._id,
+    //     email: response.data.user.email,
+    //     name: response.data.user.name,
+    //     avatar: response.data.user.image,
+    //   });
+    //   // Redirect to home page after successful login
+    //   // router.refresh();
+    //   // router.replace(`/`);
+    //   router.push(`/`);
+    //   router.refresh();
+    //   // window.location.href = `/${locale}`;
+    // } else {
+    //   setError(t("errors.invalidCredentials"));
+    // }
     if (response && response.token) {
-      // Set auth state FIRST, and await it if it's async
       await login(response.token, {
         id: response.data.user._id,
         email: response.data.user.email,
         name: response.data.user.name,
         avatar: response.data.user.image,
       });
-      // Redirect to home page after successful login
-      router.push(`/${locale}`);
-      router.refresh();
+      // no manual push/refresh here — AuthProvider's effect
+      // redirects automatically once isAuthenticated flips true
     } else {
       setError(t("errors.invalidCredentials"));
     }

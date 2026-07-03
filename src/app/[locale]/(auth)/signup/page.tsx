@@ -1,29 +1,41 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useTranslations, useLocale } from 'next-intl';
-import { Mail, Lock, Eye, EyeOff, User, Compass, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import { authApi } from '@/lib/api/auth';
-import AuthLayout from '@/components/layout/AuthLayout';
-import { useAuth } from '@/components/providers/AuthProvider';
-import Image from 'next/image';
+import React, { useState, useEffect } from "react";
+// import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Compass,
+  Sparkles,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import Button from "@/components/ui/Button";
+import { authApi } from "@/lib/api/auth";
+import AuthLayout from "@/components/layout/AuthLayout";
+import { useAuth } from "@/components/providers/AuthProvider";
+import Image from "next/image";
+import { useRouter } from "@/i18n/navigation";
 
 export default function SignUpPage() {
-  const t = useTranslations('auth');
+  const t = useTranslations("auth");
   const locale = useLocale();
   const router = useRouter();
   const { login } = useAuth();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
-  
+
   const [passwordStrength, setPasswordStrength] = useState(0); // 0-4
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,42 +56,57 @@ export default function SignUpPage() {
 
   const getStrengthLabel = () => {
     switch (passwordStrength) {
-      case 1: return t('strengthWeak');
-      case 2: return t('strengthFair');
-      case 3: return t('strengthGood');
-      case 4: return t('strengthStrong');
-      default: return t('strengthNone');
+      case 1:
+        return t("strengthWeak");
+      case 2:
+        return t("strengthFair");
+      case 3:
+        return t("strengthGood");
+      case 4:
+        return t("strengthStrong");
+      default:
+        return t("strengthNone");
     }
   };
 
   const getStrengthColor = () => {
     switch (passwordStrength) {
-      case 1: return 'bg-error'; // red
-      case 2: return 'bg-primary-container'; // orange/yellow
-      case 3: return 'bg-primary'; // brand gold
-      case 4: return 'bg-success'; // green
-      default: return 'bg-surface-container-highest';
+      case 1:
+        return "bg-error"; // red
+      case 2:
+        return "bg-primary-container"; // orange/yellow
+      case 3:
+        return "bg-primary"; // brand gold
+      case 4:
+        return "bg-success"; // green
+      default:
+        return "bg-surface-container-highest";
     }
   };
 
   const getStrengthTextColor = () => {
     switch (passwordStrength) {
-      case 1: return 'text-error';
-      case 2: return 'text-primary-container';
-      case 3: return 'text-primary';
-      case 4: return 'text-success';
-      default: return 'text-outline';
+      case 1:
+        return "text-error";
+      case 2:
+        return "text-primary-container";
+      case 3:
+        return "text-primary";
+      case 4:
+        return "text-success";
+      default:
+        return "text-outline";
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) {
-      setError(t('errors.missingFields'));
+      setError(t("errors.missingFields"));
       return;
     }
     if (!agreeTerms) {
-      setError(t('errors.termsRequired'));
+      setError(t("errors.termsRequired"));
       return;
     }
 
@@ -88,24 +115,36 @@ export default function SignUpPage() {
 
     try {
       const response = await authApi.signup({ name, email, password });
+      // if (response && response.token) {
+      //   // Use AuthProvider's login function to set auth state
+      //   login(response.token, {
+      //     id: response.data.user._id,
+      //     email: response.data.user.email,
+      //     name: response.data.user.name,
+      //     avatar: response.data.user.image,
+      //   });
+      //   // Redirect to home page after successful signup
+      //   router.push(`/${locale}`);
+      //   router.refresh();
+      // } else {
+      //   setError(t('errors.emailInUse'));
+      // }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (response && response.token) {
-        // Use AuthProvider's login function to set auth state
-        login(response.token, {
+        await login(response.token, {
           id: response.data.user._id,
           email: response.data.user.email,
           name: response.data.user.name,
           avatar: response.data.user.image,
         });
-        // Redirect to home page after successful signup
-        router.push(`/${locale}`);
-        router.refresh();
+        // no manual push/refresh here — AuthProvider's effect
+        // redirects automatically once isAuthenticated flips true
       } else {
-        setError(t('errors.emailInUse'));
+        setError(t("errors.invalidCredentials"));
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      console.error('Signup error:', err);
-      setError(err.message || t('errors.emailInUse'));
+      console.error("Signup error:", err);
+      setError(err.message || t("errors.emailInUse"));
     } finally {
       setLoading(false);
     }
