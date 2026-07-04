@@ -1,36 +1,133 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rahal Main Site
 
-## Getting Started
+## English
 
-First, run the development server:
+This project was developed by our team as a final project for the ITI trainee program.
+We built this website as a modern travel and booking platform with a multilingual experience, user authentication, destination and hotel browsing, booking flow, and a polished user interface.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Team Members
+
+We worked on this project as a team for our final project at ITI Training:
+
+- Ahmed Ayman — Team leader, managed the project file structure, handled GitHub organization, created the first web skeleton, fixed bugs, reviewed code, and created ClickUp tasks.
+- Hala AbdElhameed
+- Ameen Salah
+- Mostafa Mohamed
+- Salma Ahmed
+- Hager AbdElatif
+
+### Project Highlights
+
+- Modern Next.js web application
+- Arabic and English localization
+- Authentication pages and account flow
+- Hotel and destination browsing
+- Booking and payment-related experience
+- Responsive UI with Tailwind CSS
+
+### Tech Stack
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- next-intl
+- React Query
+- Axios
+- Leaflet for maps
+
+### Getting Started
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Open your browser at:
+   ```text
+   http://localhost:3000
+   ```
+
+### Project Structure
+
+```text
+src/
+  app/           # Pages and layouts
+  components/    # Reusable UI components
+  hooks/         # Custom hooks
+  i18n/          # Localization files
+  lib/           # API helpers and utilities
+  types/         # TypeScript types
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Arabic
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+هذا المشروع تم تطويره من قبل فريقنا ضمن مشروع التخرج في برنامج ITI Training.
+قمنا ببناء هذا الموقع كمنصة حديثة للسفر والحجوزات، مع تجربة ثنائية اللغة، وتسجيل الدخول، واستعراض الوجهات والفنادق، وسير العمل الخاص بالحجز، مع واجهة مستخدم مصممة بشكل احترافي.
 
-## Learn More
+### أعضاء الفريق
 
-To learn more about Next.js, take a look at the following resources:
+عملنا على هذا المشروع كفريق في مشروع التخرج لدينا في ITI Training:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- أحمد أيمن — قائد الفريق، وقد تولى إدارة هيكل ملفات المشروع، وإدارة GitHub، وإنشاء أول هيكل ويب أولي، وإصلاح الأخطاء، ومراجعة الكود، وإنشاء مهام ClickUp.
+- أمين صلاح
+- مصطفى محمد
+- هالة عبدالحميد
+- سلمى أحمد
+- هاجر عبد اللطيف
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### أبرز الميزات
 
-## Deploy on Vercel
+- تطبيق ويب حديث باستخدام Next.js
+- دعم العربية والإنجليزية
+- صفحات المصادقة وسير العمل الخاص بالحساب
+- تصفح الفنادق والوجهات
+- تجربة مرتبطة بالحجز والدفع
+- واجهة متجاوبة باستخدام Tailwind CSS
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### التقنيات المستخدمة
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- next-intl
+- React Query
+- Axios
+- Leaflet للخريطة
+
+### البدء
+
+1. تثبيت التبعيات:
+   ```bash
+   npm install
+   ```
+
+2. تشغيل خادم التطوير:
+   ```bash
+   npm run dev
+   ```
+
+3. افتح المتصفح على:
+   ```text
+   http://localhost:3000
+   ```
+
+### هيكل المشروع
+
+```text
+src/
+  app/           # الصفحات والتخطيطات
+  components/    # المكونات القابلة لإعادة الاستخدام
+  hooks/         # الخطافات المخصصة
+  i18n/          # ملفات الترجمة والتوطين
+  lib/           # أدوات API والخدمات المساعدة
+  types/         # أنواع TypeScript
+```
