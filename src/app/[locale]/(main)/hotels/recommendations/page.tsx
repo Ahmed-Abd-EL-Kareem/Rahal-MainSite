@@ -459,7 +459,7 @@ export default function HotelRecommendationsPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {hotelsData.slice(0, 4).map((hotel) => {
                 const hotelName =
                   hotel.name[locale as "en" | "ar"] || hotel.name.en;
@@ -490,30 +490,27 @@ export default function HotelRecommendationsPage() {
       )}
 
       {/* Empty State — no hotels matched in the hotel catalog */}
-      {!isLoading &&
-        !error &&
-        hotelsData &&
-        hotelsData.length === 0 && (
-          <section className="max-w-container mx-auto px-margin-mobile md:px-margin-desktop mb-12">
-            <div className="py-24 text-center bg-surface-container-low border border-outline-variant/20 rounded-2xl shadow-sm">
-              <Sparkles className="mx-auto text-outline" size={48} />
-              <h3 className="font-display text-xl font-semibold mt-4 text-on-surface">
-                {t("noRecommendationsFound")}
-              </h3>
-              <p className="text-sm text-on-surface-variant max-w-sm mx-auto mt-2">
-                {t("noRecommendationsFoundDesc")}
-              </p>
-              <Button
-                variant="primary"
-                className="mt-4 gap-2"
-                onClick={handleRefresh}
-              >
-                <RefreshCw size={16} />
-                {t("tryAgain")}
-              </Button>
-            </div>
-          </section>
-        )}
+      {!isLoading && !error && hotelsData && hotelsData.length === 0 && (
+        <section className="max-w-container mx-auto px-margin-mobile md:px-margin-desktop mb-12">
+          <div className="py-24 text-center bg-surface-container-low border border-outline-variant/20 rounded-2xl shadow-sm">
+            <Sparkles className="mx-auto text-outline" size={48} />
+            <h3 className="font-display text-xl font-semibold mt-4 text-on-surface">
+              {t("noRecommendationsFound")}
+            </h3>
+            <p className="text-sm text-on-surface-variant max-w-sm mx-auto mt-2">
+              {t("noRecommendationsFoundDesc")}
+            </p>
+            <Button
+              variant="primary"
+              className="mt-4 gap-2"
+              onClick={handleRefresh}
+            >
+              <RefreshCw size={16} />
+              {t("tryAgain")}
+            </Button>
+          </div>
+        </section>
+      )}
 
       {/* Loading State */}
       {isLoading && (

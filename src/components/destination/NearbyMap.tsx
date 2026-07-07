@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { Destination } from '@/types/destination';
+import React, { useEffect, useRef } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { Destination } from "@/types/destination";
 
 interface NearbyMapProps {
   destinations: Destination[];
@@ -12,66 +12,78 @@ interface NearbyMapProps {
   onMapReady?: (map: L.Map) => void;
 }
 
-export default function NearbyMap({ destinations, userCoords, locale, onMapReady }: NearbyMapProps) {
+export default function NearbyMap({
+  destinations,
+  userCoords,
+  locale,
+  onMapReady,
+}: NearbyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
 
-  useEffect(() => {
-    if (!mapRef.current) return;
+  const hasInitialFitRef = useRef<boolean>(false);
 
-    // Clean up default icons
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return;
+
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
-      iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+      iconRetinaUrl:
+        "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+      shadowUrl:
+        "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
     });
 
-    if (!mapInstanceRef.current) {
-      const map = L.map(mapRef.current, {
-        zoomControl: false,
-        scrollWheelZoom: false,
-      }).setView([26.8206, 30.8025], 6);
-      // expose map via callback
-      if (typeof onMapReady === 'function') onMapReady(map);
+    const map = L.map(mapRef.current, {
+      zoomControl: false,
+      scrollWheelZoom: false,
+    }).setView([26.8206, 30.8025], 6);
 
-      // Light tile layer — CartoDB Voyager (matches DestinationsMap)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
+    if (typeof onMapReady === "function") onMapReady(map);
+
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      {
+        attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+        subdomains: "abcd",
         maxZoom: 20,
-      }).addTo(map);
+      },
+    ).addTo(map);
 
-      mapInstanceRef.current = map;
-    }
+    mapInstanceRef.current = map;
 
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const map = mapInstanceRef.current;
+    if (!map) return;
 
-    // Remove old markers
-    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    if (userMarkerRef.current) {
-      userMarkerRef.current.remove();
-      userMarkerRef.current = null;
-    }
+    if (userMarkerRef.current) userMarkerRef.current.remove();
 
-    // Custom Pharaoh Gold icon for destinations
     const goldIcon = L.divIcon({
       html: `
         <div class="flex items-center justify-center w-8 h-8 rounded-full bg-[#7e5700]/30 border-2 border-[#7e5700] shadow-lg relative">
           <div class="w-2.5 h-2.5 bg-[#7e5700] rounded-full border border-white"></div>
         </div>
       `,
-      className: 'custom-map-marker-gold',
+      className: "custom-map-marker-gold",
       iconSize: [32, 32],
       iconAnchor: [16, 16],
       popupAnchor: [0, -16],
     });
 
-    // Custom blue pulsed icon for User Location
     const userIcon = L.divIcon({
       html: `
         <div class="relative flex items-center justify-center w-8 h-8">
@@ -79,35 +91,41 @@ export default function NearbyMap({ destinations, userCoords, locale, onMapReady
           <div class="w-4 h-4 bg-[#366286] rounded-full border-2 border-white shadow-md"></div>
         </div>
       `,
-      className: 'custom-user-marker',
+      className: "custom-user-marker",
       iconSize: [32, 32],
       iconAnchor: [16, 16],
     });
 
-    // Set User Marker if coords exist
     if (userCoords) {
-      const marker = L.marker([userCoords.lat, userCoords.lng], { icon: userIcon }).addTo(map);
-      const userText = locale === 'ar' ? 'موقعك الحالي' : 'Your Location';
-      marker.bindPopup(`<strong class="text-xs text-secondary font-bold">${userText}</strong>`);
+      const marker = L.marker([userCoords.lat, userCoords.lng], {
+        icon: userIcon,
+      }).addTo(map);
+      const userText = locale === "ar" ? "موقعك الحالي" : "Your Location";
+      marker.bindPopup(
+        `<strong class="text-xs text-secondary font-bold">${userText}</strong>`,
+      );
       userMarkerRef.current = marker;
-      map.setView([userCoords.lat, userCoords.lng], 13);
     }
 
-    // Add destinations pins
-    destinations.forEach(destination => {
+    destinations.forEach((destination) => {
       if (!destination.location || !destination.location.coordinates) return;
       const [lng, lat] = destination.location.coordinates;
+      const destinationName =
+        destination.name[locale as "en" | "ar"] || destination.name.en;
+      const cover =
+        destination.coverImage ||
+        destination.images[0] ||
+        "https://images.unsplash.com/photo-1539650116574-8efeb43e2750";
+      const exploreText = locale === "ar" ? "استكشف" : "Explore";
 
-      const destinationName = destination.name[locale as 'en' | 'ar'] || destination.name.en;
-      const cover = destination.coverImage || destination.images[0] || 'https://images.unsplash.com/photo-1539650116574-8efeb43e2750';
-
-      const exploreText = locale === 'ar' ? 'استكشف' : 'Explore';
-      
-      // Calculate distance if user coords are present
-      let distanceText = '';
+      let distanceText = "";
       if (userCoords) {
-        const d = map.distance([userCoords.lat, userCoords.lng], [lat, lng]) / 1000; // km
-        distanceText = locale === 'ar' ? `على بعد ${d.toFixed(1)} كم` : `${d.toFixed(1)} km away`;
+        const d =
+          map.distance([userCoords.lat, userCoords.lng], [lat, lng]) / 1000;
+        distanceText =
+          locale === "ar"
+            ? `على بعد ${d.toFixed(1)} كم`
+            : `${d.toFixed(1)} km away`;
       } else {
         distanceText = destination.city;
       }
@@ -130,37 +148,28 @@ export default function NearbyMap({ destinations, userCoords, locale, onMapReady
       markersRef.current.push(marker);
     });
 
-    // Fit map bounds to show both user and all destinations
-    if (destinations.length > 0) {
-      const points: L.LatLngExpression[] = destinations.map(d => [d.location.coordinates[1], d.location.coordinates[0]]);
+    if (!hasInitialFitRef.current && destinations.length > 0) {
+      const points: L.LatLngExpression[] = destinations.map((d) => [
+        d.location.coordinates[1],
+        d.location.coordinates[0],
+      ]);
       if (userCoords) {
         points.push([userCoords.lat, userCoords.lng]);
       }
       map.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
+      hasInitialFitRef.current = true;
+    } else if (
+      !hasInitialFitRef.current &&
+      userCoords &&
+      destinations.length === 0
+    ) {
+      map.setView([userCoords.lat, userCoords.lng], 10);
     }
 
-    // Handle invalid size bug in Leaflet
     setTimeout(() => {
       map.invalidateSize();
     }, 200);
-
   }, [destinations, userCoords, locale]);
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
-
-  return (
-    <div
-      ref={mapRef}
-      className="w-full h-full"
-      style={{ zIndex: 10 }}
-    />
-  );
+  return <div ref={mapRef} className="w-full h-full" style={{ zIndex: 10 }} />;
 }

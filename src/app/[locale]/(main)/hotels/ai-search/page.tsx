@@ -358,7 +358,8 @@ export default function AIHotelSearchPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
+               
                 {matchedHotels.map((hotel) => {
                   const isFavorite = favorites.includes(hotel._id);
 
