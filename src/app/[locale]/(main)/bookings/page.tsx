@@ -52,13 +52,13 @@ export default function MyBookingsPage() {
     switch (activeTab) {
       case 'upcoming':
         // Booking is confirmed/pending and check-in is in the future
-        return booking.status !== 'canceled' && checkInDate > now;
+        return booking.status !== 'cancelled' && checkInDate > now;
       case 'completed':
         // Booking is completed, or check-out is in the past
-        return booking.status === 'completed' || (booking.status !== 'canceled' && checkOutDate < now);
+        return booking.status === 'completed' || (booking.status !== 'cancelled' && checkOutDate < now);
       case 'canceled':
         // Booking is explicitly canceled
-        return booking.status === 'canceled';
+        return booking.status === 'cancelled';
       case 'all':
       default:
         return true;

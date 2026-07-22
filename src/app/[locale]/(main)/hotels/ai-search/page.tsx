@@ -18,6 +18,7 @@ import Input from '@/components/ui/Input';
 import { aiApi } from '@/lib/api/ai';
 import { Hotel } from '@/types/hotel';
 import HotelCard from '@/components/hotel/HotelCard';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 const HotelsMap = dynamic(() => import('@/components/hotel/HotelsMap'), { ssr: false });
 
@@ -29,6 +30,21 @@ export default function AIHotelSearchPage() {
   const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push(`/${locale}/login`);
+    }
+  }, [isAuthenticated, authLoading, router, locale]);
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   // State
   const [query, setQuery] = useState('');

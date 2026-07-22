@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
+import { useAuth } from '@/components/providers/AuthProvider';
 import {
   MapPin, Clock, Users, Wallet, Sparkles, ArrowRight, Loader2, Check,
   PenLine, Plus, Trash2, ChevronDown, ChevronUp, DollarSign,
@@ -51,6 +52,21 @@ export default function CreateTripPage() {
   const router = useRouter();
   const locale  = useLocale() as 'en' | 'ar';
   const isRtl   = locale === 'ar';
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push(`/${locale}/login`);
+    }
+  }, [isAuthenticated, authLoading, router, locale]);
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </main>
+    );
+  }
 
   // mode
   const [mode, setMode] = useState<Mode>('ai');

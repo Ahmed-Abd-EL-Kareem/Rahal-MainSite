@@ -9,7 +9,7 @@ const staticRoutes = [
   '/hotels',
   '/destinations',
   '/about',
-  '/planner',
+  '/trips',
   '/chat',
   '/trips',
   '/account',

@@ -4,7 +4,6 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Bot, Languages, Landmark, Send, Sparkles } from 'lucide-react';
 import Heading from '../ui/Heading';
-import Text from '../ui/Text';
 
 export default function AIChatTeaser() {
   const t = useTranslations('home.chatbot');

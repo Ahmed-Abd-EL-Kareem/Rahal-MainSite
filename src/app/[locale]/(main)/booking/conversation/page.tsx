@@ -1,9 +1,9 @@
-
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
+import { useAuth } from '@/components/providers/AuthProvider';
 import {
   Check, Calendar, MapPin, DollarSign, Send, Mic, ArrowRight,
   Loader2, Sparkles, Building2, Shield, Percent, AlertCircle, RefreshCw,
@@ -13,39 +13,12 @@ import { bookingsApi } from '@/lib/api/bookings';
 import { paymentsApi } from '@/lib/api/payments';
 import { hotelsApi } from '@/lib/api/hotels';
 import { cn } from '@/lib/utils/cn';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  step?: string;
-  timestamp: Date;
-  hotels?: HotelOption[];
-}
-
-interface HotelOption {
-  id: string;
-  name: string;
-  pricePerNight: number;
-  location: string;
-  image: string;
-  badge: 'top-pick' | 'selected' | 'best-value' | null;
-  insight: string;
-  city: string;
-}
-
-interface ApiHotel {
-  _id: string;
-  name: { en: string; ar: string };
-  city: string;
-  averagePricePerNight: number;
-  currency: string;
-  stars: number;
-  coverImage?: string;
-  images?: string[];
-  amenities?: string[];
-}
+import {
+  useBookingConversation,
+  useSendBookingMessage,
+  useDeleteBookingConversation,
+} from '@/hooks/useBookingConversation';
+import type { BookingConversationState, HotelOption, ApiHotel, BookingChatMessage } from '@/lib/chat/types';
 
 // ─── Localization ─────────────────────────────────────────────────────────────
 const dict = {
@@ -147,8 +120,6 @@ const dict = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const BADGE_ORDER: Array<HotelOption['badge']> = ['top-pick', 'selected', 'best-value'];
-
-// Cities that are considered "second leg" ONLY when a primary hotel already exists
 const SECOND_LEG_CITIES = ['luxor', 'aswan', 'الأقصر', 'أسوان'];
 
 function isSecondLegCity(city: string): boolean {
@@ -232,17 +203,13 @@ function lookupMonth(word: string): string | undefined {
   return MONTHS[word] ?? MONTHS[word.toLowerCase().slice(0, 3)];
 }
 
-// Parses a single date chunk in either order: "16 يوليو" (day-month, how
-// Arabic replies write it) or "Jul 16" (month-day, English). The previous
-// implementation used \w+ for the month, which in JS only matches
-// [A-Za-z0-9_] — it silently never matched Arabic month names at all.
 function parseSingleDate(chunk: string, year: string): string | null {
-  let m = chunk.match(/(\d{1,2})\s+([\p{L}]+)/u); // day-month
+  let m = chunk.match(/(\d{1,2})\s+([\p{L}]+)/u);
   if (m) {
     const month = lookupMonth(m[2]);
     if (month) return `${year}-${month}-${m[1].padStart(2, '0')}`;
   }
-  m = chunk.match(/([\p{L}]+)\s+(\d{1,2})/u); // month-day
+  m = chunk.match(/([\p{L}]+)\s+(\d{1,2})/u);
   if (m) {
     const month = lookupMonth(m[1]);
     if (month) return `${year}-${month}-${m[2].padStart(2, '0')}`;
@@ -261,10 +228,6 @@ function parseDatesFromText(text: string): { checkIn: string; checkOut: string }
   return null;
 }
 
-// Generic reader for the AI's "| icon | label | value |" markdown table
-// rows. Matches the label cell against `labelRegex` and returns the value
-// cell right after it — used because the AI now confirms bookings as a
-// table, not as "- Label: value" bullet lines.
 function extractTableCellValue(aiText: string, labelRegex: RegExp): string | null {
   for (const line of aiText.split('\n')) {
     const trimmed = line.trim();
@@ -278,16 +241,14 @@ function extractTableCellValue(aiText: string, labelRegex: RegExp): string | nul
 
 function extractConfirmedHotelName(aiText: string): string | null {
   const cleanName = (raw: string) => raw
-    .replace(/\(.*?\)/g, '')      // strip "(5⭐)" etc.
+    .replace(/\(.*?\)/g, '')
     .replace(/\*+/g, '')
     .replace(/[⭐★]+/g, '')
     .trim();
 
-  // Table format: "| 🏨 | الفندق | Kempinski Nile Hotel Cairo (5⭐) |"
   const tableValue = extractTableCellValue(aiText, /^(?:hotel|الفندق)$/i);
   if (tableValue) return cleanName(tableValue);
 
-  // Bullet format: "- **الفندق:** Four Seasons Hotel Cairo at Nile Plaza ⭐⭐⭐⭐⭐"
   const patterns = [
     /[-•]\s*\*{0,2}\s*(?:hotel|الفندق)\s*\*{0,2}\s*[:\-]\s*\*{0,2}\s*(.+)/i,
     /\*{0,2}\s*(?:hotel|الفندق)\s*\*{0,2}\s*[:\-]\s*\*{0,2}\s*(.+)/i,
@@ -299,10 +260,6 @@ function extractConfirmedHotelName(aiText: string): string | null {
   return null;
 }
 
-// Once the AI actually confirms a booking, pull the REAL numbers (nights,
-// guests, rooms, total price) out of its own confirmation text/table
-// instead of relying on separately-guessed values that can drift out of
-// sync with what was actually booked.
 function extractConfirmedNights(aiText: string): number | null {
   const bullet = aiText.match(/(?:nights?|عدد الليالي)\s*[:\-]?\s*\*{0,2}\s*(\d+)/i);
   if (bullet) return parseInt(bullet[1], 10);
@@ -350,19 +307,15 @@ function extractConfirmedTotal(aiText: string): number | null {
   const bullet = aiText.match(/(?:total|الإجمالي)\s*[:\-]?\s*\*{0,2}\s*(?:egp|ج\.?م\.?|جنيه)?\s*([\d,]+)/i);
   if (bullet) return parseAmount(bullet[1]);
 
-  // Table format: label cell may be "الإجمالي (لليلتين)" — match by "contains", not exact.
   const totalCell = extractTableCellValue(aiText, /(?:total|الإجمالي)/i);
   if (totalCell) return parseAmount(totalCell);
 
   return null;
 }
 
-// NEW: extract a human-readable budget label from user/AI text instead of
-// always showing the static "Luxury Heritage" placeholder.
 function extractBudgetLabel(text: string, locale: 'en' | 'ar'): string | null {
   const lower = text.toLowerCase();
 
-  // Explicit currency amount, e.g. "100000 EGP" / "٦٥٠٠٠ جنيه" / "$150"
   const egpMatch = text.match(/(\d[\d,]*)\s*(?:egp|جنيه|ج\.?م\.?)/i);
   if (egpMatch) {
     const amount = egpMatch[1].replace(/,/g, '');
@@ -373,7 +326,6 @@ function extractBudgetLabel(text: string, locale: 'en' | 'ar'): string | null {
     return locale === 'ar' ? `${usdMatch[1]}$ / الليلة` : `$${usdMatch[1]} / night`;
   }
 
-  // Qualitative tiers
   if (lower.includes('luxury') || lower.includes('فاخر') || lower.includes('فخم')) {
     return locale === 'ar' ? 'تراث فاخر' : 'Luxury Heritage';
   }
@@ -386,8 +338,6 @@ function extractBudgetLabel(text: string, locale: 'en' | 'ar'): string | null {
   return null;
 }
 
-// NEW: compute nights between two ISO dates, falling back to a sane default
-// instead of hardcoding "3 nights" / "4 nights" for every trip.
 function nightsBetween(checkIn: string | null, checkOut: string | null, fallback: number): number {
   if (!checkIn || !checkOut) return fallback;
   const inDate = new Date(checkIn);
@@ -396,7 +346,6 @@ function nightsBetween(checkIn: string | null, checkOut: string | null, fallback
   return diff > 0 ? diff : fallback;
 }
 
-// Renders a single line's **bold** segments as inline React nodes.
 function renderInlineBold(line: string, keyPrefix: string) {
   const parts = line.split(/(\*\*[^*]+\*\*)/g).filter((p) => p.length > 0);
   return parts.map((part, j) =>
@@ -408,13 +357,6 @@ function renderInlineBold(line: string, keyPrefix: string) {
   );
 }
 
-// ── Table detection/parsing/rendering ──────────────────────────────────────
-// The AI's booking confirmation comes back as a GitHub-style markdown table
-// ("| icon | label | value |" rows plus a "|---|---|---|" separator). The
-// old renderer treated every line as a plain paragraph, so the raw pipes
-// and dashes were dumped straight into the chat bubble looking like a mess.
-// These helpers detect a contiguous table block and render it as a real
-// <table> instead.
 function isTableRow(line: string) {
   const t = line.trim();
   return t.startsWith('|') && t.endsWith('|') && t.length > 1;
@@ -423,7 +365,6 @@ function isTableRow(line: string) {
 function isTableSeparator(line: string) {
   const t = line.trim();
   if (!t.startsWith('|')) return false;
-  // A separator row only contains pipes, dashes, colons and whitespace
   return /^\|[\s:|-]+\|$/.test(t) && t.includes('-');
 }
 
@@ -466,10 +407,6 @@ function renderTable(rows: string[][], key: string) {
   );
 }
 
-// Renders the AI's markdown-ish replies (**bold**, "- " bullet lines, blank
-// lines as section breaks, and "| a | b | c |" tables) as a properly
-// formatted block instead of a raw text dump with literal asterisks/pipes
-// and no visual structure.
 function renderFormattedMessage(text: string) {
   const lines = text.split('\n');
   const blocks: React.ReactNode[] = [];
@@ -494,7 +431,6 @@ function renderFormattedMessage(text: string) {
   while (i < lines.length) {
     const line = lines[i].trim();
 
-    // Table block: a row followed immediately by a separator row.
     if (isTableRow(line) && lines[i + 1] && isTableSeparator(lines[i + 1])) {
       flushList(`list-${i}`);
       const tableLines = [line];
@@ -530,111 +466,96 @@ function renderFormattedMessage(text: string) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function AITripPlannerPage() {
+export default function BookingConversationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = useLocale() as 'en' | 'ar';
   const t = dict[locale] ?? dict.en;
   const isRtl = locale === 'ar';
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [sessionId,           setSessionId]           = useState<string | null>(null);
-  const [currentStep,         setCurrentStep]         = useState('destination');
-  const [messages,            setMessages]            = useState<Message[]>([]);
-  const [inputText,           setInputText]           = useState('');
-  const [isLoading,           setIsLoading]           = useState(false);
-  const [isHotelsLoading,     setIsHotelsLoading]     = useState(false);
-  const [error,               setError]               = useState<string | null>(null);
-  const [quotaExceeded,       setQuotaExceeded]       = useState(false);
-  const [conversationCities,  setConversationCities]  = useState<string[]>([]);
-  const [travelDates,         setTravelDates]         = useState<string | null>(null);
-  const [budgetLabel,         setBudgetLabel]         = useState<string | null>(null);
+  // Session ID from URL query param (not localStorage)
+  const sessionId = searchParams.get('sessionId') ?? undefined;
 
-  // Real numbers pulled from the AI's own confirmation text — once these are
-  // set they take priority over any locally-estimated/computed values, since
-  // they reflect what was ACTUALLY booked (not a guess).
-  const [confirmedNights,     setConfirmedNights]     = useState<number | null>(null);
-  const [confirmedGuests,     setConfirmedGuests]     = useState<number | null>(null);
-  const [confirmedRooms,      setConfirmedRooms]      = useState<number | null>(null);
-  const [confirmedTotal,      setConfirmedTotal]      = useState<number | null>(null);
+  // React Query hooks - MUST be called unconditionally at top level (Rules of Hooks)
+  const { data: conversation, isLoading: isLoadingConversation } = useBookingConversation(sessionId);
+  const sendMessage = useSendBookingMessage(sessionId);
+  const deleteConversation = useDeleteBookingConversation();
 
-  // Tracks which hotel the CURRENT bookingId actually belongs to. Needed
-  // because a multi-leg trip (e.g. Cairo + Luxor) confirms one hotel at a
-  // time — if the user already confirmed/paid-flow for hotel A and then
-  // confirms a different hotel B, any bookingId left over from A must be
-  // thrown away, or "Confirm & Pay" would silently check out A's booking
-  // (wrong hotel/dates/total) while the chat is showing B's confirmation.
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push(`/${locale}/login`);
+    }
+  }, [isAuthenticated, authLoading, router, locale]);
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // Local UI state
+  const [draft, setDraft] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isHotelsLoading, setIsHotelsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [conversationCities, setConversationCities] = useState<string[]>([]);
+  const [travelDates, setTravelDates] = useState<string | null>(null);
+  const [budgetLabel, setBudgetLabel] = useState<string | null>(null);
+  const [parsedCheckIn, setParsedCheckIn] = useState<string | null>(null);
+  const [parsedCheckOut, setParsedCheckOut] = useState<string | null>(null);
+
+  // Optimistic messages (user messages sent but not yet confirmed by server)
+  const [optimisticMessages, setOptimisticMessages] = useState<BookingChatMessage[]>([]);
+
+  // Confirmed values from AI response
+  const [confirmedNights, setConfirmedNights] = useState<number | null>(null);
+  const [confirmedGuests, setConfirmedGuests] = useState<number | null>(null);
+  const [confirmedRooms, setConfirmedRooms] = useState<number | null>(null);
+  const [confirmedTotal, setConfirmedTotal] = useState<number | null>(null);
   const [lastConfirmedHotelName, setLastConfirmedHotelName] = useState<string | null>(null);
 
-  const [selectedPrimaryHotel,   setSelectedPrimaryHotel]   = useState<HotelOption | null>(null);
+  // Hotel selections
+  const [selectedPrimaryHotel, setSelectedPrimaryHotel] = useState<HotelOption | null>(null);
   const [selectedSecondaryHotel, setSelectedSecondaryHotel] = useState<HotelOption | null>(null);
-  const [allSeenHotels,          setAllSeenHotels]          = useState<HotelOption[]>([]);
+  const [allSeenHotels, setAllSeenHotels] = useState<HotelOption[]>([]);
 
-  // ── CRITICAL: refs so callbacks always read current state ──
-  const allSeenHotelsRef         = useRef<HotelOption[]>([]);
-  const selectedPrimaryHotelRef  = useRef<HotelOption | null>(null);
+  // Refs for current values in callbacks
+  const allSeenHotelsRef = useRef<HotelOption[]>([]);
+  const selectedPrimaryHotelRef = useRef<HotelOption | null>(null);
   const selectedSecondaryHotelRef = useRef<HotelOption | null>(null);
+  const lastConfirmedHotelNameRef = useRef<string | null>(null);
 
   useEffect(() => { allSeenHotelsRef.current = allSeenHotels; }, [allSeenHotels]);
   useEffect(() => { selectedPrimaryHotelRef.current = selectedPrimaryHotel; }, [selectedPrimaryHotel]);
   useEffect(() => { selectedSecondaryHotelRef.current = selectedSecondaryHotel; }, [selectedSecondaryHotel]);
+  useEffect(() => { lastConfirmedHotelNameRef.current = lastConfirmedHotelName; }, [lastConfirmedHotelName]);
 
-  const [parsedCheckIn,  setParsedCheckIn]  = useState<string | null>(null);
-  const [parsedCheckOut, setParsedCheckOut] = useState<string | null>(null);
+  // Scroll refs
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef(true);
 
-  // isCompleted / bookingId now come straight from the AI conversation
-  // response instead of only being produced by a separate "create booking" call.
-  const [isCompleted,    setIsCompleted]    = useState(false);
-  const [bookingStep,    setBookingStep]    = useState<'idle' | 'creating' | 'paying' | 'done'>('idle');
-  const [bookingError,   setBookingError]   = useState<string | null>(null);
-  const [bookingId,      setBookingId]      = useState<string | null>(null);
+  // Derived state from conversation data
+  const serverMessages = conversation?.data?.messages ?? [];
+  // Merge server messages with optimistic messages (optimistic appear at the end)
+  const messages = [...serverMessages, ...optimisticMessages];
+  const currentStep = conversation?.data?.step ?? 'destination';
+  const isCompleted = conversation?.data?.isComplete ?? false;
+  const bookingId = conversation?.data?.bookingId ?? null;
+
+  // Booking payment state
+  const [bookingStep, setBookingStep] = useState<'idle' | 'creating' | 'paying' | 'done'>('idle');
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [localBookingId, setLocalBookingId] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showNewTripConfirm, setShowNewTripConfirm] = useState(false);
   const [mobileTab, setMobileTab] = useState<'chat' | 'summary'>('chat');
 
-  const chatEndRef    = useRef<HTMLDivElement>(null);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-  const isNearBottomRef = useRef(true);
-
-  // ── auth check ──
-  useEffect(() => {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
-    if (!tokenMatch) router.push('/login');
-    else setCheckingAuth(false);
-  }, [router]);
-
-  // ── restore session ──
-  useEffect(() => {
-    if (checkingAuth) return;
-    const savedSession  = localStorage.getItem('rahal_planner_session_id');
-    const savedMessages = localStorage.getItem('rahal_planner_messages');
-    if (savedSession && savedMessages) {
-      setSessionId(savedSession);
-      try {
-        const parsed = JSON.parse(savedMessages).map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
-        setMessages(parsed);
-        if (parsed.length > 0 && parsed[parsed.length - 1].step) {
-          setCurrentStep(parsed[parsed.length - 1].step);
-        }
-      } catch {
-        localStorage.removeItem('rahal_planner_session_id');
-        localStorage.removeItem('rahal_planner_messages');
-        startFreshConversation();
-      }
-    } else {
-      startFreshConversation();
-    }
-  }, [checkingAuth]);
-
-  // ── debounced localStorage write ──
-  const saveToStorage = useCallback(
-    debounce((msgs: Message[], sid: string | null) => {
-      if (sid) localStorage.setItem('rahal_planner_session_id', sid);
-      if (msgs.length > 0) localStorage.setItem('rahal_planner_messages', JSON.stringify(msgs));
-    }, 500), []
-  );
-
-  useEffect(() => { saveToStorage(messages, sessionId); }, [messages, sessionId, saveToStorage]);
-
+  // Scroll handling
   useEffect(() => {
     const container = chatScrollRef.current;
     if (!container) return;
@@ -650,7 +571,7 @@ export default function AITripPlannerPage() {
     isNearBottomRef.current = distanceFromBottom < 120;
   }, []);
 
-  // ── city extraction ──
+  // City extraction
   const extractCities = useCallback((text: string) => {
     const cityMap: Record<string, string> = {
       cairo: 'Cairo', 'القاهرة': 'Cairo', luxor: 'Luxor', 'الأقصر': 'Luxor',
@@ -673,7 +594,7 @@ export default function AITripPlannerPage() {
     }
   }, []);
 
-  // ── date extraction ──
+  // Date extraction
   const extractDates = useCallback((text: string) => {
     const patterns = [
       /(?:from\s+)?(\w+\s+\d{1,2})\s*(?:to|–|—|-)\s*(\w+\s+\d{1,2}(?:,?\s*\d{4})?)/i,
@@ -693,85 +614,30 @@ export default function AITripPlannerPage() {
     }
   }, []);
 
-  // ── budget extraction (replaces the static "Luxury Heritage" label) ──
+  // Budget extraction
   const extractBudget = useCallback((text: string) => {
     const label = extractBudgetLabel(text, locale);
     if (label) setBudgetLabel(label);
   }, [locale]);
 
-  // ── fresh conversation ──
-  const startFreshConversation = useCallback(() => {
-    setSessionId(null);
-    setCurrentStep('destination');
-    setSelectedPrimaryHotel(null);
-    setSelectedSecondaryHotel(null);
-    setAllSeenHotels([]);
-    setConversationCities([]);
-    setTravelDates(null);
-    setBudgetLabel(null);
-    setParsedCheckIn(null);
-    setParsedCheckOut(null);
-    setConfirmedNights(null);
-    setConfirmedGuests(null);
-    setConfirmedRooms(null);
-    setConfirmedTotal(null);
-    setLastConfirmedHotelName(null);
-    setIsCompleted(false);
-    setBookingStep('idle');
-    setBookingError(null);
-    setBookingId(null);
-    setShowSuccessModal(false);
-    setError(null);
-    setQuotaExceeded(false);
-    setInputText('');
-    setMobileTab('chat');
-    const welcomeMsg: Message = {
-      id: 'welcome-msg', role: 'assistant', timestamp: new Date(), step: 'destination',
-      content: locale === 'ar'
-        ? 'أهلاً بك! 🇪🇬 أنا مساعد رحّال الذكي. دعنا نصمم مغامرتك في مصر. ما هي وجهتك الأولى؟'
-        : "Ahlan! 🇪🇬 I'm your Rahal AI Travel Assistant. Let's design your Egypt trip. Which city first? (Cairo, Luxor, Aswan, Marsa Alam?)",
-    };
-    setMessages([welcomeMsg]);
-    localStorage.removeItem('rahal_planner_session_id');
-    localStorage.removeItem('rahal_planner_messages');
-  }, [locale]);
-
-  const handleNewTripClick = useCallback(() => {
-    if (messages.length > 1 || selectedPrimaryHotel || selectedSecondaryHotel) {
-      setShowNewTripConfirm(true);
-    } else {
-      startFreshConversation();
-    }
-  }, [messages.length, selectedPrimaryHotel, selectedSecondaryHotel, startFreshConversation]);
-
-  const confirmNewTrip = useCallback(() => {
-    setShowNewTripConfirm(false);
-    startFreshConversation();
-  }, [startFreshConversation]);
-
-  // ── assign hotel using refs to always read current state ──
+  // Hotel assignment logic
   const assignHotel = useCallback((hotel: HotelOption) => {
-    const primary   = selectedPrimaryHotelRef.current;
+    const primary = selectedPrimaryHotelRef.current;
     const secondary = selectedSecondaryHotelRef.current;
 
     if (!primary) {
-      // No primary yet → always assign as primary regardless of city
       setSelectedPrimaryHotel(hotel);
     } else if (isSecondLegCity(hotel.city) && !secondary) {
-      // Primary exists + hotel is Luxor/Aswan + no secondary yet → assign as secondary
       setSelectedSecondaryHotel(hotel);
     } else if (primary.id !== hotel.id) {
-      // Otherwise update primary (user changed their main hotel)
       setSelectedPrimaryHotel(hotel);
     }
   }, []);
 
-  // ── hotel auto-select from user text ──
+  // Hotel auto-select from user text
   const detectAndSelectHotel = useCallback((text: string, hotelCards: HotelOption[]) => {
     const trimmed = text.trim();
 
-    // The AI explicitly asks "أخبرني بالرقم؟ (1 أو 2 أو 3)" / "which number
-    // (1, 2 or 3)?" — a bare number reply must map to hotelCards[number-1].
     const numericMatch = trimmed.match(/^[#]?\s*(\d)\s*$/) || trimmed.match(/^(?:رقم|فندق|hotel)?\s*(\d)\s*$/i);
     if (numericMatch) {
       const index = parseInt(numericMatch[1], 10) - 1;
@@ -791,14 +657,13 @@ export default function AITripPlannerPage() {
     }
   }, [assignHotel]);
 
-  // ── hotel confirm from AI reply — uses refs, not stale closure ──
+  // Hotel confirm from AI text
   const confirmHotelFromAiText = useCallback(async (aiText: string, knownHotels: HotelOption[]) => {
     const confirmedName = extractConfirmedHotelName(aiText);
     if (!confirmedName) return;
 
     const lowerConfirmed = confirmedName.toLowerCase();
 
-    // Try to match against known hotel cards first
     for (const hotel of knownHotels) {
       const nameWords = hotel.name.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
       const matches = hotel.name.toLowerCase() === lowerConfirmed
@@ -809,10 +674,8 @@ export default function AITripPlannerPage() {
       }
     }
 
-    // No card match — look up directly by name
     const apiHotel = await fetchHotelByName(confirmedName);
     if (!apiHotel) {
-      // Fallback: placeholder until it's resolved against the real API
       const placeholder: HotelOption = {
         id: `pending-${Date.now()}`,
         name: confirmedName,
@@ -831,7 +694,29 @@ export default function AITripPlannerPage() {
     assignHotel(hotel);
   }, [locale, assignHotel]);
 
-  // ── send message ──
+  // Start fresh conversation
+  const startFreshConversation = useCallback(() => {
+    router.replace('/booking/conversation');
+  }, [router]);
+
+  // Handle new trip click
+  const handleNewTripClick = useCallback(() => {
+    if (messages.length > 1 || selectedPrimaryHotel || selectedSecondaryHotel) {
+      setShowNewTripConfirm(true);
+    } else {
+      startFreshConversation();
+    }
+  }, [messages.length, selectedPrimaryHotel, selectedSecondaryHotel, startFreshConversation]);
+
+  const confirmNewTrip = useCallback(async () => {
+    setShowNewTripConfirm(false);
+    if (sessionId) {
+      await deleteConversation.mutateAsync(sessionId);
+    }
+    startFreshConversation();
+  }, [sessionId, deleteConversation, startFreshConversation]);
+
+  // Send message handler
   const handleSendMessage = useCallback(async (textToSend: string) => {
     if (!textToSend.trim() || isLoading) return;
     setError(null);
@@ -840,9 +725,14 @@ export default function AITripPlannerPage() {
     extractDates(textToSend);
     extractBudget(textToSend);
 
-    const userMsg: Message = { id: String(Date.now()), role: 'user', content: textToSend, timestamp: new Date() };
-    setMessages((prev) => [...prev, userMsg]);
-    setInputText('');
+    // Optimistically add user message
+    const optimisticMsg: BookingChatMessage = {
+      role: 'user',
+      content: textToSend,
+      createdAt: new Date().toISOString(),
+    };
+    setOptimisticMessages((prev) => [...prev, optimisticMsg]);
+
     setIsLoading(true);
     isNearBottomRef.current = true;
 
@@ -851,44 +741,34 @@ export default function AITripPlannerPage() {
 
     try {
       const [response, earlyHotelCards] = await Promise.all([
-        // The conversation endpoint keeps state on the server via sessionId —
-        // every follow-up call (city, dates, budget, hotel choice, payment
-        // method...) must reuse the SAME sessionId returned by the first call.
-        aiApi.bookingConversation(textToSend, sessionId),
+        sendMessage.mutateAsync(textToSend),
         hotelsLikelyNeeded
           ? resolveHotelsForContext(textToSend, '', conversationCities, locale).catch(() => [] as HotelOption[])
           : Promise.resolve(undefined as HotelOption[] | undefined),
       ]);
 
-      if (response?.status !== 'success') throw new Error('Invalid server response');
-      // NOTE: the API returns "isComplete" (no trailing "d"), not "isCompleted".
+      // Clear optimistic message on success
+      setOptimisticMessages([]);
+
+      const data = response.data;
       const {
         sessionId: nextSessionId,
         step: nextStep,
-        aiResponse,
+        aiResponse: aiResponseRaw,
         isComplete: nextIsCompleted,
         bookingId: aiBookingId,
-      } = response.data as {
-        sessionId: string;
-        step: string;
-        aiResponse: string;
-        isComplete?: boolean;
-        bookingId?: string | null;
-      };
+      } = data;
 
-      setSessionId(nextSessionId);
-      setCurrentStep(nextStep);
+      const aiResponse = aiResponseRaw ?? '';
+
+      // Update URL with sessionId if not already present
+      if (!sessionId && nextSessionId) {
+        router.replace(`/booking/conversation?sessionId=${nextSessionId}`);
+      }
+
       extractCities(aiResponse);
       extractDates(aiResponse);
-      // Intentionally NOT calling extractBudget(aiResponse) here — the AI's
-      // confirmation table's "الإجمالي" (total) row was getting mislabeled
-      // as a per-night budget. Budget only comes from what the user said.
 
-      // FIX: if the AI's reply already confirms a specific hotel (a table
-      // or bullet with "الفندق:"/"Hotel:"), don't fetch/show a fresh batch
-      // of hotel cards in the same turn — that's what produced the
-      // "hotel list pops up again right after you picked one" bug. The
-      // confirmation table itself is the answer at that point.
       const confirmedHotelNameThisTurn = extractConfirmedHotelName(aiResponse);
 
       let hotelCards = earlyHotelCards;
@@ -908,36 +788,19 @@ export default function AITripPlannerPage() {
         detectAndSelectHotel(textToSend, hotelCards);
       }
 
-      // Use all known hotels (seen so far + newly fetched)
       const knownHotelsSoFar = hotelCards && hotelCards.length > 0
         ? [...allSeenHotelsRef.current, ...hotelCards]
         : allSeenHotelsRef.current;
 
       await confirmHotelFromAiText(aiResponse, knownHotelsSoFar);
 
-      // ── This is the key flow fix ──
-      // The AI conversation itself now tells us when the booking is done and
-      // gives us a real bookingId. We no longer need to guess — once
-      // isCompleted is true we store the bookingId and jump straight to the
-      // payment step (see handleConfirmAndPay), instead of re-creating the
-      // booking from scratch with (possibly stale) selected-hotel state.
-      // FIX: if this turn confirms a DIFFERENT hotel than the one our
-      // current bookingId/isCompleted belong to, that old bookingId is
-      // stale — drop it before possibly adopting a new one below. This is
-      // what caused "Confirm & Pay" to check out a completely different
-      // hotel/dates/total (e.g. an earlier-confirmed Luxor booking) than
-      // the hotel the chat had just confirmed (e.g. Cairo).
-      if (confirmedHotelNameThisTurn && confirmedHotelNameThisTurn !== lastConfirmedHotelName) {
-        setBookingId(null);
-        setIsCompleted(false);
+      // If AI confirmed a DIFFERENT hotel than what our bookingId belongs to, drop the old bookingId
+      // The server response already reflects this, so we just invalidate to refetch
+      if (confirmedHotelNameThisTurn && confirmedHotelNameThisTurn !== lastConfirmedHotelNameRef.current) {
         setLastConfirmedHotelName(confirmedHotelNameThisTurn);
       }
 
-      if (aiBookingId) setBookingId(aiBookingId);
-      if (nextIsCompleted) setIsCompleted(true);
-
-      // Pull the real, authoritative numbers straight out of the AI's own
-      // confirmation text — these override any locally-guessed values.
+      // Pull authoritative numbers from AI confirmation
       const nights = extractConfirmedNights(aiResponse);
       if (nights !== null) setConfirmedNights(nights);
       const { guests, rooms } = extractConfirmedGuestsRooms(aiResponse);
@@ -946,15 +809,9 @@ export default function AITripPlannerPage() {
       const total = extractConfirmedTotal(aiResponse);
       if (total !== null) setConfirmedTotal(total);
 
-      setMessages((prev) => [...prev, {
-        id: String(Date.now() + 1), role: 'assistant', content: aiResponse,
-        step: nextStep, timestamp: new Date(),
-        // Don't attach hotel cards to a message that is itself a
-        // confirmation of a specific hotel — see fix note above.
-        hotels: (!confirmedHotelNameThisTurn && hotelCards?.length) ? hotelCards : undefined,
-      }]);
-
     } catch (err: any) {
+      // Clear optimistic message on error
+      setOptimisticMessages([]);
       setIsHotelsLoading(false);
       const httpStatus: number = err.statusCode ?? err.status ?? err.code ?? 0;
       const errMsg: string = (err.message ?? '').toLowerCase();
@@ -964,40 +821,36 @@ export default function AITripPlannerPage() {
         setQuotaExceeded(true); return;
       }
 
-      // FIX: only treat this as a genuinely expired/invalid session (and
-      // wipe the conversation) when the server explicitly says so — a
-      // generic network blip or 500 during "confirm booking" must NOT
-      // nuke the session, or a real, already-confirmed booking looks like
-      // it vanished and the user gets bounced back to square one.
       const isSessionInvalid = httpStatus === 404
         || errMsg.includes('session not found')
         || errMsg.includes('invalid session')
         || errMsg.includes('session expired');
 
       if (isSessionInvalid && sessionId) {
-        setSessionId(null); setCurrentStep('destination');
-        setConversationCities([]);
-        localStorage.removeItem('rahal_planner_session_id');
-        localStorage.removeItem('rahal_planner_messages');
-        setMessages((prev) => [...prev, {
-          id: String(Date.now() + 2), role: 'assistant',
-          content: t.sessionExpired, timestamp: new Date(), step: 'destination',
-        }]);
+        await deleteConversation.mutateAsync(sessionId);
+        router.replace('/booking/conversation');
       } else {
-        // Temporary/network/server error — keep the session and messages
-        // intact so the user can just retry without losing their progress.
         setError(t.connectionError);
       }
     } finally { setIsLoading(false); }
-  }, [isLoading, sessionId, locale, currentStep, conversationCities, lastConfirmedHotelName, extractCities, extractDates, extractBudget, detectAndSelectHotel, confirmHotelFromAiText, t, router]);
+  }, [
+    isLoading, sessionId, locale, currentStep, conversationCities,
+    extractCities, extractDates, extractBudget, detectAndSelectHotel, confirmHotelFromAiText,
+    t, router, sendMessage, deleteConversation
+  ]);
 
-  // ─── CONFIRM & PAY ────────────────────────────────────────────────────────
+  // Hotel card click handler
+  const handleSelectHotelCard = useCallback((hotel: HotelOption) => {
+    if (currentStep !== 'hotel_selection' && currentStep !== 'preferences') return;
+    assignHotel(hotel);
+    const msg = locale === 'ar' ? `أريد حجز فندق ${hotel.name}` : `I want to book the hotel ${hotel.name}`;
+    handleSendMessage(msg);
+  }, [currentStep, locale, handleSendMessage, assignHotel]);
+
+  // Confirm & Pay handler
   const handleConfirmAndPay = useCallback(async () => {
     setBookingError(null);
 
-    // Case 1 (preferred): the AI conversation already confirmed the booking
-    // (isCompleted === true) and handed us a real bookingId. Just start
-    // payment for it — do NOT create a second booking.
     if (isCompleted && bookingId) {
       setBookingStep('paying');
       try {
@@ -1017,18 +870,12 @@ export default function AITripPlannerPage() {
       return;
     }
 
-    // Safety net: if the AI already marked the conversation complete but we
-    // somehow don't have a bookingId, do NOT silently fall through to
-    // Case 2 — that would create a second, different booking (wrong hotel/
-    // dates/guest count) instead of paying for the one the AI just confirmed.
     if (isCompleted && !bookingId) {
       setBookingError(t.bookingError);
       console.error('AI marked booking complete but no bookingId was received.');
       return;
     }
 
-    // Case 2 (fallback): user picked a hotel card manually before the AI
-    // conversation reached its own "complete" step — create the booking here.
     let hotelToBook = selectedPrimaryHotel ?? selectedSecondaryHotel;
     if (!hotelToBook) {
       setBookingError(t.selectHotelFirst);
@@ -1050,7 +897,7 @@ export default function AITripPlannerPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      let checkInDate  = parsedCheckIn  ? new Date(parsedCheckIn)  : null;
+      let checkInDate = parsedCheckIn ? new Date(parsedCheckIn) : null;
       let checkOutDate = parsedCheckOut ? new Date(parsedCheckOut) : null;
 
       if (!checkInDate || checkInDate < today) {
@@ -1060,22 +907,28 @@ export default function AITripPlannerPage() {
         checkOutDate = new Date(checkInDate.getTime() + 4 * 86400000);
       }
 
-      const checkIn  = checkInDate.toISOString().split('T')[0];
+      const checkIn = checkInDate.toISOString().split('T')[0];
       const checkOut = checkOutDate.toISOString().split('T')[0];
 
+      const roomsPayload = [{
+        room: hotelToBook.id,
+        quantity: confirmedRooms ?? 1,
+        guests: { adults: confirmedGuests ?? 1, children: 0 },
+      }];
+
       const bookingRes = await bookingsApi.createBooking({
-        hotel:   hotelToBook.id,
+        hotel: hotelToBook.id,
         checkIn,
         checkOut,
-        guests:  confirmedGuests ?? 1,
-        rooms:   confirmedRooms ?? 1,
+        guests: confirmedGuests ?? 1,
+        rooms: roomsPayload,
       });
 
       if ((bookingRes as any).status !== 'success') throw new Error('Booking creation failed');
       const createdBooking = (bookingRes as any).data as { _id?: string; id?: string };
       const createdId = createdBooking._id ?? createdBooking.id;
       if (!createdId) throw new Error('No booking ID returned');
-      setBookingId(createdId);
+      setLocalBookingId(createdId);
 
       setBookingStep('paying');
       const payRes = await paymentsApi.bookingCheckout(createdId);
@@ -1096,15 +949,7 @@ export default function AITripPlannerPage() {
     }
   }, [isCompleted, bookingId, selectedPrimaryHotel, selectedSecondaryHotel, parsedCheckIn, parsedCheckOut, confirmedGuests, confirmedRooms, t, locale]);
 
-  // ── hotel card click ──
-  const handleSelectHotelCard = useCallback((hotel: HotelOption) => {
-    if (currentStep !== 'hotel_selection' && currentStep !== 'preferences') return;
-    assignHotel(hotel);
-    const msg = locale === 'ar' ? `أريد حجز فندق ${hotel.name}` : `I want to book the hotel ${hotel.name}`;
-    handleSendMessage(msg);
-  }, [currentStep, locale, handleSendMessage, assignHotel]);
-
-  // ── step wizard ──
+  // Step wizard
   const steps = [
     { id: 'destination', label: t.steps.destination, icon: MapPin },
     { id: 'dates',       label: t.steps.dates,       icon: Calendar },
@@ -1122,31 +967,24 @@ export default function AITripPlannerPage() {
     return map[s] ?? 0;
   };
 
-  const currentStepIndex   = getStepIndex(currentStep);
+  const currentStepIndex = getStepIndex(currentStep);
   const isBookingInProgress = bookingStep === 'creating' || bookingStep === 'paying';
 
-  // ── pricing ──
-  // Nights: prefer the REAL number confirmed by the AI's own booking text;
-  // fall back to parsed check-in/out dates; only then fall back to a
-  // placeholder (used solely while nothing else is known yet).
-  const primaryDays    = confirmedNights ?? nightsBetween(parsedCheckIn, parsedCheckOut, 3);
-  const secondaryDays  = confirmedNights ?? nightsBetween(parsedCheckIn, parsedCheckOut, 4);
-  const primaryBase    = selectedPrimaryHotel   ? selectedPrimaryHotel.pricePerNight   * primaryDays   : 0;
-  const secondaryBase  = selectedSecondaryHotel ? selectedSecondaryHotel.pricePerNight * secondaryDays : 0;
+  // Pricing
+  const primaryDays = confirmedNights ?? nightsBetween(parsedCheckIn, parsedCheckOut, 3);
+  const secondaryDays = confirmedNights ?? nightsBetween(parsedCheckIn, parsedCheckOut, 4);
+  const primaryBase = selectedPrimaryHotel ? selectedPrimaryHotel.pricePerNight * primaryDays : 0;
+  const secondaryBase = selectedSecondaryHotel ? selectedSecondaryHotel.pricePerNight * secondaryDays : 0;
   const estimatedTotal = primaryBase + secondaryBase;
-  // The 0.83768 "Rahal perks" multiplier is only an on-screen ESTIMATE shown
-  // while the trip is still being planned. The moment the AI confirms a real
-  // total (confirmedTotal), that real number is shown instead — never a
-  // fabricated discount on top of a real, already-confirmed price.
   const optimizedTotal = estimatedTotal > 0 ? Math.round(estimatedTotal * 0.83768) : 0;
-  const currentTotal    = confirmedTotal ?? estimatedTotal;
-  const displayedTotal  = confirmedTotal ?? optimizedTotal;
+  const currentTotal = confirmedTotal ?? estimatedTotal;
+  const displayedTotal = confirmedTotal ?? optimizedTotal;
 
-  if (checkingAuth) {
+  if (isLoadingConversation) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center bg-surface text-on-surface">
         <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-        <span className="font-display font-medium text-lg">Consulting the Stars...</span>
+        <span className="font-display font-medium text-lg">Loading conversation...</span>
       </div>
     );
   }
@@ -1161,15 +999,15 @@ export default function AITripPlannerPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-brand/5 via-accent/5 to-transparent pointer-events-none" />
         {steps.map((step, idx) => {
           const isCompletedStep = idx < currentStepIndex || bookingStep === 'done';
-          const isActive    = idx === currentStepIndex && bookingStep !== 'done';
-          const StepIcon    = step.icon;
+          const isActive = idx === currentStepIndex && bookingStep !== 'done';
+          const StepIcon = step.icon;
           return (
             <React.Fragment key={step.id}>
               <div className="flex flex-col items-center gap-1.5 sm:gap-2 z-10 shrink-0 select-none">
                 <div className={cn(
                   'w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 font-bold',
                   isCompletedStep && 'bg-primary border-primary text-bg shadow-md shadow-sm',
-                  isActive    && 'bg-surface-container border-primary text-primary shadow-md animate-pulse',
+                  isActive && 'bg-surface-container border-primary text-primary shadow-md animate-pulse',
                   !isCompletedStep && !isActive && 'bg-surface-container-low border-outline-variant text-outline'
                 )}>
                   {isCompletedStep ? <Check size={16} className="stroke-[3px] sm:!w-5 sm:!h-5" />
@@ -1239,10 +1077,10 @@ export default function AITripPlannerPage() {
           <div ref={chatScrollRef} onScroll={handleChatScroll}
             className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 flex flex-col gap-4 sm:gap-6 scrollbar-thin"
             aria-live="polite">
-            {messages.map((msg) => {
+            {messages.map((msg, index) => {
               const isUser = msg.role === 'user';
               return (
-                <div key={msg.id} className={cn('flex flex-col max-w-[92%] sm:max-w-[85%] animate-fade-in', isUser ? 'self-end items-end' : 'self-start items-start')}>
+                <div key={`${index}-${msg.createdAt ?? ''}`} className={cn('flex flex-col max-w-[92%] sm:max-w-[85%] animate-fade-in', isUser ? 'self-end items-end' : 'self-start items-start')}>
                   <div className={cn('p-3 sm:p-4 text-sm md:text-base leading-relaxed break-words shadow-sm', isUser ? 'bg-primary text-on-primary rounded-2xl rounded-br-sm font-medium' : 'bg-surface-container text-on-surface rounded-2xl rounded-bl-sm border-s-[3px] border-secondary')}>
                     {isUser ? (
                       <p className="whitespace-pre-wrap m-0">{msg.content}</p>
@@ -1252,13 +1090,13 @@ export default function AITripPlannerPage() {
                   </div>
                   <span className="text-[10px] text-outline mt-1.5 px-1.5 flex items-center gap-1">
                     {isUser && <Check size={10} className="text-primary shrink-0" />}
-                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                   </span>
 
                   {/* Hotel cards */}
-                  {!isUser && msg.hotels && msg.hotels.length > 0 && (
+                  {!isUser && (msg as any).hotels && (msg as any).hotels.length > 0 && (
                     <div className="w-full mt-4 overflow-x-auto pb-2 flex gap-3 sm:gap-4 select-none scrollbar-thin max-w-full">
-                      {msg.hotels.map((hotel) => {
+                      {((msg as any).hotels as HotelOption[]).map((hotel) => {
                         const isSelected = selectedPrimaryHotel?.id === hotel.id || selectedSecondaryHotel?.id === hotel.id;
                         return (
                           <div key={hotel.id} onClick={() => handleSelectHotelCard(hotel)}
@@ -1272,8 +1110,8 @@ export default function AITripPlannerPage() {
                               {hotel.badge && (
                                 <span className={cn(
                                   'absolute top-2.5 right-2.5 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded shadow-sm z-10',
-                                  hotel.badge === 'top-pick'   && 'bg-primary text-bg',
-                                  hotel.badge === 'selected'   && 'bg-secondary text-bg',
+                                  hotel.badge === 'top-pick' && 'bg-primary text-bg',
+                                  hotel.badge === 'selected' && 'bg-secondary text-bg',
                                   hotel.badge === 'best-value' && 'bg-success text-bg'
                                 )}>
                                   {hotel.badge === 'top-pick' ? (locale === 'ar' ? 'أفضل خيار' : 'TOP PICK')
@@ -1413,10 +1251,10 @@ export default function AITripPlannerPage() {
           )}
 
           {/* Input bar */}
-          <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputText); }}
+          <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(draft); setDraft(''); }}
             className="p-3 sm:p-4 border-t border-outline-variant bg-surface-container/30 flex items-center gap-2 sm:gap-3">
             <div className="relative flex-1 flex items-center min-w-0">
-              <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
+              <input type="text" value={draft} onChange={(e) => setDraft(e.target.value)}
                 placeholder={t.chatPlaceholder}
                 disabled={isLoading || bookingStep === 'done' || quotaExceeded}
                 className="rounded-lg border border-outline-variant px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/30 w-full bg-surface-container-low pr-12" />
@@ -1426,10 +1264,10 @@ export default function AITripPlannerPage() {
               </button>
             </div>
             <button type="submit"
-              disabled={!inputText.trim() || isLoading || bookingStep === 'done' || quotaExceeded}
+              disabled={!draft.trim() || isLoading || bookingStep === 'done' || quotaExceeded}
               className={cn(
                 'w-11 h-11 sm:w-12 sm:h-12 rounded-lg bg-primary text-bg flex items-center justify-center transition-all cursor-pointer border-none shrink-0',
-                (!inputText.trim() || isLoading || bookingStep === 'done' || quotaExceeded) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95 shadow-md'
+                (!draft.trim() || isLoading || bookingStep === 'done' || quotaExceeded) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95 shadow-md'
               )}>
               <Send size={18} className={cn(isRtl && 'rotate-180')} />
             </button>
@@ -1490,7 +1328,7 @@ export default function AITripPlannerPage() {
               </div>
             </div>
 
-            {/* Live itinerary — dates/legs now reflect real state, no fabricated "Oct 12-15" */}
+            {/* Live itinerary */}
             <div className="border-t border-outline-variant pt-4 flex flex-col gap-3">
               <span className="text-xs font-bold text-outline tracking-wider uppercase block">{t.liveItinerary}</span>
               <div className="flex justify-between items-start gap-2">
@@ -1528,9 +1366,7 @@ export default function AITripPlannerPage() {
               )}
             </div>
 
-            {/* Pricing — hidden until a real hotel is selected.
-                Once the AI confirms a real total, show that number as-is
-                (no fabricated discount line on top of a real price). */}
+            {/* Pricing */}
             {currentTotal > 0 ? (
               <div className="border-t border-outline-variant pt-4 flex flex-col gap-2">
                 {confirmedTotal === null && (

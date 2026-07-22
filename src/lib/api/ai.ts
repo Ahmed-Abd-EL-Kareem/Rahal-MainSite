@@ -6,6 +6,12 @@ import type {
   HotelSearchResponse,
   HotelRecommendationResponse,
 } from '@/types/ai';
+import type {
+  BookingConversationState,
+  SendBookingMessageInput,
+  ChatConversation,
+  SendChatMessageInput,
+} from '@/lib/chat/types';
 
 const serializeParams = (params?: Record<string, unknown> | HotelRecommendationRequest) => {
   if (!params) return '';
@@ -26,12 +32,6 @@ interface ChatRequest {
 interface ChatResponse {
   reply: string;
   tokensUsed: number;
-}
-
-interface BookingConversationRequest {
-  message: string;
-  sessionId: string | null;
-  context?: { tripId?: string };
 }
 
 interface BookingConversationResponse {
@@ -60,6 +60,41 @@ export const aiApi = {
       sessionId,
       context,
     }),
+
+  sendBookingMessage: (input: SendBookingMessageInput) =>
+    ai.post<SuccessResponse<BookingConversationState>>('/ai/bookings/conversation', {
+      message: input.message,
+      sessionId: input.sessionId,
+      context: input.context,
+    }),
+
+  getBookingConversation: (sessionId: string) =>
+    ai.get<SuccessResponse<BookingConversationState>>(`/ai/bookings/conversation/${sessionId}`),
+
+  deleteBookingConversation: (sessionId: string) =>
+    ai.delete<SuccessResponse<null>>(`/ai/bookings/conversation/${sessionId}`),
+
+  listBookingConversations: () =>
+    ai.get<SuccessResponse<BookingConversationState[]>>('/ai/bookings/conversations'),
+
+  // Chat conversation API (general assistant)
+  sendChatMessage: (input: SendChatMessageInput) =>
+    ai.post<SuccessResponse<ChatConversation>>('/ai/chat/', {
+      message: input.message,
+      sessionId: input.sessionId,
+    }),
+
+  getChatConversation: (sessionId: string) =>
+    ai.get<SuccessResponse<ChatConversation>>(`/ai/chat/${sessionId}`),
+
+  listChatConversations: () =>
+    ai.get<SuccessResponse<ChatConversation[]>>('/ai/chat'),
+
+  deleteChatConversation: (sessionId: string) =>
+    ai.delete<SuccessResponse<null>>(`/ai/chat/${sessionId}`),
+
+  renameChatConversation: (sessionId: string, title: string) =>
+    ai.patch<SuccessResponse<ChatConversation>>(`/ai/chat/${sessionId}`, { title }),
 
   hotelRecommendations: (params?: HotelRecommendationRequest) =>
     ai.get<SuccessResponse<HotelRecommendationResponse>>(

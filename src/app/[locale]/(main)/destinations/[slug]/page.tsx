@@ -649,7 +649,7 @@ export default function DestinationDetailsPage() {
                   : 'Let our intelligent agent design a detailed itinerary for this location, optimizing logictics, bookings, and timings for your best experience.'}
               </p>
 
-              <Link href={`/${locale}/planner?destination=${slug}`} className="block w-full">
+              <Link href={`/${locale}/trips?destination=${slug}`} className="block w-full">
                 <Button variant="primary" fullWidth className="py-3.5 shadow flex items-center justify-center gap-2">
                   <span>{t('stickyPlanTrip')}</span>
                   <ArrowRight size={16} />
@@ -671,7 +671,7 @@ export default function DestinationDetailsPage() {
           </span>
         </div>
 
-        <Link href={`/${locale}/planner?destination=${slug}`}>
+        <Link href={`/${locale}/trips?destination=${slug}`}>
           <Button variant="primary" className="py-2.5 px-5 text-xs flex items-center gap-1.5 text-on-primary">
             <span>{t('stickyPlanTrip')}</span>
             <ArrowRight size={14} />

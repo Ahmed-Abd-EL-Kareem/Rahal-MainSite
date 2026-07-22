@@ -23,7 +23,7 @@ export default function AccountLayout({
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+    const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
     const token = tokenMatch ? tokenMatch[2] : null;
 
     if (!token) {

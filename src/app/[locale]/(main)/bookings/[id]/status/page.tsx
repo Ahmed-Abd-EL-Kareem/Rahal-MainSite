@@ -194,10 +194,10 @@ export default function BookingStatusPage({ params }: PageProps) {
   const checkInDate = new Date(booking.checkIn);
   const isFutureBooking = checkInDate > new Date();
   const canCancel = (booking.status === 'pending' || booking.status === 'confirmed') && isFutureBooking;
-  const needsPayment = (booking.paymentStatus === 'pending' || booking.paymentStatus === 'failed') && booking.status !== 'canceled';
+  const needsPayment = (booking.paymentStatus === 'pending' || booking.paymentStatus === 'failed') && booking.status !== 'cancelled';
 
   // Dynamic Timeline logic:
-  const isCanceled = booking.status === 'canceled';
+  const isCanceled = booking.status === 'cancelled';
   const isConfirmed = booking.status === 'confirmed' || booking.status === 'completed';
   const isCompleted = booking.status === 'completed' || new Date(booking.checkOut) < new Date();
 

@@ -14,7 +14,8 @@ export const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   (config) => {
     if (typeof document !== 'undefined') {
-      const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+      // Read from non-HttpOnly cookie for Authorization header
+      const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
       const token = tokenMatch ? tokenMatch[2] : null;
       if (token && config.headers && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${token}`;

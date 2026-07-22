@@ -21,7 +21,7 @@ export default function FavoritesPage() {
 
   // Check login and fetch favorites from localStorage
   useEffect(() => {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+    const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
     setIsLoggedIn(!!tokenMatch);
 
     if (typeof window !== 'undefined') {

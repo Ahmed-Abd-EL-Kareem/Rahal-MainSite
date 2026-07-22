@@ -19,7 +19,7 @@ export default function FavoriteDestinationsPage() {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+    const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
     setIsLoggedIn(!!tokenMatch);
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('rahal_favorites_destinations');

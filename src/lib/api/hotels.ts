@@ -1,5 +1,5 @@
 import { client } from './client';
-import { Hotel } from '@/types/hotel';
+import { Hotel, RoomAvailability } from '@/types/hotel';
 import { SuccessResponse } from '@/types/api';
 
 const serializeParams = (params?: Record<string, any>) => {
@@ -35,4 +35,20 @@ export const hotelsApi = {
       roomTypes: string[];
       currencies: string[];
     }>>('/hotels/meta'),
+
+  getRoomsAvailability: (hotelId: string, checkIn: string, checkOut: string) =>
+    client.get<SuccessResponse<RoomAvailability[]>>(
+      `/hotels/${hotelId}/rooms/availability${serializeParams({ checkIn, checkOut })}`
+    ),
+
+  getRoomAvailability: (
+    hotelId: string,
+    roomId: string,
+    checkIn: string,
+    checkOut: string,
+    quantity: number
+  ) =>
+    client.get<SuccessResponse<RoomAvailability>>(
+      `/hotels/${hotelId}/rooms/${roomId}/availability${serializeParams({ checkIn, checkOut, quantity })}`
+    ),
 };

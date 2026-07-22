@@ -1,5 +1,5 @@
 import { client } from './client';
-import { Booking } from '@/types/booking';
+import { Booking, CreateBookingPayload, CreateHoldPayload, HoldResponse, CheckoutSessionResponse, RoomSelection } from '@/types/booking';
 import { SuccessResponse } from '@/types/api';
 
 const serializeParams = (params?: Record<string, any>) => {
@@ -11,27 +11,28 @@ const serializeParams = (params?: Record<string, any>) => {
     }
   });
   const str = searchParams.toString();
-  return str ? `?${str}` : '';
+  return str ? '?' + str : '';
 };
 
 export const bookingsApi = {
-  createBooking: (body: {
-    hotel: string;
-    checkIn: string;
-    checkOut: string;
-    guests: number;
-    rooms: number;
-    trip?: string;
-    specialRequests?: string;
-  }) =>
+  createBooking: (body: CreateBookingPayload) =>
     client.post<SuccessResponse<Booking>>('/bookings', body),
 
+  createHold: (payload: CreateHoldPayload) =>
+    client.post<SuccessResponse<HoldResponse>>('/bookings/hold', payload),
+
+  createCheckoutSession: (holdId: string) =>
+    client.post<SuccessResponse<CheckoutSessionResponse>>('/bookings/hold/' + holdId + '/checkout-session'),
+
+  getHoldStatus: (holdId: string) =>
+    client.get<SuccessResponse<Booking>>('/bookings/hold/' + holdId + '/status'),
+
   getBookings: (params?: any) =>
-    client.get<SuccessResponse<Booking[]>>(`/bookings${serializeParams(params)}`),
+    client.get<SuccessResponse<Booking[]>>('/bookings' + serializeParams(params)),
 
   getBookingById: (id: string) =>
-    client.get<SuccessResponse<Booking>>(`/bookings/${id}`),
+    client.get<SuccessResponse<Booking>>('/bookings/' + id),
 
   cancelBooking: (id: string) =>
-    client.patch<SuccessResponse<Booking>>(`/bookings/${id}/cancel`),
+    client.patch<SuccessResponse<Booking>>('/bookings/' + id + '/cancel'),
 };

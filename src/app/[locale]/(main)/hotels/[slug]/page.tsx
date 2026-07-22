@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { 
   Star, MapPin, Sparkles, Wifi, Shield, ShieldCheck, Dumbbell, Utensils, 
   Tv, Compass, Calendar, Users, Calculator, ArrowRight, AlertCircle, CheckCircle2,
@@ -14,9 +15,17 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { hotelsApi } from '@/lib/api/hotels';
-import { bookingsApi } from '@/lib/api/bookings';
-import { Hotel } from '@/types/hotel';
+import { Hotel, Room, RoomAvailability } from '@/types/hotel';
 import { getLocaleQueryKey } from '@/lib/hooks/useLocaleQuery';
+import { DateRangePicker } from '@/components/hotel/DateRangePicker';
+import { RoomCard } from '@/components/hotel/RoomCard';
+import { RoomSelectionSummary } from '@/components/hotel/RoomSelectionSummary';
+import { useRoomsAvailability } from '@/hooks/useRoomsAvailability';
+import { useCreateHoldMutation, useCreateCheckoutSessionFromHoldMutation, useCreateBookingMutation } from '@/hooks/useBookings';
+import { RoomSelection } from '@/types/booking';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { staggerContainer, slideUpFade, kenBurns, fadeIn } from '@/lib/animations/variants';
 
 // Dynamically import Leaflet Map component with SSR disabled to prevent window is not defined exception
 const HotelMap = dynamic(() => import('@/components/hotel/HotelMap'), {
@@ -30,19 +39,15 @@ const HotelMap = dynamic(() => import('@/components/hotel/HotelMap'), {
 
 export default function HotelDetailsPage() {
   const t = useTranslations('hotelDetail');
+  const roomT = useTranslations('hotels.room');
   const locale = useLocale();
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
+  const reduceMotion = useReducedMotion();
+  const { isAuthenticated } = useAuth();
 
-  // Booking Form States
-  // const getTodayDateString = (offsetDays = 0) => {
-    //   const d = new Date();
-  //   d.setDate(d.getDate() + offsetDays);
-  //   return d.toISOString().split('T')[0];
-  // };
-
-    // Fetch hotel details using TanStack Query
+  // Fetch hotel details using TanStack Query
   const { data: hotel, isLoading: loading, error: queryError } = useQuery({
     queryKey: getLocaleQueryKey(['hotel', slug], locale),
     queryFn: async () => {
@@ -63,18 +68,34 @@ export default function HotelDetailsPage() {
   
   const [checkIn, setCheckIn] = useState(getTodayDateString(1));
   const [checkOut, setCheckOut] = useState(getTodayDateString(4));
-  const [guests, setGuests] = useState(2);
-  const [rooms, setRooms] = useState(1);
+  const [selections, setSelections] = useState<Record<string, RoomSelection>>({});
   const [specialRequests, setSpecialRequests] = useState('');
-  
-  // Submit states
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
-  const [bookingError, setBookingError] = useState<string | null>(null);
-  
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [bookingError, setBookingError] = useState<string | null>(null);
+
+  // Mutations
+  const createHold = useCreateHoldMutation();
+  const createCheckoutSession = useCreateCheckoutSessionFromHoldMutation();
+  const createBooking = useCreateBookingMutation();
+
+  // Filter active rooms (defensive, backend already filters)
+  const activeRooms = hotel?.rooms.filter(r => r.isActive) ?? [];
+
+  // Fetch room availability
+  const { data: availabilities, isLoading: availabilityLoading, refetch: refetchAvailability } = useRoomsAvailability(
+    hotel?._id,
+    checkIn,
+    checkOut,
+    activeRooms
+  );
+
+  // Refetch availability when dates change
+  useEffect(() => {
+    if (hotel?._id && checkIn && checkOut) {
+      refetchAvailability();
+    }
+  }, [checkIn, checkOut, hotel?._id, refetchAvailability]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -102,13 +123,6 @@ export default function HotelDetailsPage() {
     }
   };
 
-
-  // Check login state on mount
-  useEffect(() => {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
-    setIsLoggedIn(!!tokenMatch);
-  }, []);
-
   // Calculate pricing
   const checkNightsCount = () => {
     const start = new Date(checkIn);
@@ -119,49 +133,84 @@ export default function HotelDetailsPage() {
   };
 
   const nights = checkNightsCount();
-  const basePrice = hotel ? hotel.averagePricePerNight * nights * rooms : 0;
-  const aiDiscount = Math.round(basePrice * 0.05); // 5% discount
-  const taxes = Math.round(basePrice * 0.10); // 10% taxes
-  const grandTotal = basePrice - aiDiscount + taxes;
 
-  const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isLoggedIn) {
-      setBookingError(t('loginRequired'));
-      // Redirect to login after a brief pause
-      setTimeout(() => {
-        router.push('/login');
-      }, 1500);
+  const handleQuantityChange = (roomId: string, quantity: number) => {
+    setSelections(prev => {
+      if (quantity <= 0) {
+        const { [roomId]: removed, ...rest } = prev;
+        return rest;
+      }
+      const existing = prev[roomId];
+      return {
+        ...prev,
+        [roomId]: {
+          room: roomId,
+          quantity,
+          guests: existing?.guests ?? { adults: 1, children: 0 },
+        },
+      };
+    });
+  };
+
+  const handleGuestsChange = (roomId: string, guests: { adults: number; children: number }) => {
+    setSelections(prev => {
+      const existing = prev[roomId];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        [roomId]: { ...existing, guests },
+      };
+    });
+  };
+
+  const handleRemoveRoom = (roomId: string) => {
+    setSelections(prev => {
+      const { [roomId]: removed, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const handleBook = async () => {
+    if (!isAuthenticated) {
+      setBookingError(roomT('loginRequired'));
+      setTimeout(() => router.push(`/${locale}/login`), 1500);
       return;
     }
-
     if (!hotel) return;
 
-    setBookingLoading(true);
     setBookingError(null);
-    setBookingSuccess(null);
 
     try {
-      const body = {
+      const roomsPayload = Object.entries(selections).map(([roomId, selection]) => ({
+        room: roomId,
+        quantity: selection.quantity,
+        guests: selection.guests,
+      }));
+
+      const totalGuests = roomsPayload.reduce(
+        (sum, r) => sum + r.guests.adults + r.guests.children,
+        0
+      );
+
+      const payload = {
         hotel: hotel._id,
         checkIn,
         checkOut,
-        guests,
-        rooms,
-        specialRequests
+        guests: totalGuests,
+        rooms: roomsPayload,
+        specialRequests,
       };
 
-      const response = await bookingsApi.createBooking(body);
-      if (response && response.data) {
-        setBookingSuccess(t('successMessage', { id: response.data._id }));
-         router.push(`/bookings/${response.data._id}/status`);
-        
+      const bookingResponse = await createBooking.mutateAsync(payload);
+      
+      if (bookingResponse?._id) {
+        router.push(`/${locale}/bookings/${bookingResponse._id}`);
       }
     } catch (err: any) {
-      console.error('Failed to submit booking:', err);
-      setBookingError(err.message || t('errorMessage'));
-    } finally {
-      setBookingLoading(false);
+      console.error('Failed to create booking:', err);
+      const message = err.response?.data?.message || err.message || roomT('roomNoLongerAvailable');
+      setBookingError(message);
+      refetchAvailability();
     }
   };
 
@@ -199,9 +248,6 @@ export default function HotelDetailsPage() {
 
   const hotelName = hotel.name[locale as 'en' | 'ar'] || hotel.name.en;
   const hotelDesc = hotel.description?.[locale as 'en' | 'ar'] || hotel.description?.en || '';
-  
-  // Track image loading errors to fallback gracefully
-  // const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
   const handleImageError = (idx: number) => {
     setImageErrors(prev => ({ ...prev, [idx]: true }));
@@ -232,20 +278,55 @@ export default function HotelDetailsPage() {
       <section className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mt-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 aspect-[2.39/1] md:aspect-auto md:h-[550px]">
           {/* Main Large Image */}
-          <div className="md:col-span-3 h-full relative group overflow-hidden rounded-2xl cursor-pointer">
+          <motion.div
+            className="md:col-span-3 h-full relative group overflow-hidden rounded-2xl cursor-pointer"
+            initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.div
+            className="absolute inset-0"
+            animate={reduceMotion ? {} : { scale: 1 }}
+            transition={reduceMotion ? {} : { duration: 20, ease: 'linear' }}
+            initial={reduceMotion ? {} : { scale: 1.08 }}
+            style={{ overflow: 'hidden' }}
+          >
             <img 
               src={getPhotoSrc(0)}
               alt={hotelName}
               onError={() => handleImageError(0)}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-all duration-300"></div>
-          </div>
+          </motion.div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent group-hover:from-black/40 transition-all duration-700"></div>
+            <div className="absolute bottom-6 left-6 right-6 text-white text-left rtl:text-right">
+              <span className="px-3 py-1 rounded-full font-bold text-[10px] tracking-wider mb-3 inline-block border border-primary/30 bg-primary/20 backdrop-blur-sm">
+                {hotel.stars}\u2605 Luxury Landmark
+              </span>
+              <h1 className="font-display font-bold text-2xl md:text-4xl text-white mb-2 leading-tight">
+                {hotelName}
+              </h1>
+              <p className="flex items-center gap-1.5 opacity-90 text-sm md:text-base font-medium">
+                <MapPin size={18} className="text-primary shrink-0" />
+                <span>{hotel.city}, Egypt</span>
+              </p>
+            </div>
+          </motion.div>
           
           {/* Side Thumbnail List */}
-          <div className="hidden md:grid grid-rows-3 gap-4 h-full">
+          <motion.div
+            className="hidden md:grid grid-rows-3 gap-4 h-full"
+            initial={reduceMotion ? {} : { opacity: 0, x: 20 }}
+            animate={reduceMotion ? {} : { opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+          >
             {[1, 2, 3].map((idx) => (
-              <div key={idx} className="relative overflow-hidden rounded-2xl cursor-pointer group">
+              <motion.div
+                key={idx}
+                className="relative overflow-hidden rounded-2xl cursor-pointer group"
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <img 
                   src={getPhotoSrc(idx)}
                   alt={`${hotelName} - view ${idx}`}
@@ -257,9 +338,9 @@ export default function HotelDetailsPage() {
                     + {hotel.images.length - 4} more
                   </div>
                 )}
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -267,10 +348,19 @@ export default function HotelDetailsPage() {
       <section className="max-w-container mx-auto px-margin-mobile md:px-margin-desktop mt-12 grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
         
         {/* Left Side details */}
-        <div className="lg:col-span-8 space-y-12">
+        <motion.div
+          className="lg:col-span-8 space-y-12"
+          initial={reduceMotion ? {} : { opacity: 0, x: -30 }}
+          animate={reduceMotion ? {} : { opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+        >
           
           {/* Header Info details */}
-          <div>
+          <motion.div
+            initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+          >
             <div className="flex items-center gap-1 text-primary mb-3">
               {Array.from({ length: hotel.stars }).map((_, i) => (
                 <Star key={i} className="fill-primary" size={16} />
@@ -280,14 +370,14 @@ export default function HotelDetailsPage() {
               </span>
             </div>
             <div className="flex justify-between items-start gap-4 flex-wrap sm:flex-nowrap">
-              <h1 className="font-display text-3xl md:text-5xl font-bold text-on-background mb-3">
+              <h1 className="font-display text-3xl md:text-5xl font-bold text-on-background mb-3 tracking-[-0.02em] text-wrap-balance">
                 {hotelName}
               </h1>
               <button 
                 onClick={toggleFavorite}
-                className={`p-3 rounded-full border transition-all cursor-pointer ${
+                className={`p-3 rounded-full border transition-all cursor-pointer ${ 
                   isFavorite 
-                    ? 'bg-primary/10 border-primary text-primary shadow-sm'
+                    ? 'bg-primary/10 border-primary text-primary shadow-sm' 
                     : 'bg-white border-outline-variant/30 text-on-surface-variant hover:border-primary hover:text-primary shadow-sm'
                 }`}
                 aria-label="Add to favorites"
@@ -299,10 +389,15 @@ export default function HotelDetailsPage() {
               <MapPin className="text-primary shrink-0" size={16} />
               <p>{hotel.city}, Egypt</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* AI Insight banner */}
-          <div className="bg-secondary/5 rounded-2xl p-6 border border-secondary/10 flex gap-4 shadow-sm">
+          <motion.div
+            className="bg-secondary/5 rounded-2xl p-6 border border-secondary/10 flex gap-4 shadow-sm"
+            initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
+          >
             <div className="w-12 h-12 bg-gradient-to-br from-secondary to-on-secondary-container rounded-full flex items-center justify-center flex-shrink-0 text-white shadow">
               <Sparkles size={20} />
             </div>
@@ -314,91 +409,128 @@ export default function HotelDetailsPage() {
                 {t('aiInsightText')}
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* About description */}
           {hotelDesc && (
-            <div className="space-y-4">
+            <motion.div
+              className="space-y-4"
+              initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
+              animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
+            >
               <h3 className="font-display text-xl md:text-2xl font-bold text-on-surface border-b border-outline-variant/30 pb-3">
                 {t('about')}
               </h3>
-              <p className="font-body text-sm md:text-base text-on-surface-variant leading-relaxed">
+              <p className="font-body text-sm md:text-base text-on-surface-variant leading-relaxed max-w-prose">
                 {hotelDesc}
               </p>
-            </div>
+            </motion.div>
           )}
 
           {/* Amenities grid */}
-          <div className="space-y-6">
+          <motion.div
+            className="space-y-6"
+            initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.5 }}
+          >
             <h3 className="font-display text-xl md:text-2xl font-bold text-on-surface border-b border-outline-variant/30 pb-3">
               {t('amenities')}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               {hotel.amenities.map((amenity, idx) => (
-                <div key={idx} className="flex items-center gap-3">
+                <motion.div
+                  key={idx}
+                  className="flex items-center gap-3"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1], delay: idx * 0.05 }}
+                >
                   <div className="w-10 h-10 bg-surface-container flex items-center justify-center rounded-xl text-primary border border-outline-variant/10">
                     {getAmenityIcon(amenity)}
                   </div>
                   <span className="text-sm font-bold text-on-surface">
                     {amenity}
                   </span>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
-          {/* Room types table */}
-          {hotel.rooms && hotel.rooms.length > 0 && (
-            <div className="space-y-6">
-              <h3 className="font-display text-xl md:text-2xl font-bold text-on-surface border-b border-outline-variant/30 pb-3">
+          {/* Room types with availability */}
+          <motion.div
+            className="space-y-6"
+            initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-xl md:text-2xl font-bold text-on-surface">
                 {t('roomTypes')}
               </h3>
-              <div className="overflow-x-auto rounded-2xl border border-outline-variant/20 shadow-sm">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-surface-container-low text-start">
-                      <th className="p-4 text-xs font-bold text-outline uppercase tracking-wider border-b border-outline-variant/20">{t('roomTypeHeader')}</th>
-                      <th className="p-4 text-xs font-bold text-outline uppercase tracking-wider border-b border-outline-variant/20">{t('sleepsHeader')}</th>
-                      <th className="p-4 text-xs font-bold text-outline uppercase tracking-wider border-b border-outline-variant/20">{t('featuresHeader')}</th>
-                      <th className="p-4 text-xs font-bold text-outline uppercase tracking-wider border-b border-outline-variant/20 text-end">{t('priceHeader')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-outline-variant/20">
-                    {hotel.rooms.map((room, idx) => (
-                      <tr key={idx} className="hover:bg-surface-container/30 transition-colors">
-                        <td className="p-4">
-                          <span className="font-bold text-on-surface block">{room.type}</span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex gap-0.5 text-on-surface-variant">
-                            {Array.from({ length: room.capacity }).map((_, i) => (
-                              <Users key={i} size={14} />
-                            ))}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex flex-wrap gap-1">
-                            <span className="text-[10px] font-bold bg-surface-container text-on-surface-variant px-2.5 py-0.5 rounded-md">
-                              {room.capacity > 2 ? 'Family size' : 'Premium'}
-                            </span>
-                            <span className="text-[10px] font-bold bg-surface-container text-on-surface-variant px-2.5 py-0.5 rounded-md">
-                              AC / Wi-Fi
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-4 text-end font-bold text-primary">
-                          {room.pricePerNight.toLocaleString()} {hotel.currency || 'EGP'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DateRangePicker
+                checkIn={checkIn}
+                checkOut={checkOut}
+                onCheckInChange={setCheckIn}
+                onCheckOutChange={setCheckOut}
+                minDate={getTodayDateString(0)}
+                className="w-auto"
+              />
             </div>
-          )}
+
+            {availabilityLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse bg-surface-container rounded-xl h-48 border border-outline-variant/20" />
+                ))}
+              </div>
+            ) : activeRooms && activeRooms.length > 0 ? (
+              <motion.div
+                className="space-y-4"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="show"
+                custom={0}
+              >
+                {activeRooms.map((room, index) => {
+                  const availability = availabilities?.find((a) => a.roomId === room._id);
+                  const selection = selections[room._id] || null;
+                  return (
+                    <RoomCard
+                      key={room._id}
+                      room={room}
+                      availability={availability}
+                      selection={selection}
+                      onChange={(newSelection) => {
+                        if (newSelection) {
+                          setSelections((prev) => ({
+                            ...prev,
+                            [room._id]: newSelection,
+                          }));
+                        } else {
+                          handleRemoveRoom(room._id);
+                        }
+                      }}
+                      index={index}
+                    />
+                  );
+                })}
+              </motion.div>
+            ) : (
+              <div className="text-center py-12 text-on-surface-variant">
+                <p>{t('noRoomsAvailable')}</p>
+              </div>
+            )}
+          </motion.div>
 
           {/* Location Map with Leaflet */}
-          <div className="space-y-6">
+          <motion.div
+            className="space-y-6"
+            initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={reduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.7 }}
+          >
             <h3 className="font-display text-xl md:text-2xl font-bold text-on-surface border-b border-outline-variant/30 pb-3">
               {t('location')}
             </h3>
@@ -415,185 +547,42 @@ export default function HotelDetailsPage() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        {/* Right Sticky Sidebar form */}
-        <div className="lg:col-span-4 sticky top-24 z-20">
-          <div className="bg-surface border border-outline-variant/30 rounded-2xl p-6 md:p-8 shadow-lg space-y-6">
-            
-            {/* Header cost details */}
-            <div className="flex justify-between items-end border-b border-outline-variant/20 pb-4">
-              <div>
-                <span className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider block">
-                  {t('startingFrom')}
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-display text-3xl font-bold text-on-background">
-                    {hotel.averagePricePerNight.toLocaleString()}
-                  </span>
-                  <span className="text-xs text-on-surface-variant">{hotel.currency || 'EGP'} / night</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-secondary text-xs font-semibold">
-                <Calculator size={14} />
-                <span>{t('aiBestPrice')}</span>
-              </div>
-            </div>
-
-            {/* Notification alert states */}
-            {bookingSuccess && (
-              <div className="p-4 bg-success/10 border border-success/20 rounded-xl flex items-start gap-3 text-success">
-                <CheckCircle2 className="flex-shrink-0 mt-0.5" size={18} />
-                <span className="text-xs font-semibold leading-relaxed">{bookingSuccess}</span>
-              </div>
-            )}
-
-            {bookingError && (
-              <div className="p-4 bg-error-container/20 border border-error-container/30 rounded-xl flex items-start gap-3 text-error">
-                <AlertCircle className="flex-shrink-0 mt-0.5" size={18} />
-                <span className="text-xs font-semibold leading-relaxed">{bookingError}</span>
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleBookingSubmit} className="space-y-6">
-              
-              {/* Checkin / Checkout date pickers */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-on-surface-variant block uppercase tracking-wider">
-                    {t('checkIn')}
-                  </label>
-                  <div className="flex items-center gap-2 p-3 bg-surface-container rounded-xl border border-transparent focus-within:border-secondary focus-within:bg-white transition-all">
-                    <Calendar size={14} className="text-secondary shrink-0" />
-                    <input 
-                      type="date"
-                      value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                      className="bg-transparent border-none p-0 focus:ring-0 text-on-surface w-full text-xs font-bold"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-on-surface-variant block uppercase tracking-wider">
-                    {t('checkOut')}
-                  </label>
-                  <div className="flex items-center gap-2 p-3 bg-surface-container rounded-xl border border-transparent focus-within:border-secondary focus-within:bg-white transition-all">
-                    <Calendar size={14} className="text-secondary shrink-0" />
-                    <input 
-                      type="date"
-                      value={checkOut}
-                      onChange={(e) => setCheckOut(e.target.value)}
-                      className="bg-transparent border-none p-0 focus:ring-0 text-on-surface w-full text-xs font-bold"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Guests Count Steppers */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-on-surface-variant block uppercase tracking-wider">
-                    {t('guests')}
-                  </label>
-                  <div className="flex items-center gap-2 p-3 bg-surface-container rounded-xl border border-transparent focus-within:border-secondary focus-within:bg-white transition-all">
-                    <Users size={14} className="text-secondary shrink-0" />
-                    <input 
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={guests}
-                      onChange={(e) => setGuests(Number(e.target.value))}
-                      className="bg-transparent border-none p-0 focus:ring-0 text-on-surface w-full text-xs font-bold"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-on-surface-variant block uppercase tracking-wider">
-                    {t('rooms')}
-                  </label>
-                  <div className="flex items-center gap-2 p-3 bg-surface-container rounded-xl border border-transparent focus-within:border-secondary focus-within:bg-white transition-all">
-                    <Compass size={14} className="text-secondary shrink-0" />
-                    <input 
-                      type="number"
-                      min="1"
-                      max="5"
-                      value={rooms}
-                      onChange={(e) => setRooms(Number(e.target.value))}
-                      className="bg-transparent border-none p-0 focus:ring-0 text-on-surface w-full text-xs font-bold"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Special request field */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-on-surface-variant block uppercase tracking-wider">
-                  {t('specialRequests')}
-                </label>
-                <textarea 
-                  value={specialRequests}
-                  onChange={(e) => setSpecialRequests(e.target.value)}
-                  placeholder={t('specialRequestsPlaceholder')}
-                  rows={2}
-                  className="w-full p-3 bg-surface-container border border-outline-variant/20 rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all text-xs font-medium text-on-surface"
-                />
-              </div>
-
-              {/* Price Breakdown details */}
-              <div className="pt-4 border-t border-outline-variant/20 space-y-3 text-sm">
-                <div className="flex justify-between text-on-surface-variant">
-                  <span className="font-medium text-xs">{t('priceNights', { price: `${hotel.averagePricePerNight.toLocaleString()} ${hotel.currency || 'EGP'}`, nights })}</span>
-                  <span className="font-bold text-xs">{basePrice.toLocaleString()} {hotel.currency || 'EGP'}</span>
-                </div>
-                <div className="flex justify-between text-on-surface-variant">
-                  <span className="font-medium text-xs">{t('serviceFee')}</span>
-                  <span className="font-bold text-xs text-success">-{aiDiscount.toLocaleString()} {hotel.currency || 'EGP'}</span>
-                </div>
-                <div className="flex justify-between text-on-surface-variant border-b border-outline-variant/10 pb-3">
-                  <span className="font-medium text-xs">{t('taxesAndFees')}</span>
-                  <span className="font-bold text-xs">{taxes.toLocaleString()} {hotel.currency || 'EGP'}</span>
-                </div>
-                <div className="flex justify-between pt-2">
-                  <span className="font-display text-base font-bold text-on-background">{t('total')}</span>
-                  <span className="font-display text-lg font-bold text-on-background">{grandTotal.toLocaleString()} {hotel.currency || 'EGP'}</span>
-                </div>
-              </div>
-
-              {/* Book Button */}
-              <Button 
-                type="submit" 
-                variant="primary" 
-                fullWidth
-                disabled={bookingLoading}
-                className="py-4 rounded-xl flex items-center justify-center gap-2 font-semibold shadow-md active:scale-95 transition-transform"
-              >
-                {bookingLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
-                    <span>{t('bookingInProgress')}</span>
-                  </span>
-                ) : (
-                  <>
-                    <span>{t('bookNow')}</span>
-                    <ArrowRight size={16} />
-                  </>
-                )}
-              </Button>
-              <p className="text-center text-[10px] text-on-surface-variant font-medium">
-                {t('disclaimer')}
-              </p>
-            </form>
-
-          </div>
-        </div>
+        {/* Right Sticky Sidebar - Room Selection Summary */}
+        <motion.div
+          className="lg:col-span-4 sticky top-24 z-20"
+          initial={reduceMotion ? {} : { opacity: 0, x: 30 }}
+          animate={reduceMotion ? {} : { opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.8 }}
+        >
+          {bookingError && (
+            <motion.div
+              className="p-4 bg-error/10 border border-error/20 rounded-xl flex items-start gap-3 text-error mb-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <AlertCircle className="flex-shrink-0 mt-0.5" size={18} />
+              <span className="text-xs font-semibold leading-relaxed">{bookingError}</span>
+            </motion.div>
+          )}
+          <RoomSelectionSummary
+            selections={selections}
+            rooms={activeRooms}
+            availabilities={availabilities || []}
+            checkIn={checkIn}
+            checkOut={checkOut}
+            nights={nights}
+            currency={hotel.currency || 'EGP'}
+            onUpdateQuantity={handleQuantityChange}
+            onUpdateGuests={handleGuestsChange}
+            onRemove={handleRemoveRoom}
+            onBook={handleBook}
+            isBooking={createHold.isPending || createCheckoutSession.isPending || createBooking.isPending}
+          />
+        </motion.div>
 
       </section>
     </main>

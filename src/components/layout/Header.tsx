@@ -30,6 +30,7 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 import { usersApi } from "@/lib/api/users";
 import { subscriptionsApi } from "@/lib/api/subscriptions";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 interface NavLink {
   href: string;
@@ -44,37 +45,38 @@ export default function Header() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const reducedMotion = useReducedMotion();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
-  const isAuthPage = [
-    "/login",
-    "/signup",
-    "/forgot-password",
-    "/reset-password",
-    "/verify-otp",
-    "/en/login",
-    "/en/signup",
-    "/en/forgot-password",
-    "/en/reset-password",
-    "/en/verify-otp",
-    "/ar/login",
-    "/ar/signup",
-    "/ar/forgot-password",
-    "/ar/reset-password",
-    "/ar/verify-otp",
-  ].some((p) => pathname === p || pathname.startsWith(p + "/"));
-
+  // State hooks - MUST be called on every render
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<"free" | "pro" | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const tabletMenuRef = useRef<HTMLDivElement>(null);
 
+  // Get userId from AuthProvider user object
+  const userId = user?.id || null;
+
+  // useQuery hooks - MUST be called on every render
+  const { data: userData } = useQuery({
+    queryKey: ["currentUser", userId],
+    queryFn: () => usersApi.getUser(userId!),
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: subscriptionData } = useQuery({
+    queryKey: ["mySubscription", userId],
+    queryFn: () => subscriptionsApi.getMySubscription(),
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Effects - MUST be called on every render
   useEffect(() => {
     setMounted(true);
     const handleScroll = () => {
@@ -83,40 +85,6 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tokenFromUrl = params.get("token");
-    if (tokenFromUrl) {
-      document.cookie = `token=${tokenFromUrl}; path=/; max-age=86400; SameSite=Lax`;
-      params.delete("token");
-      const cleanUrl =
-        window.location.pathname + (params.toString() ? `?${params}` : "");
-      window.history.replaceState({}, "", cleanUrl);
-    }
-    const checkAuth = () => {
-      const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
-      const token = tokenMatch ? tokenMatch[2] : null;
-      setIsLoggedIn(!!token);
-
-      if (token) {
-        try {
-          const payload = token.split(".")[1];
-          const decoded = JSON.parse(
-            atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
-          );
-          setUserId(decoded.id || decoded._id || decoded.sub || null);
-        } catch {
-          setUserId(null);
-        }
-      } else {
-        setUserId(null);
-      }
-    };
-    checkAuth();
-    window.addEventListener("auth-change", checkAuth);
-    return () => window.removeEventListener("auth-change", checkAuth);
-  }, [pathname]);
 
   useEffect(() => {
     if (!isDropdownOpen) return;
@@ -139,20 +107,7 @@ export default function Header() {
     };
   }, [isDropdownOpen]);
 
-  const { data: userData } = useQuery({
-    queryKey: ["currentUser", userId],
-    queryFn: () => usersApi.getUser(userId!),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: subscriptionData } = useQuery({
-    queryKey: ["mySubscription", userId],
-    queryFn: () => subscriptionsApi.getMySubscription(),
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-  });
-
+  // Derived values needed for early returns - MUST be before effects that use them
   const currentUser = userData?.data?.user || null;
   const userInitial = currentUser?.name
     ? currentUser.name.charAt(0).toUpperCase()
@@ -163,21 +118,49 @@ export default function Header() {
     setImageError(false);
   }, [userImage]);
 
-  useEffect(() => {
-    if (subscriptionData?.data) {
-      const status = subscriptionData.data.status;
-      setSubscriptionTier(status === "active" || status === "succeeded" ? "pro" : "free");
-    } else {
-      setSubscriptionTier("free");
-    }
-  }, [subscriptionData]);
+  const closeMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
 
+  const navLinks: NavLink[] = [
+    { href: "/", label: t("home"), icon: <LayoutDashboard size={20} /> },
+    { href: "/destinations", label: t("destinations"), icon: <MapPinHouse size={20} /> },
+    { href: "/hotels", label: t("hotels"), icon: <Hotel size={20} /> },
+    ...(isAuthenticated
+      ? [
+          { href: "/trips", label: t("trips"), icon: <CreditCard size={20} /> },
+          { href: "/bookings", label: t("bookings"), icon: <Bookmark size={20} /> },
+        ]
+      : []),
+    { href: "/pricing", label: t("pricing"), icon: <Shield size={20} /> },
+    { href: "/about", label: t("about"), icon: <Settings size={20} /> },
+  ];
+
+  const isAuthPage = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-otp",
+    "/en/login",
+    "/en/signup",
+    "/en/forgot-password",
+    "/en/reset-password",
+    "/en/verify-otp",
+    "/ar/login",
+    "/ar/signup",
+    "/ar/forgot-password",
+    "/ar/reset-password",
+    "/ar/verify-otp",
+  ].some((p) => pathname === p || pathname.startsWith(p + "/"));
+
+  // Early returns for special cases - AFTER ALL hooks
   if (isAuthPage) return null;
 
+  // Common variables - MUST be before loading state
   const isAr = locale === "ar";
   const isDark = mounted && resolvedTheme === "dark";
   const isHomepage = pathname === "/";
-
   const isTransparent = isHomepage && !isScrolled;
   const isFloating = isScrolled;
   const isFilledFullWidth = !isHomepage && !isScrolled;
@@ -189,32 +172,28 @@ export default function Header() {
   };
 
   const handleLogout = () => {
-    document.cookie =
-      "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-    setIsLoggedIn(false);
-    setUserId(null);
+    // Clear both cookies
+    document.cookie = `auth_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+    document.cookie = `token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
     window.dispatchEvent(new Event("auth-change"));
     window.location.href = "/";
   };
 
-  const closeMobileMenu = useCallback(() => {
-    setIsMobileMenuOpen(false);
-  }, []);
+  // Main render - single return with conditional loading state
+  const logoSrc = isTransparent
+    ? "/images/logo-2.png"
+    : isDark
+    ? "/images/logo-2.png"
+    : "/images/logo.png";
 
-  const navLinks: NavLink[] = [
-    { href: "/", label: t("home"), icon: <LayoutDashboard size={20} /> },
-    { href: "/destinations", label: t("destinations"), icon: <MapPinHouse size={20} /> },
-    { href: "/hotels", label: t("hotels"), icon: <Hotel size={20} /> },
-    ...(isLoggedIn
-      ? [
-          { href: "/trips", label: t("trips"), icon: <CreditCard size={20} /> },
-          { href: "/bookings", label: t("bookings"), icon: <Bookmark size={20} /> },
-        ]
-      : []),
-    { href: "/pricing", label: t("pricing"), icon: <Shield size={20} /> },
-    { href: "/about", label: t("about"), icon: <Settings size={20} /> },
-  ];
+  const springTransition = reducedMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 400, damping: 40 };
+  const springTransitionStagger = reducedMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 300, damping: 30 };
 
+  // Loading state - render minimal nav inline (NOT early return)
   if (!mounted) {
     return (
       <nav
@@ -243,19 +222,6 @@ export default function Header() {
       </nav>
     );
   }
-
-  const logoSrc = isTransparent
-    ? "/images/logo-2.png"
-    : isDark
-    ? "/images/logo-2.png"
-    : "/images/logo.png";
-
-  const springTransition = reducedMotion
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 400, damping: 40 };
-  const springTransitionStagger = reducedMotion
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 300, damping: 30 };
 
   return (
     <nav
@@ -295,10 +261,7 @@ export default function Header() {
           </span>
         </Link>
 
-        <div
-          className="hidden lg:flex items-center gap-0.5 xl:gap-1"
-          role="menubar"
-        >
+        <div className="hidden lg:flex items-center gap-0.5 xl:gap-1" role="menubar">
           {navLinks.map((link) => {
             const isActive =
               pathname === link.href ||
@@ -381,7 +344,7 @@ export default function Header() {
           )}
         />
 
-        {!isLoggedIn ? (
+        {!isAuthenticated ? (
           <>
             <Link
               href="/login"
@@ -605,27 +568,28 @@ export default function Header() {
 
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            ref={mobileMenuRef}
-            id="mobile-menu"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Mobile navigation menu"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reducedMotion ? 0 : 0.2 }}
-            className="fixed inset-0 z-50 lg:hidden"
-          >
+          <>
             <motion.div
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-              onClick={closeMobileMenu}
-              aria-hidden="true"
+              ref={mobileMenuRef}
+              id="mobile-menu"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile navigation menu"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: reducedMotion ? 0 : 0.2 }}
-            />
+              className="fixed inset-0 z-50 lg:hidden"
+            >
+              <motion.div
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                onClick={closeMobileMenu}
+                aria-hidden="true"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: reducedMotion ? 0 : 0.2 }}
+              />
             <motion.div
               className={cn(
                 "absolute inset-inline-start-0 w-full flex flex-col max-h-[calc(100vh-6rem)] overflow-y-auto",
@@ -695,7 +659,7 @@ export default function Header() {
               </div>
 
               <div className="p-4 border-t border-outline-variant/10">
-                {!isLoggedIn ? (
+                {!isAuthenticated ? (
                   <div className="flex flex-col gap-3">
                     <Link
                       href="/login"
@@ -842,13 +806,14 @@ export default function Header() {
                       <LogOut size={18} aria-hidden="true" />
                       <span>{t("logout")}</span>
                     </Button>
-                  </div>
+</div>
                 )}
               </div>
             </motion.div>
           </motion.div>
+          </>
         )}
-      </AnimatePresence>
+        </AnimatePresence>
     </nav>
   );
 }

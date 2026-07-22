@@ -1,0 +1,24 @@
+{
+  "name": "Rahal رحّال",
+  "short_name": "Rahal",
+  "description": "Bespoke itineraries, heritage insights, and seamless bookings for your Egypt journey.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a5f7a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/logo-2.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["travel", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "scope": "/",
+  "screenshots": []
+}

@@ -3,11 +3,13 @@
 import React, { useEffect, useState, use, useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Sparkles, MapPin, AlertCircle, Clock } from 'lucide-react';
-import { useBookingDetailsQuery, useCreateCheckoutMutation } from '@/hooks/useBookings';
+import { Loader2, Sparkles, MapPin, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
+import { useHoldStatus } from '@/hooks/useHoldStatus';
+import { BookingDetail } from '@/types/booking';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { getLocalized, type LocalizedString } from '@/lib/utils/localized';
+import { HoldCountdown } from '@/components/booking/HoldCountdown';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -18,106 +20,12 @@ export default function PaymentSuccessPage({ params }: PageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations('bookings');
+  const holdT = useTranslations('booking.hold');
 
-  const bookingId = searchParams.get('booking_id') || '';
+  const holdId = searchParams.get('holdId') || searchParams.get('booking_id') || '';
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { data: response, isLoading, isError, refetch, isFetching } = useBookingDetailsQuery(bookingId);
-  const checkoutMutation = useCreateCheckoutMutation();
-  const booking = response?.data;
-
-  // Particle Canvas Confetti Effect (only used in succeeded state)
-  useEffect(() => {
-    if (!booking || booking.paymentStatus !== 'succeeded') return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const activeCanvas = canvas;
-    const ctx = activeCanvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    let particles: any[] = [];
-
-    const resize = () => {
-      if (activeCanvas) {
-        activeCanvas.width = window.innerWidth;
-        activeCanvas.height = window.innerHeight;
-      }
-    };
-
-    class Particle {
-      x: number = 0;
-      y: number = 0;
-      size: number = 0;
-      speedY: number = 0;
-      speedX: number = 0;
-      rotation: number = 0;
-      rotationSpeed: number = 0;
-      color: string = '';
-      opacity: number = 0;
-
-      constructor() {
-        this.reset();
-        this.y = Math.random() * activeCanvas.height;
-      }
-
-      reset() {
-        this.x = Math.random() * activeCanvas.width;
-        this.y = Math.random() * -activeCanvas.height;
-        this.size = Math.random() * 8 + 4;
-        this.speedY = Math.random() * 3 + 1;
-        this.speedX = Math.random() * 2 - 1;
-        this.rotation = Math.random() * 360;
-        this.rotationSpeed = Math.random() * 2 - 1;
-        this.color = ['#C8922A', '#1B4B6E', '#2D7A4F', '#7e5700'][Math.floor(Math.random() * 4)];
-        this.opacity = Math.random() * 0.5 + 0.3;
-      }
-
-      update() {
-        this.y += this.speedY;
-        this.x += this.speedX;
-        this.rotation += this.rotationSpeed;
-        if (this.y > activeCanvas.height) {
-          this.reset();
-        }
-      }
-
-      draw() {
-        if (!ctx) return;
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation * Math.PI / 180);
-        ctx.globalAlpha = this.opacity;
-        ctx.fillStyle = this.color;
-        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-        ctx.restore();
-      }
-    }
-
-    resize();
-    window.addEventListener('resize', resize);
-
-    for (let i = 0; i < 40; i++) {
-      particles.push(new Particle());
-    }
-
-    const animate = () => {
-      ctx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
-      particles.forEach((p) => {
-        p.update();
-        p.draw();
-      });
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [booking]);
+  const { data: booking, isLoading, isError, isFetching } = useHoldStatus(holdId) as { data: BookingDetail | undefined; isLoading: boolean; isError: boolean; isFetching: boolean };
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
@@ -146,25 +54,20 @@ export default function PaymentSuccessPage({ params }: PageProps) {
     }
   };
 
-  const handleRetryPayment = async () => {
-    try {
-      await checkoutMutation.mutateAsync(bookingId);
-    } catch (err) {
-      console.error('Failed to retry payment:', err);
-    }
-  };
-
   const isAr = locale === 'ar';
 
-  // 1. Loading Verification State
-  if (isLoading || (booking && booking.paymentStatus === 'processing')) {
+  // 1. Loading Verification State - polling for hold status
+  if (isLoading || (booking && booking.status === 'held')) {
     return (
       <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
         <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
           <Loader2 className="w-16 h-16 text-primary animate-spin mb-6" />
           <h1 className="font-display font-bold text-2xl md:text-3xl text-on-background mb-4">
-            {t('paymentSuccess.loadingTitle')}
+            {holdT('confirming')}
           </h1>
+          {booking && booking.expiresAt && (
+            <HoldCountdown expiresAt={booking.expiresAt} className="mb-4" />
+          )}
           <p className="text-sm md:text-base text-on-surface-variant max-w-md mx-auto leading-relaxed">
             {t('paymentSuccess.loadingSubtitle')}
           </p>
@@ -188,8 +91,45 @@ export default function PaymentSuccessPage({ params }: PageProps) {
     );
   }
 
-  // 2. Failed State
-  if (booking.paymentStatus === 'failed') {
+  // 2. Expired hold state
+  if (booking.status === 'expired') {
+    return (
+      <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
+        <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
+          <div className="relative mb-8 flex items-center justify-center">
+            <div className="absolute w-24 h-24 bg-error/10 rounded-full scale-125 animate-pulse"></div>
+            <svg className="w-24 h-24 text-error" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
+              <path d="M12 8V12M12 16H12.01" />
+            </svg>
+          </div>
+
+          <h1 className="font-display font-bold text-3xl md:text-4xl text-on-background mb-4">
+            {holdT('expired')}
+          </h1>
+          <p className="text-sm md:text-base text-on-surface-variant mb-10 max-w-md mx-auto leading-relaxed">
+            {t('paymentSuccess.failedSubtitle')}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+            <Link href={`/${locale}/hotels`}>
+              <Button variant="primary" className="px-8 py-3.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2">
+                {holdT('selectAgain')}
+              </Button>
+            </Link>
+            <Link href={`/${locale}`}>
+              <Button variant="secondary" className="px-8 py-3.5 rounded-xl font-bold text-sm w-full">
+                {t('paymentSuccess.backToHome')}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // 3. Failed payment state (if status is confirmed but payment failed)
+  if (booking.status === 'cancelled' && booking.paymentStatus === 'failed') {
     return (
       <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
         <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
@@ -210,11 +150,9 @@ export default function PaymentSuccessPage({ params }: PageProps) {
           <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
             <Button
               variant="primary"
-              onClick={handleRetryPayment}
-              disabled={checkoutMutation.isPending}
+              onClick={() => router.push(`/${locale}/bookings/${booking._id}/status`)}
               className="px-8 py-3.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
             >
-              {checkoutMutation.isPending && <Loader2 size={16} className="animate-spin" />}
               {t('paymentSuccess.retryPayment')}
             </Button>
             <Link href={`/${locale}`}>
@@ -228,45 +166,7 @@ export default function PaymentSuccessPage({ params }: PageProps) {
     );
   }
 
-  // 3. Pending verification state
-  if (booking.paymentStatus === 'pending') {
-    return (
-      <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
-        <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
-          <div className="relative mb-8 flex items-center justify-center">
-            <div className="absolute w-24 h-24 bg-amber-500/10 rounded-full scale-125 animate-pulse"></div>
-            <Clock className="w-16 h-16 text-amber-600 dark:text-amber-400 animate-pulse" />
-          </div>
-
-          <h1 className="font-display font-bold text-3xl md:text-4xl text-on-background mb-4">
-            {t('paymentSuccess.pendingTitle')}
-          </h1>
-          <p className="text-sm md:text-base text-on-surface-variant mb-10 max-w-md mx-auto leading-relaxed">
-            {t('paymentSuccess.pendingSubtitle')}
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-            <Button
-              variant="primary"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="px-8 py-3.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2"
-            >
-              {isFetching && <Loader2 size={16} className="animate-spin" />}
-              {t('paymentSuccess.refreshStatus')}
-            </Button>
-            <Link href={`/${locale}`}>
-              <Button variant="secondary" className="px-8 py-3.5 rounded-xl font-bold text-sm w-full">
-                {t('paymentSuccess.backToHome')}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // 4. Succeeded state
+  // 4. Confirmed state - show success
   const hotelObj = typeof booking.hotel === 'object' ? booking.hotel : null;
   const hotelName = hotelObj ? (locale === 'ar' ? hotelObj.name.ar : hotelObj.name.en) : 'Hotel';
   const hotelCity = getLocalized(hotelObj?.city as LocalizedString, locale);

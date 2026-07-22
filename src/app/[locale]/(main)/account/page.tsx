@@ -38,7 +38,7 @@ export default function AccountSettingsPage() {
 
   // Extract userId on mount
   useEffect(() => {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+    const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
     const token = tokenMatch ? tokenMatch[2] : null;
     if (token) {
       try {

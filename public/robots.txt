@@ -16,4 +16,4 @@ Disallow: /planner
 Disallow: /favorites
 
 # Sitemap
-Sitemap: https://rahal.app/sitemap.xml
+Sitemap: https://rahal-main-site.vercel.app/sitemap.xml

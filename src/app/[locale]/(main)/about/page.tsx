@@ -131,7 +131,7 @@ export default function AboutPage() {
           </Text>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 w-full sm:w-auto">
-            <Link href="/planner" className="w-full sm:w-auto">
+            <Link href="/trips" className="w-full sm:w-auto">
               <Button variant="primary" pill fullWidth className="text-base py-3.5 px-8 shadow-md">
                 {content.hero.primaryCta}
               </Button>
@@ -296,7 +296,7 @@ export default function AboutPage() {
             <Text variant="body-lg" className="text-on-surface-variant">
               {content.techBanner.desc}
             </Text>
-            <Link href="/planner">
+            <Link href="/trips">
               <Button variant="primary" pill className="bg-secondary text-white hover:bg-secondary-container hover:text-on-secondary-container shadow-md px-8 py-3">
                 {content.techBanner.cta}
               </Button>

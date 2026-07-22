@@ -55,7 +55,7 @@ export default function Footer() {
   const quickLinks = [
     { href: '/destinations', label: navT('destinations') },
     { href: '/hotels', label: navT('hotels') },
-    { href: '/planner', label: navT('planner') },
+    { href: '/trips', label: navT('planner') },
     { href: '/pricing', label: navT('pricing') },
   ];
 

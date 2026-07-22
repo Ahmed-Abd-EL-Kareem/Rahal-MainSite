@@ -85,7 +85,7 @@ export default function FeatureGrid() {
           <Text variant="body-lg" className="text-on-surface-variant">
             {calloutT('desc')}
           </Text>
-          <Link href="/planner">
+          <Link href="/trips">
             <Button variant="primary" pill className="bg-secondary text-white hover:bg-secondary-container hover:text-on-secondary-container shadow-md">
               {calloutT('cta')}
             </Button>

@@ -8,11 +8,11 @@ export default function MainLayout({
 }) {
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <div className="flex-1 flex flex-col">
         {children}
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }

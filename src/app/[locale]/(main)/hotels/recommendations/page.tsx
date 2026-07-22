@@ -28,7 +28,8 @@ import { hotelsApi } from "@/lib/api/hotels";
 import { aiApi } from "@/lib/api/ai";
 import { Hotel } from "@/types/hotel";
 import HotelCard from '@/components/hotel/HotelCard'
-import { getLocaleQueryKey } from '@/lib/hooks/useLocaleQuery';;
+import { getLocaleQueryKey } from '@/lib/hooks/useLocaleQuery';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 const HotelsMap = dynamic(() => import("@/components/hotel/HotelsMap"), {
   ssr: false,
@@ -49,6 +50,21 @@ export default function HotelRecommendationsPage() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push(`/${locale}/login`);
+    }
+  }, [isAuthenticated, authLoading, router, locale]);
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   // Get tripId from URL params
   const tripId = searchParams.get("tripId");

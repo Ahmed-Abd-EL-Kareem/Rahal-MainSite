@@ -1,6 +1,10 @@
 import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const isServer = typeof window === 'undefined';
+// const isProduction = process.env.NODE_ENV === 'production';
+
+// Use relative URL through Next.js proxy in development, direct backend URL in production
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ;
 console.log("BASE_URL", BASE_URL);
 
 export class APIError extends Error {
@@ -36,7 +40,9 @@ function getLocaleFromCookie(): string {
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (typeof document !== 'undefined') {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+    // Read from non-HttpOnly cookie for Authorization header (fallback)
+    // HttpOnly 'token' cookie is sent automatically via withCredentials: true
+    const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
     const token = tokenMatch ? tokenMatch[2] : null;
     if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -128,7 +134,8 @@ function createAIClient() {
 
   aiClient.interceptors.request.use((config) => {
     if (typeof document !== 'undefined') {
-      const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+      // Read from non-HttpOnly cookie for Authorization header (fallback)
+      const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
       const token = tokenMatch ? tokenMatch[2] : null;
       if (token && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${token}`;

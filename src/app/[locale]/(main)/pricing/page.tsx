@@ -32,7 +32,7 @@ export default function PricingPlansPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+    const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
     const token = tokenMatch ? tokenMatch[2] : null;
     setIsLoggedIn(!!token);
     if (token) {

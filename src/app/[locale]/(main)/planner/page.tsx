@@ -1,29 +1,30 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { useLocale } from 'next-intl';
 import { useTranslations } from 'next-intl';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { Loader2 } from 'lucide-react';
 import Heading from '@/components/ui/Heading';
 import Text from '@/components/ui/Text';
 
 export default function AITripPlannerPage() {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations('planner');
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
-    if (!tokenMatch) {
-      router.push('/login');
-    } else {
-      setLoading(false);
+    if (!isLoading && !isAuthenticated) {
+      router.push(`/${locale}/login`);
     }
-  }, [router]);
+  }, [isAuthenticated, isLoading, router, locale]);
 
-  if (loading) {
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

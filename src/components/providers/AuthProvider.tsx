@@ -36,20 +36,42 @@ const getLocaleFromPathname = (pathname: string): string => {
   return "en"; // default
 };
 
+const authPaths = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-otp",
+];
+
+const isAuthPath = (pathname: string): boolean => {
+  const locale = getLocaleFromPathname(pathname);
+  return authPaths.some(
+    (path) => pathname === `/${locale}${path}` || pathname === path
+  );
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
+  // Determine if we should use Secure flag (HTTPS)
+  const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+  const cookieSecureFlag = isSecure ? "; Secure" : "";
+
+  const getCookieOptions = (maxAge: number) => `path=/; max-age=${maxAge}; SameSite=Lax${cookieSecureFlag}`;
+
   useEffect(() => {
     const checkAuth = () => {
       if (typeof document !== "undefined") {
-        const tokenMatch = document.cookie.match(/(^|;\s*)token\s*=\s*([^;]*)/);
+        // Read from non-HttpOnly cookie (set by backend as 'auth_token')
+        const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
         const token = tokenMatch ? tokenMatch[2] : null;
 
         if (token) {
-          // Try to parse user from token (JWT) or we could fetch from API
+          // Try to parse user from token (JWT)
           try {
             const payload = JSON.parse(atob(token.split(".")[1]));
             setUser({
@@ -71,9 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
 const login = async (token: string, userData: User) => {
-  document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
-  setUser(userData);
-  window.dispatchEvent(new Event("auth-change")); // keep Header in sync
+  return new Promise<void>((resolve) => {
+    // Set both cookies: HttpOnly 'token' (for API) and non-HttpOnly 'auth_token' (for client)
+    // Note: Backend should ideally set both on login response
+    document.cookie = `auth_token=${token}; ${getCookieOptions(86400)}`;
+    setUser(userData);
+    // Wait for state update before resolving
+    setTimeout(() => {
+      window.dispatchEvent(new Event("auth-change")); // keep Header in sync
+      resolve();
+    }, 0);
+  });
 };
 
   // const logout = () => {
@@ -84,52 +114,25 @@ const login = async (token: string, userData: User) => {
   //   router.refresh();
   // };
 const logout = () => {
-  document.cookie =
-    "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+  // Clear both cookies
+  document.cookie = `auth_token=; ${getCookieOptions(0)}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+  document.cookie = `token=; ${getCookieOptions(0)}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
   setUser(null);
   router.push("/");
 };
   const isAuthenticated = !!user;
 
-  // Redirect authenticated users away from auth pages
+// Redirect authenticated users away from auth pages
   // Runs on mount and whenever pathname/auth state changes
-  // useEffect(() => {
-  //   if (!isLoading && isAuthenticated) {
-  //     const locale = getLocaleFromPathname(pathname);
-  //     const authPaths = [
-  //       "/login",
-  //       "/signup",
-  //       "/forgot-password",
-  //       "/reset-password",
-  //       "/verify-otp",
-  //     ];
-  //     // Check for locale-prefixed paths: /en/login, /ar/signup, etc.
-  //     const isAuthPath = authPaths.some(
-  //       (path) => pathname === `/${locale}${path}` || pathname === path
-  //     );
-
-  //     if (isAuthPath) {
-  //       router.push(`/`);
-  //       router.refresh();
-  //     }
-  //   }
-  // }, [pathname, isAuthenticated, isLoading, router]);
-useEffect(() => {
-  if (!isLoading && isAuthenticated) {
-    const authPaths = [
-      "/login",
-      "/signup",
-      "/forgot-password",
-      "/reset-password",
-      "/verify-otp",
-    ];
-    const isAuthPath = authPaths.some((path) => pathname === path);
-
-    if (isAuthPath) {
-      router.push("/");
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      if (isAuthPath(pathname)) {
+        const locale = getLocaleFromPathname(pathname);
+        router.push(`/${locale}`);
+        router.refresh();
+      }
     }
-  }
-}, [pathname, isAuthenticated, isLoading, router]);
+  }, [pathname, isAuthenticated, isLoading, router]);
   return (
     <AuthContext.Provider
       value={{ user, isLoading, isAuthenticated, login, logout }}
