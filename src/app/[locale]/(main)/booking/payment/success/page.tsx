@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useEffect, useState, use, useRef } from 'react';
+import React, { use, useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, Sparkles, MapPin, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
-import { useHoldStatus } from '@/hooks/useHoldStatus';
+import { Loader2, Sparkles, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useBookingDetailsQuery } from '@/hooks/useBookings';
 import { BookingDetail } from '@/types/booking';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { getLocalized, type LocalizedString } from '@/lib/utils/localized';
-import { HoldCountdown } from '@/components/booking/HoldCountdown';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -22,10 +21,11 @@ export default function PaymentSuccessPage({ params }: PageProps) {
   const t = useTranslations('bookings');
   const holdT = useTranslations('booking.hold');
 
-  const holdId = searchParams.get('holdId') || searchParams.get('booking_id') || '';
+  const bookingId = searchParams.get('booking_id') || '';
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { data: booking, isLoading, isError, isFetching } = useHoldStatus(holdId) as { data: BookingDetail | undefined; isLoading: boolean; isError: boolean; isFetching: boolean };
+  const { data: response, isLoading, isError } = useBookingDetailsQuery(bookingId);
+  const booking = response?.data;
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
@@ -56,8 +56,8 @@ export default function PaymentSuccessPage({ params }: PageProps) {
 
   const isAr = locale === 'ar';
 
-  // 1. Loading Verification State - polling for hold status
-  if (isLoading || (booking && booking.status === 'held')) {
+  // 1. Loading Verification State - polling for booking status
+  if (isLoading || (booking && booking.paymentStatus === 'processing')) {
     return (
       <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
         <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
@@ -65,9 +65,6 @@ export default function PaymentSuccessPage({ params }: PageProps) {
           <h1 className="font-display font-bold text-2xl md:text-3xl text-on-background mb-4">
             {holdT('confirming')}
           </h1>
-          {booking && booking.expiresAt && (
-            <HoldCountdown expiresAt={booking.expiresAt} className="mb-4" />
-          )}
           <p className="text-sm md:text-base text-on-surface-variant max-w-md mx-auto leading-relaxed">
             {t('paymentSuccess.loadingSubtitle')}
           </p>
@@ -91,8 +88,8 @@ export default function PaymentSuccessPage({ params }: PageProps) {
     );
   }
 
-  // 2. Expired hold state
-  if (booking.status === 'expired') {
+  // 2. Expired/Cancelled hold state
+  if (booking.status === 'expired' || (booking.status === 'cancelled' && booking.paymentStatus !== 'succeeded')) {
     return (
       <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
         <div className="max-w-xl w-full flex flex-col items-center text-center z-10 px-4 py-16">
@@ -128,7 +125,7 @@ export default function PaymentSuccessPage({ params }: PageProps) {
     );
   }
 
-  // 3. Failed payment state (if status is confirmed but payment failed)
+  // 3. Failed payment state (if status is cancelled but payment failed)
   if (booking.status === 'cancelled' && booking.paymentStatus === 'failed') {
     return (
       <main className="flex-grow flex items-center justify-center pt-24 pb-12 px-margin-mobile relative overflow-hidden bg-background text-on-background min-h-screen">
