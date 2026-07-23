@@ -59,6 +59,8 @@ export default function AITravelChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingConversationId, setEditingConversationId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  // Local messages for new chat (before sessionId exists)
+  const [localMessages, setLocalMessages] = useState<Array<{ role: string; content: string; createdAt?: string }>>([]);
 
   // Fetch subscription data
   useEffect(() => {
@@ -98,7 +100,7 @@ export default function AITravelChatPage() {
   // Scroll to bottom when messages or loading state changes
   useEffect(() => {
     scrollToBottom();
-  }, [conversation?.data?.messages, isLoading, scrollToBottom]);
+  }, [sessionId ? conversation?.data?.messages : localMessages, isLoading, scrollToBottom]);
 
   // Toast auto-dismissal
   useEffect(() => {
@@ -110,6 +112,12 @@ export default function AITravelChatPage() {
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
+
+    // Optimistic update for new chats (no sessionId)
+    if (!sessionId) {
+      const userMessage = { role: 'user', content: text, createdAt: new Date().toISOString() };
+      setLocalMessages(prev => [...prev, userMessage]);
+    }
 
     setIsLoading(true);
 
@@ -123,6 +131,10 @@ export default function AITravelChatPage() {
         router.replace(`/chat?sessionId=${result.data.sessionId}`);
       }
     } catch (err: unknown) {
+      // Rollback on error for new chats
+      if (!sessionId) {
+        setLocalMessages(prev => prev.slice(0, -1));
+      }
       console.error('Chat API Error:', err);
       showToast(t('requestFailed'), 'error');
     } finally {
@@ -146,6 +158,7 @@ export default function AITravelChatPage() {
   };
 
   const handleNewChat = () => {
+    setLocalMessages([]);
     router.push('/chat');
   };
 
@@ -186,7 +199,9 @@ export default function AITravelChatPage() {
   };
 
   // Derived data
-  const messages = conversation?.data?.messages ?? [];
+  const messages = sessionId 
+    ? conversation?.data?.messages ?? [] 
+    : localMessages;
 
   if (authLoading) {
     return (

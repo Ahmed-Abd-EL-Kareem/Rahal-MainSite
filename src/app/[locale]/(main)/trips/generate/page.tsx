@@ -43,9 +43,9 @@ export default function GenerateTripPage() {
   const INTERESTS = ['history', 'food', 'nature', 'adventure', 'culture', 'beach', 'shopping', 'wellness'];
 
   const BUDGETS = [
-    { value: 'budget', label: t('budget.budget'), desc: t('budgetDescs.budget') },
-    { value: 'mid-range', label: t('budget.mid-range'), desc: t('budgetDescs.mid-range') },
-    { value: 'luxury', label: t('budget.luxury'), desc: t('budgetDescs.luxury') },
+    { value: 'budget', label: t('budgetOptions.budget'), desc: t('budgetDescs.budget') },
+    { value: 'mid-range', label: t('budgetOptions.mid-range'), desc: t('budgetDescs.mid-range') },
+    { value: 'luxury', label: t('budgetOptions.luxury'), desc: t('budgetDescs.luxury') },
   ];
 
   const EGYPT_CITIES = locale === 'ar'
