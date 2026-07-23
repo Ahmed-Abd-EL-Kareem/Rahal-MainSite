@@ -81,7 +81,21 @@ export interface BookingsResponse {
   message?: string;
   results?: number;
   data: Booking[];
-  pagination?: Record<string, unknown>;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface GetMyBookingsParams {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  status?: string;
+  upcoming?: boolean;
+  search?: string;
 }
 
 export interface BookingDetailResponse {
@@ -122,8 +136,19 @@ export interface PaymentStatusResponse {
 
 export const bookingsAxiosService = {
   // GET /bookings
-  getMyBookings: async (): Promise<BookingsResponse> => {
-    const response = await axiosClient.get<BookingsResponse>('/bookings');
+  getMyBookings: async (params?: GetMyBookingsParams): Promise<BookingsResponse> => {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null) {
+          searchParams.set(key, String(val));
+        }
+      });
+    }
+    const queryString = searchParams.toString();
+    const response = await axiosClient.get<BookingsResponse>(
+      `/bookings${queryString ? '?' + queryString : ''}`
+    );
     return response.data;
   },
 

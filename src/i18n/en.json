@@ -1089,6 +1089,16 @@
       "recommendation": "Based on your booking in Aswan, would you like me to book a private Felucca sailing trip for sunset on October 13th?",
       "cta": "Plan Activity"
     },
+    "sort": {
+      "newest": "Newest First",
+      "oldest": "Oldest First",
+      "checkInAsc": "Check-in (Ascending)",
+      "checkInDesc": "Check-in (Descending)",
+      "priceAsc": "Price (Low to High)",
+      "priceDesc": "Price (High to Low)"
+    },
+    "resultsCount": "Showing {from}-{to} of {count} bookings",
+    "sortBy": "Sort by",
     "detail": {
       "title": "Booking Detail",
       "subtitle": "Review your reservation details, payment status, and cancellation policy.",

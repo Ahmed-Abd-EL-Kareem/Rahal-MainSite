@@ -4,10 +4,17 @@ import { bookingsApi } from '@/lib/api/bookings';
 import { CreateHoldPayload, CreateBookingPayload, HoldResponse, CheckoutSessionResponse, Booking } from '@/types/booking';
 import { SuccessResponse } from '@/types/api';
 
-export function useMyBookingsQuery() {
+export function useMyBookingsQuery(params?: { 
+  page?: number; 
+  limit?: number; 
+  sort?: string; 
+  status?: string; 
+  upcoming?: boolean;
+  search?: string;
+}) {
   return useQuery({
-    queryKey: ['myBookings'],
-    queryFn: () => bookingsAxiosService.getMyBookings(),
+    queryKey: ['myBookings', params],
+    queryFn: () => bookingsAxiosService.getMyBookings(params),
     staleTime: 30 * 1000,
   });
 }
