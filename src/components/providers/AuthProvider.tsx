@@ -6,9 +6,10 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useCallback,
   ReactNode,
 } from "react";
-// import { useRouter, usePathname } from "next/navigation";
+import { usersApi } from "@/lib/api/users";
 
 interface User {
   id: string;
@@ -21,7 +22,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (token: string, user?: User) => Promise<void>;
   logout: () => void;
 }
 
@@ -51,6 +52,21 @@ const isAuthPath = (pathname: string): boolean => {
   );
 };
 
+const decodeToken = (token: string) => {
+  try {
+    const base64Url = token.split(".")[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(base64));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,69 +77,152 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
   const cookieSecureFlag = isSecure ? "; Secure" : "";
 
-  const getCookieOptions = (maxAge: number) => `path=/; max-age=${maxAge}; SameSite=Lax${cookieSecureFlag}`;
+  const getCookieOptions = useCallback(
+    (maxAge: number) => `path=/; max-age=${maxAge}; SameSite=Lax${cookieSecureFlag}`,
+    [cookieSecureFlag]
+  );
+
+  const checkAuth = useCallback(async () => {
+    let token: string | null = null;
+
+    // 1. Check if token is in URL query parameters (e.g. from Google OAuth redirect)
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryToken = urlParams.get("token");
+
+      if (queryToken) {
+        token = queryToken;
+        // Save token to non-HttpOnly cookie for client and API requests
+        document.cookie = `auth_token=${token}; ${getCookieOptions(86400 * 7)}`;
+
+        // Remove token from query parameters without reloading the page
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete("token");
+        window.history.replaceState(
+          {},
+          document.title,
+          newUrl.pathname + (newUrl.search ? newUrl.search : "") + newUrl.hash
+        );
+      }
+    }
+
+    // 2. If no token in URL, check document.cookie
+    if (!token && typeof document !== "undefined") {
+      const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
+      token = tokenMatch ? tokenMatch[2] : null;
+    }
+
+    if (token) {
+      const payload = decodeToken(token);
+
+      if (payload) {
+        const userId = payload.id || payload._id || payload.sub || "";
+        const email = payload.email || "";
+        const name = payload.name || payload.email || "";
+        const avatar = payload.picture || payload.avatar;
+
+        setUser({
+          id: userId,
+          email,
+          name,
+          avatar,
+        });
+
+        // Fetch fresh user details to populate full profile
+        if (userId) {
+          try {
+            const userRes = await usersApi.getUser(userId);
+            if (userRes?.data?.user) {
+              const u = userRes.data.user;
+              setUser({
+                id: u._id,
+                email: u.email || "",
+                name: u.name || "",
+                avatar: u.image,
+              });
+            }
+          } catch {
+            // Keep parsed user state
+          }
+        }
+      } else {
+        // Token is invalid or expired
+        document.cookie = `auth_token=; ${getCookieOptions(0)}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+
+    setIsLoading(false);
+  }, [getCookieOptions]);
 
   useEffect(() => {
-    const checkAuth = () => {
-      if (typeof document !== "undefined") {
-        // Read from non-HttpOnly cookie (set by backend as 'auth_token')
-        const tokenMatch = document.cookie.match(/(^|;\s*)auth_token\s*=\s*([^;]*)/);
-        const token = tokenMatch ? tokenMatch[2] : null;
+    checkAuth();
 
-        if (token) {
-          // Try to parse user from token (JWT)
-          try {
-            const payload = JSON.parse(atob(token.split(".")[1]));
-            setUser({
-              id: payload.sub || payload.id,
-              email: payload.email,
-              name: payload.name || payload.email,
-              avatar: payload.picture || payload.avatar,
-            });
-          } catch {
-            // If token parsing fails, just mark as authenticated
-            setUser({ id: "", email: "", name: "" });
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+
+    window.addEventListener("auth-change", handleAuthChange);
+    return () => {
+      window.removeEventListener("auth-change", handleAuthChange);
+    };
+  }, [checkAuth]);
+
+  const login = async (token: string, userData?: User) => {
+    return new Promise<void>(async (resolve) => {
+      document.cookie = `auth_token=${token}; ${getCookieOptions(86400 * 7)}`;
+
+      if (userData) {
+        setUser(userData);
+      } else {
+        const payload = decodeToken(token);
+        if (payload) {
+          const userId = payload.id || payload._id || payload.sub || "";
+          setUser({
+            id: userId,
+            email: payload.email || "",
+            name: payload.name || payload.email || "",
+            avatar: payload.picture || payload.avatar,
+          });
+
+          if (userId) {
+            try {
+              const userRes = await usersApi.getUser(userId);
+              if (userRes?.data?.user) {
+                const u = userRes.data.user;
+                setUser({
+                  id: u._id,
+                  email: u.email || "",
+                  name: u.name || "",
+                  avatar: u.image,
+                });
+              }
+            } catch {}
           }
         }
       }
-      setIsLoading(false);
-    };
 
-    checkAuth();
-  }, []);
+      setTimeout(() => {
+        window.dispatchEvent(new Event("auth-change"));
+        resolve();
+      }, 0);
+    });
+  };
 
-const login = async (token: string, userData: User) => {
-  return new Promise<void>((resolve) => {
-    // Set both cookies: HttpOnly 'token' (for API) and non-HttpOnly 'auth_token' (for client)
-    // Note: Backend should ideally set both on login response
-    document.cookie = `auth_token=${token}; ${getCookieOptions(86400)}`;
-    setUser(userData);
-    // Wait for state update before resolving
-    setTimeout(() => {
-      window.dispatchEvent(new Event("auth-change")); // keep Header in sync
-      resolve();
-    }, 0);
-  });
-};
+  const logout = () => {
+    // Clear both cookies
+    document.cookie = `auth_token=; ${getCookieOptions(0)}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+    document.cookie = `token=; ${getCookieOptions(0)}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+    setUser(null);
+    window.dispatchEvent(new Event("auth-change"));
+    router.push("/");
+  };
 
-  // const logout = () => {
-  //   document.cookie =
-  //     "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC";
-  //   setUser(null);
-  //   router.push("/");
-  //   router.refresh();
-  // };
-const logout = () => {
-  // Clear both cookies
-  document.cookie = `auth_token=; ${getCookieOptions(0)}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
-  document.cookie = `token=; ${getCookieOptions(0)}; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
-  setUser(null);
-  router.push("/");
-};
   const isAuthenticated = !!user;
 
-// Redirect authenticated users away from auth pages
-  // Runs on mount and whenever pathname/auth state changes
+  // Redirect authenticated users away from auth pages
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       if (isAuthPath(pathname)) {
@@ -133,6 +232,7 @@ const logout = () => {
       }
     }
   }, [pathname, isAuthenticated, isLoading, router]);
+
   return (
     <AuthContext.Provider
       value={{ user, isLoading, isAuthenticated, login, logout }}
