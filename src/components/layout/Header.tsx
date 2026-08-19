@@ -45,7 +45,7 @@ export default function Header() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const reducedMotion = useReducedMotion();
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, user, isLoading, logout } = useAuth();
 
   // State hooks - MUST be called on every render
   const [isScrolled, setIsScrolled] = useState(false);
@@ -108,11 +108,14 @@ export default function Header() {
   }, [isDropdownOpen]);
 
   // Derived values needed for early returns - MUST be before effects that use them
-  const currentUser = userData?.data?.user || null;
-  const userInitial = currentUser?.name
-    ? currentUser.name.charAt(0).toUpperCase()
-    : "U";
-  const userImage = currentUser?.image;
+  const currentUser = userData?.data?.user || (user?.id ? {
+    _id: user.id,
+    name: user.name || "",
+    email: user.email || "",
+    image: user.avatar,
+  } : null);
+  const userInitial = (currentUser?.name || user?.name || "U").charAt(0).toUpperCase();
+  const userImage = currentUser?.image || user?.avatar;
 
   useEffect(() => {
     setImageError(false);
@@ -172,11 +175,7 @@ export default function Header() {
   };
 
   const handleLogout = () => {
-    // Clear both cookies
-    document.cookie = `auth_token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
-    document.cookie = `token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
-    window.dispatchEvent(new Event("auth-change"));
-    window.location.href = "/";
+    logout();
   };
 
   // Main render - single return with conditional loading state
