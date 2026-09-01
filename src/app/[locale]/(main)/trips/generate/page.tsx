@@ -78,7 +78,7 @@ export default function GenerateTripPage() {
       const trip = (res as any).data?.trip;
       if (trip?._id) router.push(`/trips/${trip._id}`);
     } catch (err: any) {
-      setError(err.message ?? 'Failed to generate trip');
+      setError(err?.response?.data?.message || err?.message || 'Failed to generate trip');
     } finally {
       setLoading(false);
     }

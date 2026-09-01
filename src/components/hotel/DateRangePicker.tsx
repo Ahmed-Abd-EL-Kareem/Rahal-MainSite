@@ -31,6 +31,8 @@ export function DateRangePicker({
 }: DateRangePickerProps) {
   const t = useTranslations('hotels.room');
   const reduceMotion = useReducedMotion();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const effectiveMinDate = minDate || todayStr;
 
   return (
     <motion.div
@@ -50,7 +52,7 @@ export function DateRangePicker({
               type="date"
               value={checkIn}
               onChange={(e) => onCheckInChange(e.target.value)}
-              min={minDate}
+              min={effectiveMinDate}
               max={checkOut || maxDate}
               className="bg-transparent border-none p-0 focus:ring-0 text-on-surface w-full text-xs font-bold"
               required
@@ -71,7 +73,7 @@ export function DateRangePicker({
               type="date"
               value={checkOut}
               onChange={(e) => onCheckOutChange(e.target.value)}
-              min={checkIn || minDate}
+              min={checkIn || effectiveMinDate}
               max={maxDate}
               className="bg-transparent border-none p-0 focus:ring-0 text-on-surface w-full text-xs font-bold"
               required

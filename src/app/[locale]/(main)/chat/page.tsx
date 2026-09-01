@@ -64,6 +64,12 @@ export default function AITravelChatPage() {
 
   // Fetch subscription data
   useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push(`/${locale}/login`);
+    }
+  }, [isAuthenticated, authLoading, router, locale]);
+
+  useEffect(() => {
     if (isAuthenticated) {
       subscriptionsApi.getMySubscription()
         .then((res: { data: Subscription }) => setSubscription(res.data))
@@ -77,6 +83,14 @@ export default function AITravelChatPage() {
   const sendMessage = useSendChatMessage(sessionId);
   const deleteConversation = useDeleteChatConversation();
   const renameConversation = useRenameChatConversation();
+
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   // References
   const messagesEndRef = useRef<HTMLDivElement>(null);
